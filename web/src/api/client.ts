@@ -10,7 +10,15 @@
 import { isApiErrorResponse, type ApiErrorCode } from '@daydayup/contracts';
 import { getToken, notifyAuthExpired } from '../store/auth.ts';
 
-const BASE_URL = import.meta.env.VITE_API_BASE ?? '';
+/**
+ * API 基础路径。
+ *
+ * 用可选链读取 —— `import.meta.env` 只在 Vite 打包后存在，
+ * 在 Node（测试 / SSR）里是 undefined。
+ * 直接写 `import.meta.env.VITE_API_BASE` 会在非打包环境抛
+ * `Cannot read properties of undefined`，让整层 API 客户端无法被测试。
+ */
+const BASE_URL = import.meta.env?.VITE_API_BASE ?? '';
 
 export class ApiRequestError extends Error {
   constructor(
