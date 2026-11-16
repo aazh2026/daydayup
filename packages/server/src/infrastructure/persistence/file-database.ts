@@ -114,8 +114,15 @@ export class FileDatabase {
     }
   }
 
+  /**
+   * 删除文件或目录。
+   *
+   * 与 read() 对称：末段可省略 `.json` 后缀，两个候选路径都会尝试删除。
+   */
   async remove(segments: string[]): Promise<void> {
-    await fs.rm(this.resolvePath(...segments), { force: true, recursive: true });
+    for (const candidate of this.readCandidates(segments)) {
+      await fs.rm(candidate, { force: true, recursive: true });
+    }
   }
 
   async list(segments: string[]): Promise<string[]> {

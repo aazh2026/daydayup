@@ -13,6 +13,10 @@ import {
 import { useCurriculum } from '../store/curriculum.tsx';
 import { SAMPLE_EXAM_IMAGE_URL } from '../data/initialStore.ts';
 import { api } from '../api/client.ts';
+import {
+  subscribeJob,
+  type EnqueueDiagnosisResponse,
+} from '../api/jobs.ts';
 import { ALL_SUBJECTS } from '../types.ts';
 import type {
   DetectedMetadata,
@@ -77,7 +81,11 @@ interface MicroQuizItem {
   explanation: string;
 }
 
-interface DiagnosisPageProps {
+interface DiagnosisPageProps {  /** 当前学生 ID（用于服务端鉴权与数据隔离） */
+  studentId: string;
+  /** 当前考试 ID（诊断归属的考试） */
+  examId: string;
+
   exams: Exam[];
   examResults: ExamResult[];
   examPapers: ExamPaper[];
@@ -156,6 +164,8 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   masteryRecords,
   onAddExamResult,
   onDiagnosisCompleted,
+  studentId,
+  examId,
   onVerifyKnowledge,
   onLaunchCoach,
 }) => {
@@ -188,6 +198,11 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   const [sampleImageFailed, setSampleImageFailed] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnoseError, setDiagnoseError] = useState<string | null>(null);
+  /** 异步诊断进度（分离后诊断走 Job + SSE） */
+  const [diagnoseProgress, setDiagnoseProgress] = useState<{
+    stage: string;
+    pct: number;
+  } | null>(null);
   const [diagnoseSuccessMsg, setDiagnoseSuccessMsg] = useState<string | null>(null);
   const [pendingDraft, setPendingDraft] = useState<PendingDiagnosisDraft | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -382,9 +397,39 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
         : '文本试卷';
 
     try {
-      const data = await api.post<DiagnoseExamResponse>(
-        '/api/v1/diagnose-paper',
+      /**
+       * 分离后诊断走异步 Job：
+       * 1. 上传试卷图片 → 得到 fileId
+       * 2. 创建诊断任务 → 得到 jobId
+       * 3. 订阅 SSE 接收进度
+       *
+       * 大试卷诊断可能超过 2 分钟，同步请求会超时。
+       */
+      let fileIds: string[] = [];
+
+      if (uploadedImages.length > 0) {
+        setDiagnoseProgress({ stage: '上传试卷图片', pct: 5 });
+        for (const img of uploadedImages.slice(0, 4)) {
+          const uploaded = await api.post<{ fileId: string }>(
+            '/api/v1/uploads/papers',
+            {
+              studentId,
+              base64: img.dataUrl,
+              mimeType: img.mimeType,
+              originalName: 'paper.jpg',
+            }
+          );
+          fileIds.push(uploaded.fileId);
+        }
+      }
+
+      setDiagnoseProgress({ stage: '创建诊断任务', pct: 15 });
+
+      const enqueued = await api.post<EnqueueDiagnosisResponse>(
+        `/api/v1/exams/${examId}/diagnosis`,
         {
+          studentId,
+          paperId: `paper-${Date.now()}`,
           subject: uploadSubject,
           examTitle: resolvedUploadTitle,
           rawText: rawTextInput.trim(),
@@ -397,13 +442,34 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
               : hasImageSource
               ? 'image'
               : 'parsed_text',
-          images: uploadedImages.map((img) => ({
-            base64: img.dataUrl,
-            mimeType: img.mimeType,
-          })),
-          useSampleImage: usingSampleImage,
+          fileIds,
         }
       );
+
+      setDiagnoseProgress({ stage: 'AI 识别试卷结构', pct: 30 });
+
+      // 订阅 SSE 进度
+      const data = await new Promise<DiagnoseExamResponse>((resolve, reject) => {
+        let unsubscribe: (() => void) | null = null;
+
+        unsubscribe = subscribeJob(enqueued.jobId, {
+          onProgress: (progress) => {
+            setDiagnoseProgress({ stage: progress.stage, pct: progress.pct });
+          },
+          onDone: (job) => {
+            unsubscribe?.();
+            resolve(job.output as DiagnoseExamResponse);
+          },
+          onError: (message) => {
+            unsubscribe?.();
+            reject(new Error(message));
+          },
+          onCancelled: () => {
+            unsubscribe?.();
+            reject(new Error('诊断已取消'));
+          },
+        });
+      });
 
       const meta = data.detectedMetadata ?? ({} as DetectedMetadata);
       const aiSubject = ALL_SUBJECTS.includes(String(meta.subject) as Subject)
@@ -511,8 +577,10 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
       });
     } catch (err) {
       setDiagnoseError(err instanceof Error ? err.message : '试卷识别失败，请稍后重试。');
+      setDiagnoseProgress(null);
     } finally {
       setIsDiagnosing(false);
+      setDiagnoseProgress(null);
     }
   };
 
@@ -1001,8 +1069,27 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span>
-                          {isTextOnlyMode ? '正在解析文本试卷并归因...' : '正在进行视觉识别与归因...'}
+                          {diagnoseProgress
+                            ? `${diagnoseProgress.stage}（${diagnoseProgress.pct}%）`
+                            : isTextOnlyMode
+                              ? '正在解析文本试卷并归因...'
+                              : '正在进行视觉识别与归因...'}
                         </span>
+                        {/* 进度条：SSE 实时推送 */}
+                        {diagnoseProgress && (
+                          <span
+                            className="inline-block w-16 h-1 bg-blue-200 rounded-full overflow-hidden"
+                            role="progressbar"
+                            aria-valuenow={diagnoseProgress.pct}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          >
+                            <span
+                              className="block h-full bg-blue-600 transition-all duration-300"
+                              style={{ width: `${diagnoseProgress.pct}%` }}
+                            />
+                          </span>
+                        )}
                       </>
                     ) : (
                       <>

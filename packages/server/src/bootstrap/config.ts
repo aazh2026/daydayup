@@ -24,6 +24,14 @@ export interface AppConfig {
   authSecret: string;
   /** 是否强制要求认证（生产默认 true） */
   authRequired: boolean;
+  /** 数据保留策略（天） */
+  retention: {
+    eventLogDays: number;
+    attemptDays: number;
+    completedJobDays: number;
+    uploadDays: number;
+    auditLogDays: number;
+  };
 }
 
 export function loadConfig(): AppConfig {
@@ -53,5 +61,12 @@ export function loadConfig(): AppConfig {
       process.env.AUTH_REQUIRED !== undefined
         ? process.env.AUTH_REQUIRED === 'true'
         : authSecret.length > 0,
+    retention: {
+      eventLogDays: Number(process.env.RETENTION_EVENT_LOG_DAYS ?? 180),
+      attemptDays: Number(process.env.RETENTION_ATTEMPT_DAYS ?? 365),
+      completedJobDays: Number(process.env.RETENTION_JOB_DAYS ?? 30),
+      uploadDays: Number(process.env.RETENTION_UPLOAD_DAYS ?? 180),
+      auditLogDays: Number(process.env.RETENTION_AUDIT_DAYS ?? 730),
+    },
   };
 }

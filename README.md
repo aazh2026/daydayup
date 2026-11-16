@@ -97,6 +97,59 @@ npm run dev:web       # 前端 → http://localhost:5173
 
 ---
 
+## 异步任务（Job Engine）
+
+试卷诊断等耗时操作改为异步：提交 → 拿 jobId → 订阅 SSE 进度。
+
+```
+POST /api/v1/uploads/papers          上传试卷图片 → fileId
+POST /api/v1/exams/:id/diagnosis     创建诊断任务 → jobId（幂等）
+GET  /api/v1/jobs/:id/events         SSE 进度推送
+GET  /api/v1/exams/:id/diagnosis/:jobId  轮询降级路径
+```
+
+| 能力 | 实现 |
+|---|---|
+| 持久化 | 任务写入 `data/db/jobs/`，重启后可恢复 |
+| 幂等 | 相同 `idempotencyKey` 返回同一任务 ID |
+| 重试 | 失败按指数退避重试（默认 3 次） |
+| 租约 | 进程崩溃后任务不会永久卡在 RUNNING，启动时自动重新入队 |
+| 取消 | 长任务在检查点响应取消信号 |
+| 并发 | 默认 2 个任务并发（`JOB_CONCURRENCY` 可调） |
+| 优雅退出 | SIGTERM 时等待进行中任务完成 |
+
+SSE 用 `node:http` 原生实现，保持零第三方依赖。
+
+---
+
+## 数据合规与运维
+
+### 数据保留与删除
+
+| 命令 | 说明 |
+|---|---|
+| `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
+| `DELETE /api/v1/admin/students/:id/data` | 删除某学生全部数据（数据主体删除权） |
+
+保留期可通过环境变量配置（事件日志 180 天、作答流水 365 天、
+完成任务 30 天、上传文件 180 天、审计日志 730 天）。
+
+删除操作写入**审计日志**（`data/audit/`）并保留，满足可追溯要求。
+
+### 备份与恢复
+
+| 命令 | 说明 |
+|---|---|
+| `npm run backup --workspace=@daydayup/server` | 创建备份（自动验证可恢复性） |
+| `npm run backup --workspace=@daydayup/server -- --list` | 列出备份 |
+| `npm run backup --workspace=@daydayup/server -- --verify` | 验证全部备份 |
+| `npm run restore --workspace=@daydayup/server -- --name <名> --dry-run` | 试运行恢复 |
+| `npm run restore --workspace=@daydayup/server -- --name <名>` | 实际恢复 |
+
+备份含每个文件的 SHA-256 校验和，恢复前可验证完整性。
+
+---
+
 ## API
 
 基础路径 `/api/v1`。成功返回裸对象；失败返回统一结构：

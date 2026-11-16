@@ -863,6 +863,8 @@ export default function App() {
             masteryRecords={appState.masteryRecords}
             onAddExamResult={handleAddExamResult}
             onDiagnosisCompleted={handleDiagnosisCompleted}
+            studentId={appState.student.id}
+            examId={appState.exams[0]?.id ?? `exam-${appState.student.id}`}
             onVerifyKnowledge={handleVerifyKnowledge}
             onLaunchCoach={handleLaunchCoach}
           />

@@ -20,6 +20,9 @@ import { createPlanRoutes } from './api/routes/plan.routes.ts';
 import { createPracticeRoutes } from './api/routes/practice.routes.ts';
 import { createExamRoutes } from './api/routes/exam.routes.ts';
 import { createCoachingRoutes } from './api/routes/coaching.routes.ts';
+import { createJobRoutes } from './api/routes/job.routes.ts';
+import { createUploadRoutes } from './api/routes/upload.routes.ts';
+import { createAdminRoutes } from './api/routes/admin.routes.ts';
 import { logger } from './infrastructure/logging/logger.ts';
 
 export function createApp(container: Container): Express {
@@ -68,7 +71,19 @@ export function createApp(container: Container): Express {
   studentDataRouter.use(createPracticeRoutes(container));
   studentDataRouter.use(createExamRoutes(container));
   studentDataRouter.use(createCoachingRoutes(container));
+  studentDataRouter.use(createUploadRoutes(container));
+  studentDataRouter.use(createAdminRoutes(container));
   v1.use(studentDataRouter);
+
+  /**
+   * 任务路由。
+   *
+   * SSE 需要在认证中间件之前保持连接，因此这里只挂载读接口，
+   * 写操作（取消任务）通过 studentDataRouter 鉴权。
+   */
+  const jobRouter = express.Router();
+  jobRouter.use(createJobRoutes(container));
+  v1.use(jobRouter);
 
   app.use('/api/v1', v1);
 

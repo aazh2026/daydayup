@@ -27,15 +27,20 @@ async function main(): Promise<void> {
     );
   });
 
-  const shutdown = (signal: string) => {
+  // ---- 启动 Job Engine（会恢复上次崩溃遗留的任务）----
+  await container.jobEngine.start();
+
+  const shutdown = async (signal: string) => {
     logger.info('boot.shutdown', { signal });
+    // 优雅退出：等待进行中的任务完成
+    await container.jobEngine.stop();
     server.close(() => process.exit(0));
     // 兜底：10 秒后强制退出
     setTimeout(() => process.exit(0), 10_000).unref();
   };
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
 }
 
 main().catch((err) => {
