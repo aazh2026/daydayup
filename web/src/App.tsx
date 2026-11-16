@@ -83,8 +83,22 @@ export default function App() {
   /** 知识体系（服务端资产） */
   const { knowledgeMap: KNOWLEDGE_MAP } = useCurriculum();
 
-  /** 从服务端水合业务状态（服务端是唯一真相源） */
-  useServerHydration(appState.student?.id, setAppState);
+  /**
+   * 从服务端水合业务状态（服务端是唯一真相源）。
+   *
+   * 注意：老师角色的 `studentIds` 为空（可访问全部学生，不绑定某个），
+   * 此时**不水合**任何单个学生 —— 否则会请求一个不属于老师的学生，
+   * 触发无意义的 403。老师的视角是「工作台」，由 TeacherDashboard
+   * 通过 `GET /students` 自行拉取学生列表。
+   */
+  const hydrationStudentId =
+    session && session.role !== 'teacher'
+      ? (session.studentIds[0] ?? appState.student?.id)
+      : authRequired === false
+        ? appState.student?.id
+        : undefined;
+
+  useServerHydration(hydrationStudentId, setAppState);
 
   useEffect(() => {
     void isAuthRequired()
@@ -131,7 +145,8 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    const studentId = appState.student?.id;
+    // 与水合同理：老师不拉某个学生的计划（会触发 403）
+    const studentId = hydrationStudentId;
     if (!studentId) return;
 
     void fetchCurrentPlan(studentId)
@@ -146,7 +161,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [appState.student?.id, appState.completedTaskIds, appState.deferredKnowledgeIds]);
+  }, [hydrationStudentId, appState.completedTaskIds, appState.deferredKnowledgeIds]);
 
   const plan = useMemo(
     () => serverPlan ?? buildLocalPlanFallback(appState),
@@ -806,9 +821,19 @@ export default function App() {
       <LoginPage
         onLoggedIn={(next) => {
           setSession(next);
+          /**
+           * 学生 ID 以令牌为准。
+           *
+           * 老师角色的 `studentIds` 为空（可访问全部学生），
+           * 此时**保留骨架里的默认 ID 不动** —— 老师不该被当成某个学生，
+           * 也不该拿默认学生去拉数据（会 403）。
+           */
+          if (next.role === 'teacher' || next.studentIds.length === 0) {
+            return;
+          }
           setAppState((prev) => ({
             ...prev,
-            student: { ...prev.student, id: next.studentIds[0] ?? prev.student.id },
+            student: { ...prev.student, id: next.studentIds[0] },
           }));
         }}
       />

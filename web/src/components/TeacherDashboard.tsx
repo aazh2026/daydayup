@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Loader2, AlertTriangle, ShieldCheck, TrendingUp } from 'lucide-react';
 import { api } from '../api/client.ts';
-import type { MasteryRecord, PriorityOpportunity } from '@daydayup/contracts';
+import type { MasteryRecord, PriorityOpportunity, Student } from '@daydayup/contracts';
 
 interface StudentSummary {
   studentId: string;
@@ -43,8 +43,26 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       setError(null);
 
       try {
+        /**
+         * 学生列表来自**服务端**，不是令牌。
+         *
+         * 老师角色的 `studentIds` 为空（可访问全部学生），
+         * 令牌里根本不含学生清单 —— 必须向服务端要。
+         */
+        const listResponse = await api.get<{ students: Student[] }>(
+          '/api/v1/students'
+        );
+        const students = listResponse.students ?? [];
+
+        // 令牌里的 studentIds 非空时（受限老师），只取交集
+        const targets =
+          studentIds.length > 0
+            ? students.filter((s) => studentIds.includes(s.id))
+            : students;
+
         const results = await Promise.all(
-          studentIds.map(async (studentId) => {
+          targets.map(async (student) => {
+            const studentId = student.id;
             const [mastery, opportunities] = await Promise.all([
               api.get<{ records: Record<string, MasteryRecord> }>(
                 `/api/v1/students/${studentId}/mastery`
@@ -62,7 +80,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
             return {
               studentId,
-              displayName: studentId,
+              displayName: student.name || studentId,
               state: '在读',
               masteryCount: records.length,
               masteredCount: mastered,

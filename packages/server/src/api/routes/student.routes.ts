@@ -14,8 +14,60 @@ import type { Student, StudentProfileUpdate } from '@daydayup/contracts';
 
 const STUDENTS_DIR = ['db', 'students'];
 
+/**
+ * 读取全部学生档案。
+ *
+ * `db.list()` 返回带 `.json` 后缀的文件名，这里按 ID 读取（与 read 的兼容行为对称）。
+ */
+async function listStudents(container: Container): Promise<Student[]> {
+  const files = await container.db.list(STUDENTS_DIR);
+  const students: Student[] = [];
+  for (const file of files) {
+    const student = await container.db.read<Student>([
+      ...STUDENTS_DIR,
+      file.replace(/\.json$/, ''),
+    ]);
+    if (student) students.push(student);
+  }
+  return students;
+}
+
 export function createStudentRoutes(container: Container): Router {
   const router = Router();
+
+  /**
+   * GET /api/v1/students —— 列出当前身份可访问的学生。
+   *
+   * 为什么需要这个端点：
+   * 老师角色的 `studentIds` 为空（可访问**全部**学生，而非某个子集），
+   * 因此前端无法从令牌里得知有哪些学生。
+   * 没有这个端点，教师工作台永远拿不到学生列表 —— 功能形同虚设。
+   *
+   * 授权：
+   * - teacher：返回全部学生
+   * - student / parent：只返回 `studentIds` 内的学生
+   */
+  router.get('/students', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const auth = req.auth;
+      if (!auth) {
+        // 开发模式：无认证上下文，返回全部学生（本地单一演示场景）
+        const all = await listStudents(container);
+        res.json({ students: all });
+        return;
+      }
+
+      const all = await listStudents(container);
+      const visible =
+        auth.role === 'teacher'
+          ? all
+          : all.filter((s) => auth.studentIds.includes(s.id));
+
+      res.json({ students: visible });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   /** GET /api/v1/students/:id */
   router.get('/students/:id', async (req: Request, res: Response, next: NextFunction) => {

@@ -13,7 +13,7 @@
  * 前置：npx playwright install chromium
  */
 import { chromium } from 'playwright';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -90,7 +90,14 @@ async function waitForPort(port, timeoutMs = 60_000) {
 function cleanup() {
   for (const child of children) {
     try {
-      child.kill('SIGKILL');
+      // 杀掉整个进程组（vite 会再拉起 esbuild 子进程）
+      if (child.pid) {
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+        } catch {
+          child.kill('SIGKILL');
+        }
+      }
     } catch {
       // 忽略
     }
@@ -99,6 +106,28 @@ function cleanup() {
 }
 
 async function main() {
+  // ---- 播种演示数据（否则教师工作台没有学生可展示）----
+  fs.mkdirSync(path.join(tmpDataDir, 'seed'), { recursive: true });
+  fs.copyFileSync(
+    path.join(root, 'packages/server/data/seed/demo-student.json'),
+    path.join(tmpDataDir, 'seed', 'demo-student.json')
+  );
+  await new Promise((resolve) => {
+    const seed = spawnSync(
+      'npx',
+      ['tsx', 'scripts/seed.ts'],
+      {
+        cwd: path.join(root, 'packages/server'),
+        env: { ...process.env, DATA_DIR: tmpDataDir },
+        encoding: 'utf8',
+      }
+    );
+    if (seed.status !== 0) {
+      console.error('播种失败:', seed.stderr || seed.stdout);
+    }
+    resolve();
+  });
+
   // 凭证文件（三种角色）
   fs.mkdirSync(path.join(tmpDataDir, 'db'), { recursive: true });
   fs.writeFileSync(
@@ -271,9 +300,40 @@ async function main() {
 
   // ---- 7. API 调用合理性 ----
   console.log('\n▶ API 调用');
-  const authFailures = apiCalls.filter((c) => c.s === 401 || c.s === 403);
-  console.log('  DEBUG all api calls:', JSON.stringify(apiCalls, null, 1));
-  checkEqual(authFailures.length, 0, '教师会话下无 401/403 响应', JSON.stringify(authFailures));
+  /**
+   * 登录后的会话不应出现 401/403。
+   *
+   * 注意：**错误凭证那次 401 是预期的**（用例刻意验证登录失败），
+   * 因此这里只看**非登录类**调用的状态码 ——
+   * 登录接口的状态码在下面单独断言。
+   *
+   * （不能用 `slice(loginCalls.length)` 定位登录之后的调用：
+   * 那是按「过滤后数组的下标」切，而登录调用在原始序列里的位置通常更靠后，
+   * 切出来的尾巴里仍会包含那次预期内的 401。）
+   */
+  const loginCalls = apiCalls.filter((c) => c.p === '/api/v1/auth/login');
+  const otherCalls = apiCalls.filter((c) => c.p !== '/api/v1/auth/login');
+  const authFailures = otherCalls.filter((c) => c.s === 401 || c.s === 403);
+  checkEqual(
+    authFailures.length,
+    0,
+    '登录后无 401/403 响应',
+    JSON.stringify(authFailures)
+  );
+
+  // 登录本身：第一次（错误凭证）应 401，第二次（正确凭证）应 200
+  checkEqual(loginCalls[0]?.s, 401, '错误凭证登录返回 401');
+  checkEqual(loginCalls[1]?.s, 200, '正确凭证登录返回 200');
+
+  // 教师工作台必须真的取到了学生数据
+  check(
+    otherCalls.some((c) => c.p === '/api/v1/students' && c.s === 200),
+    '教师工作台成功拉取学生列表'
+  );
+  check(
+    otherCalls.some((c) => c.p.endsWith('/mastery') && c.s === 200),
+    '教师工作台成功拉取学生掌握度'
+  );
 
   await browser.close();
 
@@ -300,4 +360,11 @@ try {
   process.exitCode = 1;
 } finally {
   cleanup();
+  /**
+   * 显式退出。
+   *
+   * 子进程（vite / tsx）与 Playwright 的浏览器会留下活跃句柄，
+   * 事件循环不会自然排空 —— 表现为「测试跑完了但进程不退出」。
+   */
+  process.exit(process.exitCode ?? 0);
 }

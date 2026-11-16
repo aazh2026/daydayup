@@ -60,6 +60,32 @@ before(async () => {
 
   // 教师与家长凭证
   fs.mkdirSync(path.join(tmpDataDir, 'db'), { recursive: true });
+
+  /**
+   * 学生档案（供 `GET /students` 列出）。
+   *
+   * 老师角色的 `studentIds` 为空（可访问全部学生），
+   * 必须有一个服务端列表端点，老师才知道有哪些学生 ——
+   * 否则教师工作台永远拿不到数据。
+   */
+  fs.mkdirSync(path.join(tmpDataDir, 'db', 'students'), { recursive: true });
+  for (const id of [STUDENT_ID]) {
+    fs.writeFileSync(
+      path.join(tmpDataDir, 'db', 'students', `${id}.json`),
+      JSON.stringify({
+        id,
+        name: id === STUDENT_ID ? '张伟' : `学生-${id}`,
+        grade: '初三',
+        region: '上海',
+        targetExamDate: '2027-06-20',
+        targetSchool: '上海市重点高中',
+        dailyBudgetMinutes: 60,
+        homeworkLoad: '适中',
+        fatigueLevel: '低',
+      })
+    );
+  }
+
   fs.writeFileSync(
     path.join(tmpDataDir, 'db', 'credentials.json'),
     JSON.stringify([
@@ -84,6 +110,19 @@ before(async () => {
         secret: 'teacher-key',
         role: 'teacher',
         studentIds: [],
+      },
+      // 学生列表端点专用凭证（与删除类用例隔离，避免互相影响）
+      {
+        principalId: 'list-student-001',
+        secret: 'list-student-key',
+        role: 'student',
+        studentIds: ['stu-list-owner'],
+      },
+      {
+        principalId: 'list-parent-001',
+        secret: 'list-parent-key',
+        role: 'parent',
+        studentIds: ['stu-list-owner'],
       },
     ])
   );
@@ -404,6 +443,81 @@ describe('教师跨学生访问', () => {
     });
     // 不应是 403
     assert.notEqual(res.status, 403);
+  });
+});
+
+describe('学生列表端点', () => {
+  /**
+   * 用独立的学生 ID，避免与删除类用例互相干扰。
+   *
+   * 之前这些用例依赖 `STUDENT_ID`，而 `家长可以代为行使孩子的数据删除权`
+   * 会把该学生的档案文件从磁盘删除 —— 于是用例**执行顺序不同结果就不同**
+   *（典型的顺序依赖型脆弱测试）。
+   */
+  const LIST_STUDENT = 'stu-list-owner';
+  const LIST_OTHER = 'stu-list-other';
+
+  before(async () => {
+    for (const id of [LIST_STUDENT, LIST_OTHER]) {
+      fs.writeFileSync(
+        path.join(tmpDataDir, 'db', 'students', `${id}.json`),
+        JSON.stringify({
+          id,
+          name: `学生-${id}`,
+          grade: '初三',
+          region: '上海',
+          targetExamDate: '2027-06-20',
+          targetSchool: '上海市重点高中',
+          dailyBudgetMinutes: 60,
+          homeworkLoad: '适中',
+          fatigueLevel: '低',
+        })
+      );
+    }
+  });
+
+  test('教师可列出全部学生（令牌里不含学生清单）', async () => {
+    const token = await login('teacher-key');
+    const res = await fetch(`${baseUrl}/api/v1/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(res.status, 200);
+
+    const body = (await res.json()) as { students: Array<{ id: string }> };
+    const ids = body.students.map((s) => s.id);
+    // 老师角色的 studentIds 为空，必须靠这个端点拿到学生清单
+    assert.ok(ids.includes(LIST_STUDENT), '教师应看到全部学生');
+    assert.ok(ids.includes(LIST_OTHER), '教师应看到全部学生');
+  });
+
+  test('学生只看到自己的数据', async () => {
+    const token = await login('list-student-key');
+    const res = await fetch(`${baseUrl}/api/v1/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(res.status, 200);
+
+    const body = (await res.json()) as { students: Array<{ id: string }> };
+    const ids = body.students.map((s) => s.id);
+    assert.deepEqual(ids, [LIST_STUDENT], '学生不应看到其他学生');
+  });
+
+  test('家长只看到自己孩子的数据', async () => {
+    const token = await login('list-parent-key');
+    const res = await fetch(`${baseUrl}/api/v1/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(res.status, 200);
+
+    const body = (await res.json()) as { students: Array<{ id: string }> };
+    const ids = body.students.map((s) => s.id);
+    assert.ok(ids.includes(LIST_STUDENT), '家长应看到孩子');
+    assert.ok(!ids.includes(LIST_OTHER), '家长不应看到无关学生');
+  });
+
+  test('未携带令牌不能列出学生', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/students`, { method: 'GET' });
+    assert.equal(res.status, 401);
   });
 });
 
