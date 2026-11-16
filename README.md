@@ -17,22 +17,58 @@ daydayup/
 ## 快速开始
 
 ```bash
-# 1. 安装依赖（npm workspaces）
+# 一条命令启动前后端
+npm start
+```
+
+脚本会自动完成：
+
+- 检查 Node 版本与依赖（缺失则自动安装）
+- `.env` 不存在时从 `.env.example` 生成
+- 首次启动自动播种演示数据
+- 端口占用检测
+- 统一彩色输出，Ctrl+C 同时停止两端
+
+```
+前端    http://localhost:5173
+后端    http://localhost:3000/api/v1/health
+```
+
+### 启动选项
+
+```bash
+npm start                    # 前后端（开发模式，Vite HMR）
+npm start -- --no-web        # 仅后端
+npm start -- --no-srv        # 仅前端
+npm start -- --seed          # 先播种演示数据
+npm start -- --port 4000     # 指定后端端口
+npm start -- --build         # 先构建前端产物
+npm start -- --prod          # 生产模式：免编译 + 单端口托管前后端
+```
+
+### 手动启动（不想用脚本时）
+
+```bash
 npm install --legacy-peer-deps
-
-# 2. 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入 GEMINI_API_KEY（AI 功能必需，其余功能无需）
-
-# 3. 播种演示数据（服务端存储）
+cp .env.example .env        # 填入 GEMINI_API_KEY（AI 功能必需）
 npm run seed --workspace=@daydayup/server
 
-# 4. 启动（两个独立进程）
 npm run dev:server    # 后端 → http://localhost:3000
 npm run dev:web       # 前端 → http://localhost:5173
 ```
 
 前端开发服务器已配置 `/api` 代理，自动转发到后端 3000 端口。
+
+### AI 功能
+
+未配置 `GEMINI_API_KEY` 时，脚本会提示 AI 功能不可用，**其余功能正常**
+（计划生成、掌握度计算、报告、题库等均不依赖模型）。
+
+配置后编辑 `.env`：
+
+```bash
+GEMINI_API_KEY="你的密钥"
+```
 
 ---
 
@@ -57,9 +93,10 @@ node --experimental-strip-types packages/server/src/main.ts
 
 | 命令 | 说明 |
 |---|---|
+| `npm start` | **一键启动前后端**（见上文） |
 | `npm run dev:server` | 启动后端（tsx watch，热重载） |
 | `npm run dev:web` | 启动前端（Vite dev server） |
-| `npm run dev` | 等同 `dev:server` |
+| `npm run dev` | 等同 `npm start` |
 | `npm run build` | 构建前端产物到 `web/dist` |
 | `npm run typecheck` | 全包类型检查 |
 | `npm run lint` | 全包 lint |

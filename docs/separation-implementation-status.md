@@ -31,6 +31,10 @@
 | Phase 5c | localStorage 边界收紧（只留 token/偏好/快照） | ✅ 完成 |
 | Phase 5d | 补全服务端水合（历史/流水/成绩） | ✅ 完成 |
 | Phase 5e | 清理一次性迁移脚本 | ✅ 完成 |
+| Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
+| Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
+| Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
+| Phase 6d | 前端测试基建（web 包接入测试） | ✅ 完成 |
 
 ---
 
@@ -337,12 +341,85 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ---
 
+## Phase 6 — 回归测试与并发缺陷修复
+
+### 自动化回归任务
+
+已配置定时任务（`schedule-ee11af60-fb15-44ff-b621-4eaa9c2a5d48`），
+周期性执行 `npm test` + `npm run typecheck` + `npm run build`，
+失败时定位根因、补测试、修复实现，直至全绿。
+
+### Job Engine 进度事件乱序（并发缺陷）
+
+**现象**：`JobEngine` 进度订阅者收到的进度事件顺序与上报顺序不一致。
+
+```
+上报顺序：第一步(30) → 第二步(70) → 第三步(90)
+实际收到：第一步 → 第三步 → 第二步
+```
+
+**根因**：`reportProgress` 内部先 `await persist()`（磁盘写）再 `emit`，
+而 `JobContext.reportProgress` 是**即发即忘**（`void` 调用）。
+连续上报时多个 `await` 并发挂起，谁先完成就谁先 `emit` ——
+**写操作的锁保证了落盘顺序，却管不住 await 之后的 emit 顺序**。
+
+实测：8 次连续上报，10 次运行中 **7 次乱序**；
+20 次上报时顺序错乱更明显（如 `s0,s2,s3,s1,s5,s6,s7,s4`）。
+
+**影响**：SSE 推送的进度条会来回跳动（30% → 90% → 70%），
+用户看到「进度倒退」。
+
+**修复**：
+
+| 措施 | 说明 |
+|---|---|
+| 每任务进度链 | `progressChains: Map<jobId, Promise>` 把同任务的进度上报串成 FIFO |
+| `drainProgress()` | 任务结束前等待排队的进度事件推送完毕 |
+| `done` 事件时序 | 保证 `done` 永远排在最后一条 `progress` 之后 |
+| 失败隔离 | 单次进度上报失败只告警，不影响任务本身 |
+
+### 数据删除审计重复条目（合规缺陷）
+
+**现象**：一次删除学生数据，审计日志里出现**两条** `StudentDataDeleted`。
+
+| 来源 | 字段 |
+|---|---|
+| `retention-service.ts` | `payload: { scope, reason }`，**无 actor** |
+| `admin.routes.ts` | `actor / actor_role / via`，**无 scope** |
+
+两条记录 schema 不同，审计追溯时无法确定「谁删的」。
+
+**修复**：审计落盘统一收敛到 `retention.deleteStudentData()`，
+调用方通过 `options.actor` / `options.via` 传入身份上下文，只写一条完整记录。
+
+顺带修正：
+
+| 问题 | 修复前 | 修复后 |
+|---|---|---|
+| 老师删除的身份标记 | `via=owner`（误标为数据主体本人） | `via=teacher` |
+| `event_id` 生成 | `Date.now()`（同毫秒内会重复） | `randomUUID()` |
+
+### 前端测试基建
+
+`web` 包此前无测试能力，「localStorage 只保留 token / 偏好 / 快照」
+这一关键边界约束完全依赖人工保证。
+
+| 文件 | 说明 |
+|---|---|
+| `web/tests/helpers/local-storage.ts` | localStorage 替身，支持「写入必然失败」模式覆盖配额超限分支 |
+| `web/tests/local-state.test.ts` | 13 例：遗留数据清理、骨架构造、UI 偏好读写 |
+
+根 `package.json` 的 `test` 改为 `--workspaces`，前后端测试统一入口。
+
+---
+
 ## 验证结果
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       110/110 通过（单元 18 + 鉴权 10 + Job 13 + 集成 15 + SSE 7 + 异步 4
-                + 保留/备份 9 + 安全/运维 17 + 角色权限 13）
+测试       134/134 通过（服务端 121 + 前端 13）
+                单元 18 + 鉴权 10 + Job 17 + 集成 15 + SSE 7 + 异步 4
+                + 保留/备份 9 + 安全/运维 17 + 角色权限 24
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
 localStorage 仅剩 7.3KB 知识体系快照（原 19.7KB 业务数据）
@@ -379,6 +456,21 @@ Phase 4 又发现 3 个：
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
+
+Phase 6 又发现 3 个：
+
+| # | 缺陷 | 影响 |
+|---|---|---|
+| 13 | `reportProgress` 即发即忘，多个 await 竞争后 emit | **SSE 进度事件乱序**（进度条来回跳动，30% → 90% → 70%） |
+| 14 | 数据删除写两条审计记录（retention + 路由各一条） | **审计追溯无法确定「谁删的」**（两条 schema 还不同） |
+| 15 | 老师删除被记为 `via=owner` | 审计失真：管理需要 ≠ 数据主体本人 |
+
+#13 最隐蔽——**写操作的锁保证了落盘顺序，却管不住 `await` 之后的 `emit` 顺序**。
+写对了、存对了、发出去了，但顺序错了，人眼在浏览器里只看到「进度条乱跳」，
+很难归因到并发。
+
+#14 同属「**每一步都做对了，但做重了**」——
+审计服务与 API 路由都认为自己该记一笔，结果一次删除留下两条互相矛盾的记录。
 
 ---
 

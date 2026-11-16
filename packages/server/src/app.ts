@@ -143,7 +143,12 @@ export function createApp(container: Container): Express {
 
       // SPA fallback
       app.get('*', (req, res, next) => {
-        if (req.path.startsWith('/api')) {
+        // API 与敏感路径不落到 SPA（否则会被当作前端路由）
+        if (
+          req.path.startsWith('/api') ||
+          req.path.startsWith('/data') ||
+          req.path.startsWith('/files')
+        ) {
           next();
           return;
         }
