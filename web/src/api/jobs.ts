@@ -96,7 +96,14 @@ export function subscribeJob(
   return () => controller.abort();
 }
 
-function handleFrame(
+/**
+ * 解析单帧 SSE 并派发给对应回调。
+ *
+ * 导出以便单测 —— 这是 SSE 协议解析的全部难点所在
+ * （注释行、多行 data、分帧边界、非法 JSON），出错时症状是
+ * 「进度条不动」或「诊断结果丢失」，极难定位。
+ */
+export function handleFrame(
   frame: string,
   handlers: DiagnosisJobHandlers
 ): void {
@@ -104,7 +111,12 @@ function handleFrame(
   const dataLines: string[] = [];
 
   for (const line of frame.split('\n')) {
-    if (line.startsWith(':')) continue; // 注释/心跳
+    /**
+     * 只认以 `event:` / `data:` **开头**的行。
+     *
+     * SSE 注释行（以 `:` 开头）因此天然被忽略 ——
+     * 无需额外的 `startsWith(':')` 判断（那在本实现下不可达）。
+     */
     if (line.startsWith('event:')) {
       event = line.slice(6).trim();
     } else if (line.startsWith('data:')) {
