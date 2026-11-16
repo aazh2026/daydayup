@@ -13,6 +13,7 @@ import {
   computePriorityOpportunities,
   getEffectiveDailyBudget,
   getDelayedRetestStatus,
+  computeDaysToZhongkao,
 } from '../src/engines/planning-engine.ts';
 import { evaluateMasteryTransition } from '../src/engines/mastery-engine.ts';
 import type {
@@ -324,6 +325,66 @@ describe('延迟复测解锁判定（服务端时钟）', () => {
     );
     assert.equal(status.unlocked, false);
     assert.ok(status.daysRemaining > 0);
+  });
+});
+
+describe('距离中考天数（时区正确性）', () => {
+  /**
+   * 回归：目标日期若按 UTC 零点解析，而「今天」按本地零点，
+   * 在 UTC+8 下两者差 8 小时，`ceil` 会多算一天。
+   *
+   * 症状：学生看到「距离中考 216 天」，实际应为 215 天；
+   * 更糟的是「明天」会被显示成「2 天后」。
+   */
+  test('同一天算 1 天', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0); // 2026-11-17 本地
+    assert.equal(computeDaysToZhongkao('2026-11-17', now), 1);
+  });
+
+  test('明天算 1 天（不是 2 天）', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('2026-11-18', now), 1);
+  });
+
+  test('后天算 2 天', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('2026-11-19', now), 2);
+  });
+
+  test('跨月计算正确', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('2026-12-17', now), 30);
+  });
+
+  test('跨年计算正确', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('2027-06-20', now), 215);
+  });
+
+  test('凌晨时刻同样正确（不受当天时刻影响）', () => {
+    const now = new Date(2026, 10, 17, 0, 30, 0); // 凌晨 00:30
+    assert.equal(computeDaysToZhongkao('2026-11-18', now), 1);
+  });
+
+  test('深夜时刻同样正确（不受当天时刻影响）', () => {
+    const now = new Date(2026, 10, 17, 23, 30, 0); // 深夜 23:30
+    assert.equal(computeDaysToZhongkao('2026-11-18', now), 1);
+  });
+
+  test('过去日期下限为 1（不显示 0 或负数）', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('2020-06-20', now), 1);
+  });
+
+  test('非法日期回退为 200', () => {
+    const now = new Date(2026, 10, 17, 13, 0, 0);
+    assert.equal(computeDaysToZhongkao('not-a-date', now), 200);
+    assert.equal(computeDaysToZhongkao('', now), 200);
+  });
+
+  test('闰年 2 月 29 日可解析', () => {
+    const now = new Date(2028, 0, 1, 12, 0, 0); // 2028-01-01
+    assert.equal(computeDaysToZhongkao('2028-02-29', now), 59);
   });
 });
 

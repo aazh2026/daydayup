@@ -94,13 +94,25 @@ export function getDelayedRetestStatus(
   };
 }
 
-/** 距离中考天数 */
+/**
+ * 距离中考天数。
+ *
+ * 注意时区：`new Date('2027-06-20')` 会被解析为 **UTC 零点**，
+ * 而「今天」是**本地零点**。在 UTC+8 下两者差 8 小时，
+ * `ceil` 会把结果多算一天。因此目标日期必须按**本地日历日**解析。
+ */
 export function computeDaysToZhongkao(
   targetExamDate: string,
   now: Date = new Date()
 ): number {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(targetExamDate);
+
+  // 按本地日历日解析 'YYYY-MM-DD'，避免被当成 UTC 零点
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(targetExamDate);
+  const target = parts
+    ? new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]))
+    : new Date(targetExamDate);
+
   if (Number.isNaN(target.getTime())) return 200;
   const diffMs = target.getTime() - today.getTime();
   return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
