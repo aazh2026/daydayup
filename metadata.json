@@ -1,0 +1,6 @@
+{
+  "name": "智学中枢 · 上海初三AI提分系统",
+  "description": "面向上海初三中考的AI提分操作系统：覆盖试卷拍照诊断、结构化错因归因、边际提分规划、苏格拉底式AI教练与五维效果验证闭环。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
