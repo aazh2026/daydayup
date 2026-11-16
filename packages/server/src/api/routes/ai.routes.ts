@@ -29,6 +29,8 @@ import {
 } from '../../infrastructure/ai/prompts/registry.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
 import { toGeminiSchema } from '../../infrastructure/ai/gemini-provider.ts';
+import { requireAuth } from '../middleware/auth.ts';
+import { requireQuota } from '../middleware/quota.ts';
 
 function requireAi(container: Container) {
   if (!container.ai) {
@@ -53,9 +55,28 @@ export function createAiRoutes(container: Container): Router {
   const router = Router();
 
   /**
+   * AI 端点保护：
+   * 1. 身份认证 —— 防止他人白嫖 GEMINI_API_KEY
+   * 2. 配额限制 —— 防止单账号刷量
+   *
+   * 注意：authRequired=false（未配置 AUTH_SECRET）时跳过认证，
+   * 仅保留配额保护，便于本地开发。
+   */
+  const guard = (
+    path: string,
+    handler: (req: Request, res: Response, next: NextFunction) => void
+  ) => {
+    if (container.config.authRequired) {
+      router.post(path, requireAuth(container), requireQuota(container), handler);
+    } else {
+      router.post(path, requireQuota(container), handler);
+    }
+  };
+
+  /**
    * 1. 试卷诊断（原 /api/diagnose-paper）
    */
-  router.post('/diagnose-paper', async (req: Request, res: Response, next: NextFunction) => {
+  guard('/diagnose-paper', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ai = requireAi(container);
       const {
@@ -174,7 +195,7 @@ export function createAiRoutes(container: Container): Router {
   /**
    * 2. 教练对话（原 /api/coach/chat）
    */
-  router.post('/coach/chat', async (req: Request, res: Response, next: NextFunction) => {
+  guard('/coach/chat', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ai = requireAi(container);
       const {
@@ -222,7 +243,7 @@ export function createAiRoutes(container: Container): Router {
   /**
    * 3. 练习题生成 + 双轮独立验算（原 /api/practice/generate）
    */
-  router.post('/practice/generate', async (req: Request, res: Response, next: NextFunction) => {
+  guard('/practice/generate', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ai = requireAi(container);
       const {
@@ -301,7 +322,7 @@ export function createAiRoutes(container: Container): Router {
   /**
    * 4. 作答评测（原 /api/practice/evaluate）
    */
-  router.post('/practice/evaluate', async (req: Request, res: Response, next: NextFunction) => {
+  guard('/practice/evaluate', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ai = requireAi(container);
       const {
@@ -336,7 +357,7 @@ export function createAiRoutes(container: Container): Router {
   /**
    * 5. 诊断微测（原 /api/diagnose-microquiz）
    */
-  router.post('/diagnose-microquiz', async (req: Request, res: Response, next: NextFunction) => {
+  guard('/diagnose-microquiz', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ai = requireAi(container);
       const { targets = [] } = req.body ?? {};

@@ -10,7 +10,7 @@ import {
   Sparkles,
   Upload,
 } from 'lucide-react';
-import { KNOWLEDGE_MAP, SHANGHAI_CURRICULUM } from '../data/shanghaiCurriculum.ts';
+import { useCurriculum } from '../store/curriculum.tsx';
 import { SAMPLE_EXAM_IMAGE_URL } from '../data/initialStore.ts';
 import { api } from '../api/client.ts';
 import { ALL_SUBJECTS } from '../types.ts';
@@ -159,6 +159,12 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   onVerifyKnowledge,
   onLaunchCoach,
 }) => {
+  /** 知识体系（服务端资产） */
+  const {
+    knowledgeMap: KNOWLEDGE_MAP,
+    knowledgePoints: SHANGHAI_CURRICULUM,
+  } = useCurriculum();
+
   const [selectedSubject, setSelectedSubject] = useState<Subject>('数学');
   const [selectedExamFilter, setSelectedExamFilter] = useState<string>('all');
   const [mindMapPaperId, setMindMapPaperId] = useState<string>('all');

@@ -8,6 +8,7 @@
  * 本模块统一：超时、错误标准化、错误码透出。
  */
 import { isApiErrorResponse, type ApiErrorCode } from '@daydayup/contracts';
+import { getToken, notifyAuthExpired } from '../store/auth.ts';
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? '';
 
@@ -61,11 +62,12 @@ async function request<T>(
     options.signal?.addEventListener('abort', onExternalAbort);
 
     try {
+      const token = getToken();
       const response = await fetch(`${BASE_URL}${path}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          ...(options.signal ? {} : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
@@ -83,6 +85,10 @@ async function request<T>(
 
       if (!response.ok) {
         if (isApiErrorResponse(parsed)) {
+          // 401：令牌失效或缺失 —— 通知 UI 层跳转登录
+          if (parsed.error.code === 'UNAUTHORIZED') {
+            notifyAuthExpired();
+          }
           throw new ApiRequestError(
             parsed.error.code,
             parsed.error.message,

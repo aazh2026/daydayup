@@ -16,7 +16,17 @@ import { FileDatabase } from '../src/infrastructure/persistence/file-database.ts
 import { getCurriculum } from '../src/infrastructure/knowledge/curriculum.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.resolve(__dirname, '../data');
+
+/**
+ * 数据目录。
+ *
+ * 优先使用 DATA_DIR 环境变量（测试与多实例部署需要），
+ * 默认 packages/server/data。
+ */
+const dataDir = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.resolve(__dirname, '../data');
+
 const db = new FileDatabase(dataDir);
 
 interface SeedState {

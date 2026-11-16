@@ -9,6 +9,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
 import { getEffectiveDailyBudget } from '../../engines/planning-engine.ts';
+import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import type { Student, StudentProfileUpdate } from '@daydayup/contracts';
 
 const STUDENTS_DIR = ['db', 'students'];
@@ -19,6 +20,7 @@ export function createStudentRoutes(container: Container): Router {
   /** GET /api/v1/students/:id */
   router.get('/students/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
+      assertStudentAccess(req, req.params.id);
       const student = await container.db.read<Student>([
         ...STUDENTS_DIR,
         `${req.params.id}.json`,
@@ -35,6 +37,7 @@ export function createStudentRoutes(container: Container): Router {
   /** PUT /api/v1/students/:id/profile */
   router.put('/students/:id/profile', async (req: Request, res: Response, next: NextFunction) => {
     try {
+      assertStudentWriteAccess(req, req.params.id);
       const fileSegments = [...STUDENTS_DIR, `${req.params.id}.json`];
       const existing = await container.db.read<Student>(fileSegments);
       if (!existing) {
@@ -63,6 +66,7 @@ export function createStudentRoutes(container: Container): Router {
     '/students/:id/effective-budget',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        assertStudentAccess(req, req.params.id);
         const student = await container.db.read<Student>([
           ...STUDENTS_DIR,
           `${req.params.id}.json`,

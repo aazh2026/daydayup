@@ -7,7 +7,12 @@
  * 分离后：请求体携带 paperId（图片已在上传时落盘），响应增加 meta 可追溯块。
  */
 
-import type { Subject, ConfidenceLevel, ErrorType } from '../domain/index.ts';
+import type {
+  Subject,
+  ConfidenceLevel,
+  ErrorType,
+  DetectedMetadata,
+} from '../domain/index.ts';
 
 export type ExamType = '期中考试' | '月考' | '一模' | '二模' | '随堂诊断';
 
@@ -16,16 +21,6 @@ export const EXAM_TYPES: ExamType[] = ['期中考试', '月考', '一模', '二�
 export type InputFormat = 'image' | 'parsed_text' | 'mixed' | 'wrong_item';
 
 export type PaperSourceFormat = '试卷拍照' | '文本试卷' | '单题录入';
-
-export interface DetectedMetadata {
-  subject: string;
-  examTitle: string;
-  examType: string;
-  examDate: string;
-  score: number;
-  fullScore: number;
-  metadataConfidence: string;
-}
 
 export interface DiagnosedItem {
   questionNumber: string;
@@ -138,3 +133,4 @@ export function parseMicroQuizResponse(raw: unknown): MicroQuizResponse | null {
 }
 
 export type { ConfidenceLevel, ErrorType };
+export type { DetectedMetadata };

@@ -13,8 +13,17 @@ export interface AppConfig {
   dataDir: string;
   logLevel: string;
   corsOrigins: string[];
-  /** AI 每日配额（按 studentId 计），0 = 不限制 */
+  /** AI 每日配额（按调用次数），0 = 不限制 */
   dailyTokenQuota: number;
+  /**
+   * Token 签名密钥。
+   *
+   * 为空时进入「开发模式」：启用内存演示凭证（demo PIN 1234）。
+   * 生产环境必须配置，否则任何人都能用默认凭证登录。
+   */
+  authSecret: string;
+  /** 是否强制要求认证（生产默认 true） */
+  authRequired: boolean;
 }
 
 export function loadConfig(): AppConfig {
@@ -24,6 +33,8 @@ export function loadConfig(): AppConfig {
   const dataDir = process.env.DATA_DIR
     ? path.resolve(process.env.DATA_DIR)
     : defaultDataDir;
+
+  const authSecret = process.env.AUTH_SECRET ?? '';
 
   return {
     port: Number(process.env.PORT ?? 3000),
@@ -36,5 +47,11 @@ export function loadConfig(): AppConfig {
       .map((s) => s.trim())
       .filter(Boolean),
     dailyTokenQuota: Number(process.env.DAILY_TOKEN_QUOTA ?? 0),
+    authSecret,
+    // 未配置 AUTH_SECRET 时默认不强制（便于本地开发）
+    authRequired:
+      process.env.AUTH_REQUIRED !== undefined
+        ? process.env.AUTH_REQUIRED === 'true'
+        : authSecret.length > 0,
   };
 }

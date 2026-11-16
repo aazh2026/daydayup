@@ -70,14 +70,35 @@ export class FileDatabase {
     });
   }
 
+  /**
+   * 读取 JSON 文件。
+   *
+   * 最后一段可省略 `.json` 后缀——`list()` 返回的是带后缀的文件名，
+   * 而调用方常按 id（无后缀）读取，这里做兼容。
+   */
   async read<T>(segments: string[]): Promise<T | null> {
-    try {
-      const raw = await fs.readFile(this.resolvePath(...segments), 'utf8');
-      return JSON.parse(raw) as T;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
-      throw err;
+    const candidates = this.readCandidates(segments);
+    for (const candidate of candidates) {
+      try {
+        const raw = await fs.readFile(candidate, 'utf8');
+        return JSON.parse(raw) as T;
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+      }
     }
+    return null;
+  }
+
+  /** 候选路径：原样 → 补 .json */
+  private readCandidates(segments: string[]): string[] {
+    const base = this.resolvePath(...segments);
+    const candidates = [base];
+    if (!base.endsWith('.json')) {
+      candidates.push(`${base}.json`);
+    } else {
+      candidates.push(base.slice(0, -'.json'.length));
+    }
+    return candidates;
   }
 
   async readStored<T>(segments: string[]): Promise<StoredDocument<T> | null> {

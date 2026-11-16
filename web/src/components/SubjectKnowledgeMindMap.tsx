@@ -10,7 +10,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { KNOWLEDGE_MAP, SHANGHAI_CURRICULUM } from '../data/shanghaiCurriculum.ts';
+import { useCurriculum } from '../store/curriculum.tsx';
 import type {
   ErrorRecord,
   Exam,
@@ -198,6 +198,12 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
   onLaunchCoach,
   compactHeader = false,
 }) => {
+  /** 知识体系（服务端资产） */
+  const {
+    knowledgeMap: KNOWLEDGE_MAP,
+    knowledgePoints: SHANGHAI_CURRICULUM,
+  } = useCurriculum();
+
   const [internalPaperId, setInternalPaperId] = useState<string>(controlledPaperId ?? 'all');
   const [onlyProblemBranches, setOnlyProblemBranches] = useState(false);
   const [showSubSkills, setShowSubSkills] = useState(true);

@@ -14,6 +14,7 @@ import type {
   LearningPlan,
   Student,
 } from '@daydayup/contracts';
+import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 
 const PLANS_DIR = ['db', 'plans'];
 
@@ -62,6 +63,7 @@ export function createPlanRoutes(container: Container): Router {
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const studentId = req.params.id;
+        assertStudentAccess(req, studentId);
 
         const student = await container.db.read<Student>([
           'db',
@@ -114,6 +116,7 @@ export function createPlanRoutes(container: Container): Router {
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const studentId = req.params.id;
+        assertStudentAccess(req, studentId);
 
         const student = await container.db.read<Student>([
           'db',
@@ -161,6 +164,7 @@ export function createPlanRoutes(container: Container): Router {
     '/students/:id/opportunities',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        assertStudentAccess(req, req.params.id);
         const mastery = await container.db.read<{
           records: Record<string, MasteryRecord>;
         }>(['db', 'mastery', `${req.params.id}.json`]);
@@ -182,6 +186,7 @@ export function createPlanRoutes(container: Container): Router {
       try {
         const studentId = req.params.studentId;
         const taskId = req.params.taskId;
+        assertStudentWriteAccess(req, studentId);
         const body = req.body ?? {};
 
         const existing = await readPlan(container, studentId);

@@ -16,6 +16,7 @@ import {
 import { getDelayedRetestStatus } from '../../engines/planning-engine.ts';
 import { computePriorityOpportunities } from '../../engines/planning-engine.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
+import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import type {
   MasteryRecord,
   MasteryTransitionEvent,
@@ -68,6 +69,7 @@ export function createMasteryRoutes(container: Container): Router {
     '/students/:id/mastery',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        assertStudentAccess(req, req.params.id);
         const aggregate = await readAggregate(container, req.params.id);
         res.json({
           studentId: aggregate.studentId,
@@ -85,6 +87,7 @@ export function createMasteryRoutes(container: Container): Router {
     '/students/:id/mastery/history',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        assertStudentAccess(req, req.params.id);
         const aggregate = await readAggregate(container, req.params.id);
         res.json({ history: aggregate.history });
       } catch (err) {
@@ -98,6 +101,7 @@ export function createMasteryRoutes(container: Container): Router {
     '/students/:id/mastery/:knowledgeId/retest-status',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        assertStudentAccess(req, req.params.id);
         const aggregate = await readAggregate(container, req.params.id);
         const rec = aggregate.records[req.params.knowledgeId];
         res.json(getDelayedRetestStatus(rec));
@@ -119,6 +123,7 @@ export function createMasteryRoutes(container: Container): Router {
       try {
         const studentId = req.params.id;
         const knowledgeId = req.params.knowledgeId;
+        assertStudentWriteAccess(req, studentId);
         const body = req.body ?? {};
 
         const isCorrect = Boolean(body.isCorrect);

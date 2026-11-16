@@ -5,7 +5,11 @@
  * 「模型超时该重试」与「参数错误该改 UI」。
  */
 import type { Request, Response, NextFunction } from 'express';
-import { buildApiError, type ApiErrorCode } from '@daydayup/contracts';
+import {
+  buildApiError,
+  API_ERROR_STATUS,
+  type ApiErrorCode,
+} from '@daydayup/contracts';
 import { logger } from '../../infrastructure/logging/logger.ts';
 
 export class ApiException extends Error {
@@ -40,8 +44,9 @@ export function errorHandler(
       message: err.message,
       path: req.path,
     });
+    // HTTP 状态码由错误码统一映射（401/403/404/429/503 ...）
     res
-      .status(err.code === 'NOT_FOUND' ? 404 : err.code === 'FORBIDDEN' ? 403 : 400)
+      .status(API_ERROR_STATUS[err.code] ?? 400)
       .json(buildApiError(err.code, err.message, err.details, requestId));
     return;
   }

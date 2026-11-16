@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, FileText, GitBranch, Layers, Search, TrendingDown, TrendingUp } from 'lucide-react';
-import { KNOWLEDGE_MAP, SHANGHAI_CURRICULUM } from '../data/shanghaiCurriculum.ts';
+import { useCurriculum } from '../store/curriculum.tsx';
 import { MASTERY_ORDER } from '../engine/planner.ts';
 import { ALL_SUBJECTS } from '../types.ts';
 import { SubjectKnowledgeMindMap } from './SubjectKnowledgeMindMap.tsx';
@@ -62,6 +62,12 @@ export const ReportPage: React.FC<ReportPageProps> = ({
   onMarkErrorCorrected,
   onLaunchCoach,
 }) => {
+  /** 知识体系（服务端资产） */
+  const {
+    knowledgeMap: KNOWLEDGE_MAP,
+    knowledgePoints: SHANGHAI_CURRICULUM,
+  } = useCurriculum();
+
   const [activeTab, setActiveTab] = useState<ReportTab>('evaluation');
   const [subjectFilter, setSubjectFilter] = useState<'全部' | Subject>('全部');
   const [correctionDrafts, setCorrectionDrafts] = useState<Record<string, string>>({});

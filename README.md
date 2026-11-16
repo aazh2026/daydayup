@@ -80,14 +80,20 @@ npm run dev:web       # 前端 → http://localhost:5173
 | PlanningEngine | `packages/server/src/engines/planning-engine.ts` | 7 天计划、时间预算、提分优先级 |
 | MasteryEngine | `packages/server/src/engines/mastery-engine.ts` | 掌握度状态机迁移 |
 
-两者均为**纯函数**（无 IO、时钟由参数显式传入），用 `node:test` 覆盖 18 个用例：
+两者均为**纯函数**（无 IO、时钟由参数显式传入）。测试共 **43 个用例**：
 
 ```
-TC08 每日学习时长硬约束（≤60 分钟、≤3 任务）
-TC07 提分优先级可复现
-TC11 掌握度状态机（含 3 天延迟复测锁定）
-TC06 多知识点失分不重复计算
+单元测试（18）  TC08 每日学习时长硬约束 / TC07 优先级可复现
+                TC11 掌握度状态机（含 3 天延迟复测锁定）/ TC06 失分不重复
+鉴权测试（10）  Token 签发校验 / payload 篡改防护 / 过期失效
+                配额上限 / 账号隔离 / 用量持久化
+集成测试（15）  真实 HTTP + 真实文件存储：
+                认证 / 资源级隔离（403）/ 知识体系前置引用完整性
+                服务端权威计划与掌握度迁移 / 错题落库 / 事件日志
 ```
+
+> 集成测试发现并修复了一个真实缺陷：`FileDatabase.read()` 未兼容
+> `list()` 返回的带 `.json` 后缀文件名，导致**所有列表接口静默返回空**。
 
 ---
 
@@ -109,18 +115,29 @@ TC06 多知识点失分不重复计算
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/health` | 健康检查 |
+| POST | `/auth/login` | 凭证换令牌 |
+| GET | `/auth/me` | 校验当前令牌 |
+| GET | `/health` | 健康检查（含 `authRequired`） |
 | GET | `/knowledge-points?subject=` | 知识体系（服务端资产，带版本号） |
+| GET | `/knowledge-points/tree` | 知识树 |
 | GET | `/students/:id` | 学生档案 |
 | PUT | `/students/:id/profile` | 更新档案 |
 | GET | `/students/:id/effective-budget` | **服务端权威**每日预算 |
 | GET | `/students/:id/mastery` | 掌握度列表 |
+| GET | `/students/:id/mastery/history` | 状态迁移历史 |
 | GET | `/students/:id/mastery/:kid/retest-status` | 延迟复测状态（服务端时钟） |
 | POST | `/students/:id/mastery/:kid/attempt` | 提交作答 → 权威状态迁移 |
 | GET | `/students/:id/opportunities` | 提分机会 |
 | GET | `/students/:id/plans/current` | 当前 7 天计划 |
 | POST | `/students/:id/plans` | 重新生成计划 |
 | PATCH | `/plans/:studentId/tasks/:taskId` | 更新任务状态与进度 |
+| GET | `/students/:id/error-records` | 错题记录列表 |
+| PATCH | `/error-records/:studentId/:id` | 错题订正 / 闭环 |
+| POST | `/exams` | 创建考试 |
+| POST | `/exams/:id/papers` | 保存试卷 + 诊断结果落库 |
+| PATCH | `/papers/:id/confirm-metadata` | 人工确认 AI 提取的元信息 |
+| GET | `/practice/questions?knowledgeId=` | 题库取题（题库优先策略） |
+| GET/PUT | `/students/:id/coaching/sessions/:kid` | 教练会话历史 |
 | POST | `/diagnose-paper` | 试卷诊断（多模态 + 结构化输出） |
 | POST | `/coach/chat` | AI 教练对话 |
 | POST | `/practice/generate` | 练习题生成 + **双轮独立验算** |
@@ -129,6 +146,45 @@ TC06 多知识点失分不重复计算
 
 旧路径（`/api/diagnose-paper` 等）保留一个发布周期作为兼容层，
 前端全量切换后可删除。
+
+---
+
+## 认证与授权
+
+未配置 `AUTH_SECRET` 时进入**开发模式**（不要求认证，仅本地单学生使用）；
+配置后强制认证。
+
+```
+POST /api/v1/auth/login  { "secret": "1234" }
+→ { "token": "eyJ...", "studentIds": ["stu-sh-zhangwei"], "role": "student" }
+```
+
+| 角色 | 权限 |
+|---|---|
+| `student` | 读写自己的学习数据 |
+| `parent` | **只读** —— 可看报告，不能替孩子提交作答 |
+| `teacher` | 可访问全部学生 |
+
+三层防护：
+
+1. **身份认证** —— HMAC-SHA256 签名令牌，`timingSafeEqual` 防时序攻击，payload 带 `exp`
+2. **资源级隔离** —— `AuthContext.studentIds` 决定可访问范围，越权返回 **403**
+3. **成本护栏** —— AI 调用按账号计数，超额返回 **429**
+
+演示凭证（开发模式）：学生 PIN `1234`。
+生产环境把凭证写入 `data/db/credentials.json`：
+
+```json
+[
+  {
+    "principalId": "parent-001",
+    "secret": "家长APIKey",
+    "role": "parent",
+    "studentIds": ["stu-sh-zhangwei"],
+    "displayName": "张伟家长"
+  }
+]
+```
 
 ---
 
@@ -156,14 +212,18 @@ data/
 ├── knowledge/shanghai-junior-2026.1.json   知识体系资产（版本化）
 ├── questions/bank.json                      题库
 ├── seed/demo-student.json                   演示数据
-└── db/
-    ├── students/{id}.json
-    ├── exams/{id}.json
-    ├── papers/{id}.json
-    ├── error-records/{studentId}/{id}.json
-    ├── mastery/{studentId}.json             掌握度 + 迁移历史
-    ├── plans/{studentId}/{planId}.json
-    └── attempts/{studentId}/{yyyy-MM}.jsonl  作答流水（事件日志）
+├── db/
+│   ├── students/{id}.json
+│   ├── exams/{id}.json
+│   ├── papers/{id}.json
+│   ├── error-records/{studentId}/{id}.json
+│   ├── mastery/{studentId}.json             掌握度 + 迁移历史
+│   ├── plans/{studentId}/{planId}.json      计划 + 任务状态
+│   ├── coaching/{studentId}/{knowledgeId}.json
+│   ├── attempts/{studentId}/{yyyy-MM}.jsonl  作答流水
+│   ├── quota/{principalId}.json             AI 用量计数
+│   └── credentials.json                     凭证（生产模式）
+└── events/{yyyy-MM-dd}.jsonl                业务事件日志
 ```
 
 写入特性（`FileDatabase`）：
@@ -203,6 +263,8 @@ npx tsx scripts/extract-seed.mjs        # 演示数据 → seed JSON
 | `DATA_DIR` | `packages/server/data` | 数据目录 |
 | `LOG_LEVEL` | info | `debug`/`info`/`warn`/`error` |
 | `CORS_ORIGINS` | `http://localhost:5173` | 允许的前端来源（逗号分隔） |
-| `DAILY_TOKEN_QUOTA` | 0 | AI 每日配额（0 = 不限制） |
+| `DAILY_TOKEN_QUOTA` | 0 | AI 每日配额（按调用次数，0 = 不限制） |
+| `AUTH_SECRET` | — | 令牌签名密钥；**生产必配**，配了即强制认证 |
+| `AUTH_REQUIRED` | 自动 | 显式开关强制认证 |
 | `VITE_API_PROXY` | `http://localhost:3000` | 前端 dev proxy 目标 |
 | `VITE_API_BASE` | 空 | 前端生产环境 API 基础路径 |

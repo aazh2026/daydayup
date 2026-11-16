@@ -10,11 +10,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import {
-  KNOWLEDGE_MAP,
-  SHANGHAI_CURRICULUM,
-  VERIFIED_QUESTION_BANK,
-} from '../data/shanghaiCurriculum.ts';
+import { useCurriculum } from '../store/curriculum.tsx';
 import { MASTERY_ORDER, fetchRetestStatus } from '../engine/planner.ts';
 import { api } from '../api/client.ts';
 import type {
@@ -65,7 +61,10 @@ interface CoachPageProps {
   onAddGeneratedVariant: (variant: VariantQuestion) => void;
 }
 
-function getInitialDiagnosticPrompt(knowledgeId: string): {
+function getInitialDiagnosticPrompt(
+  knowledgeId: string,
+  knowledgeMap: Record<string, { name: string }>
+): {
   opening: string;
   quickReplies: string[];
 } {
@@ -125,7 +124,7 @@ function getInitialDiagnosticPrompt(knowledgeId: string): {
       quickReplies: ['迁移课内对应义项', '按现代汉语词意猜', '不确定'],
     };
   }
-  const kp = KNOWLEDGE_MAP[knowledgeId];
+  const kp = knowledgeMap[knowledgeId];
   return {
     opening: `今天我们集中训练「${kp?.name ?? '核心考点'}」。先来诊断一下基础理解：面对这类题目时，你觉得最容易出错的一步通常是哪里？`,
     quickReplies: ['审题漏条件', '公式/性质记不清', '计算或格式出错'],
@@ -156,6 +155,14 @@ export const CoachPage: React.FC<CoachPageProps> = ({
   onRecordPracticeAttempt,
   onAddGeneratedVariant,
 }) => {
+  /**
+   * 知识体系（服务端资产，通过 /knowledge-points 获取并缓存）。
+   */
+  const {
+    knowledgeMap: KNOWLEDGE_MAP,
+    knowledgePoints: SHANGHAI_CURRICULUM,
+  } = useCurriculum();
+
   const kp = KNOWLEDGE_MAP[activeKnowledgeId] ?? SHANGHAI_CURRICULUM[0];
   const mastery = masteryRecords[kp.id];
 
@@ -226,60 +233,47 @@ export const CoachPage: React.FC<CoachPageProps> = ({
           {
             id: `init-${kp.id}`,
             role: 'coach',
-            text: getInitialDiagnosticPrompt(kp.id).opening,
+            text: getInitialDiagnosticPrompt(kp.id, KNOWLEDGE_MAP).opening,
             behavior: '诊断',
           },
         ];
 
-  const findBankQuestion = (
+  /**
+   * 从本地已生成的变式题中匹配（AI 变式题存在客户端会话状态中）。
+   *
+   * 教研题库查找已下沉服务端（GET /practice/questions），
+   * 因为题库是服务端资产，前端不应硬编码。
+   */
+  const findLocalVariant = (
     knowledgeId: string,
     level: QuestionLevel,
     excludeStems: string[]
   ): ActiveQuestionView | null => {
-    const verifiedMatch = VERIFIED_QUESTION_BANK.find(
-      (q) =>
-        q.knowledgeIds.includes(knowledgeId) &&
-        q.level === level &&
-        !excludeStems.includes(q.stem)
-    );
-    if (verifiedMatch) {
-      return {
-        stem: verifiedMatch.stem,
-        options: verifiedMatch.options,
-        standardAnswer: verifiedMatch.standardAnswer,
-        solutionSteps: verifiedMatch.solutionSteps,
-        commonTrap: verifiedMatch.commonErrors[0] ?? kp.commonTraps[0] ?? '',
-        sourceLabel: '上海中考教研校对题库',
-        dualVerified: true,
-      };
-    }
-
     const variantMatch = variantQuestions.find(
       (v) =>
         v.knowledgeId === knowledgeId &&
         v.level === level &&
         !excludeStems.includes(v.stem)
     );
-    if (variantMatch) {
-      return {
-        stem: variantMatch.stem,
-        options: variantMatch.options,
-        standardAnswer: variantMatch.standardAnswer,
-        solutionSteps: variantMatch.solutionSteps,
-        commonTrap: variantMatch.commonTrap,
-        sourceLabel:
-          variantMatch.source === 'AI变式'
-            ? 'AI 变式生成（已双轮验算）'
-            : '上海中考教研校对题库',
-        dualVerified: variantMatch.dualVerified ?? true,
-        verificationCheck: variantMatch.verificationCheck,
-      };
-    }
-    return null;
+    if (!variantMatch) return null;
+
+    return {
+      stem: variantMatch.stem,
+      options: variantMatch.options,
+      standardAnswer: variantMatch.standardAnswer,
+      solutionSteps: variantMatch.solutionSteps,
+      commonTrap: variantMatch.commonTrap,
+      sourceLabel:
+        variantMatch.source === 'AI变式'
+          ? 'AI 变式生成（已双轮验算）'
+          : '上海中考教研校对题库',
+      dualVerified: variantMatch.dualVerified ?? true,
+      verificationCheck: variantMatch.verificationCheck,
+    };
   };
 
   useEffect(() => {
-    const init = getInitialDiagnosticPrompt(kp.id);
+    const init = getInitialDiagnosticPrompt(kp.id, KNOWLEDGE_MAP);
     if (!coachHistoryByKnowledge[kp.id] || coachHistoryByKnowledge[kp.id].length === 0) {
       onUpdateCoachHistory(kp.id, [
         {
@@ -301,16 +295,44 @@ export const CoachPage: React.FC<CoachPageProps> = ({
     setStudentAnswer('');
     setShowSolution(false);
 
-    const starter =
-      findBankQuestion(kp.id, '基础题', []) ??
-      findBankQuestion(kp.id, '变式题', []) ??
-      findBankQuestion(kp.id, '迁移题', []);
-    if (starter) {
-      setCurrentQuestion(starter);
-      setPracticeLevel('基础题');
-    } else {
-      setCurrentQuestion(null);
-    }
+    // 初始题目：优先本地变式题，回落服务端题库
+    setCurrentQuestion(null);
+    void (async () => {
+      const local = findLocalVariant(kp.id, '基础题', []);
+      if (local) {
+        setCurrentQuestion(local);
+        setPracticeLevel('基础题');
+        return;
+      }
+      try {
+        const bankRes = await api.get<{
+          found: boolean;
+          questions: Array<{
+            stem: string;
+            standardAnswer: string;
+            solutionSteps: string[];
+            commonErrors: string[];
+          }>;
+        }>(
+          `/api/v1/practice/questions?knowledgeId=${encodeURIComponent(kp.id)}`
+        );
+        const hit = bankRes.questions?.[0];
+        if (hit) {
+          setCurrentQuestion({
+            stem: hit.stem,
+            options: undefined,
+            standardAnswer: hit.standardAnswer,
+            solutionSteps: hit.solutionSteps ?? [],
+            commonTrap: hit.commonErrors?.[0] ?? kp.commonTraps[0] ?? '',
+            sourceLabel: '上海中考教研校对题库',
+            dualVerified: true,
+          });
+          setPracticeLevel('基础题');
+        }
+      } catch {
+        // 题库不可用：留空，由用户主动生成
+      }
+    })();
     setQuestionStartTime(Date.now());
   }, [kp.id]);
 
@@ -401,13 +423,41 @@ export const CoachPage: React.FC<CoachPageProps> = ({
       return;
     }
 
-    // Bank-first strategy: check curated verified questions first unless user forces AI generation
+    // Bank-first strategy: 优先取服务端题库（命中则不调用 AI，省成本且更稳定）
     if (!forceAiNew) {
-      const bankHit = findBankQuestion(kp.id, targetLevel, attemptedStems);
-      if (bankHit) {
-        setCurrentQuestion(bankHit);
-        setQuestionStartTime(Date.now());
-        return;
+      try {
+        const excludeParam = attemptedStems.join('||');
+        const bankRes = await api.get<{
+          found: boolean;
+          questions: Array<{
+            stem: string;
+            standardAnswer: string;
+            solutionSteps: string[];
+            commonErrors: string[];
+          }>;
+        }>(
+          `/api/v1/practice/questions?knowledgeId=${encodeURIComponent(kp.id)}` +
+            `&level=${encodeURIComponent(targetLevel)}` +
+            `&exclude=${encodeURIComponent(excludeParam)}`
+        );
+
+        const bankHit = bankRes.questions?.[0];
+        if (bankHit) {
+          setCurrentQuestion({
+            stem: bankHit.stem,
+            options: undefined,
+            standardAnswer: bankHit.standardAnswer,
+            solutionSteps: bankHit.solutionSteps ?? [],
+            commonTrap: bankHit.commonErrors?.[0] ?? '',
+            sourceLabel: '教研题库',
+            dualVerified: true,
+            verificationCheck: '教研题库预置题目，经教研审校',
+          });
+          setQuestionStartTime(Date.now());
+          return;
+        }
+      } catch {
+        // 题库不可用时降级为 AI 生成
       }
     }
 

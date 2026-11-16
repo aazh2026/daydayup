@@ -6,10 +6,20 @@ import { DiagnosisPage } from './components/DiagnosisPage.tsx';
 import { PlanningPage } from './components/PlanningPage.tsx';
 import { CoachPage } from './components/CoachPage.tsx';
 import { ReportPage } from './components/ReportPage.tsx';
+import { LoginPage } from './components/LoginPage.tsx';
 import { INITIAL_APP_STATE } from './data/initialStore.ts';
-import { KNOWLEDGE_MAP } from './data/shanghaiCurriculum.ts';
 import { submitMasteryAttempt, fetchCurrentPlan } from './engine/planner.ts';
 import { buildLocalPlanFallback } from './engine/plan-fallback.ts';
+import { isAuthRequired } from './api/auth.ts';
+import { api } from './api/client.ts';
+import { useCurriculum } from './store/curriculum.tsx';
+import { useServerHydration } from './store/hydrate.ts';
+import {
+  loadSession,
+  clearSession,
+  AUTH_EXPIRED_EVENT,
+  type AuthSession,
+} from './store/auth.ts';
 import type {
   AppPage,
   AppState,
@@ -29,6 +39,20 @@ import type {
 } from './types.ts';
 
 const STORAGE_KEY = 'shanghai_ai_score_os_v5';
+
+/**
+ * 开发模式会话。
+ *
+ * 服务端未配置 AUTH_SECRET 时不要求认证，此时用此身份访问服务端。
+ */
+const DEV_SESSION: AuthSession = {
+  token: '',
+  expiresAt: '',
+  principalId: 'dev',
+  role: 'student',
+  studentIds: ['stu-sh-zhangwei'],
+  displayName: '张伟',
+};
 
 function loadInitialState(): AppState {
   try {
@@ -61,6 +85,46 @@ export default function App() {
   const [activePage, setActivePage] = useState<AppPage>('today');
   const [activeKnowledgeId, setActiveKnowledgeId] = useState<string>('math-alg-rational');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  /**
+   * 登录态。
+   *
+   * 服务端未配置 AUTH_SECRET 时不要求认证（本地开发），
+   * 此时直接进入应用；否则展示登录页。
+   */
+  const [session, setSession] = useState<AuthSession | null>(() => loadSession());
+  const [authRequired, setAuthRequired] = useState<boolean | null>(null);
+
+  /** 知识体系（服务端资产） */
+  const { knowledgeMap: KNOWLEDGE_MAP } = useCurriculum();
+
+  /** 从服务端水合业务状态（服务端是唯一真相源） */
+  useServerHydration(appState.student?.id, setAppState);
+
+  useEffect(() => {
+    void isAuthRequired()
+      .then((required) => {
+        setAuthRequired(required);
+        if (!required) {
+          // 开发模式：使用默认学生身份
+          setSession((prev) => prev ?? DEV_SESSION);
+        }
+      })
+      .catch(() => {
+        setAuthRequired(false);
+        setSession((prev) => prev ?? DEV_SESSION);
+      });
+  }, []);
+
+  // 令牌失效（401）时回到登录页
+  useEffect(() => {
+    const handleExpired = () => {
+      clearSession();
+      setSession(null);
+    };
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleExpired);
+  }, []);
 
   /**
    * 学习计划 —— 服务端权威。
@@ -128,7 +192,38 @@ export default function App() {
     setActivePage('coach');
   };
 
+  /**
+   * 任务状态同步到服务端。
+   *
+   * 服务端收到 PATCH 后会重新生成计划（保持权威一致），
+   * 前端收到新计划后覆盖本地展示。
+   */
+  const syncTaskToServer = (
+    taskId: string,
+    patch: {
+      status?: '已完成' | '待开始';
+      deferred?: boolean;
+      progress?: {
+        reviewedConcept?: boolean;
+        viewedExample?: boolean;
+        practiceSolvedDelta?: number;
+        reviewedFeedback?: boolean;
+      };
+    }
+  ) => {
+    void api
+      .patch<LearningPlan>(`/api/v1/plans/${appState.student.id}/tasks/${taskId}`, patch)
+      .then((plan) => {
+        setServerPlan(plan);
+      })
+      .catch((err) => {
+        console.warn('任务状态同步失败（本地状态仍保留）:', err);
+      });
+  };
+
   const handleToggleCompleteTask = (taskId: string) => {
+    const willComplete = !appState.completedTaskIds.includes(taskId);
+
     setAppState((prev) => {
       const exists = prev.completedTaskIds.includes(taskId);
       return {
@@ -137,6 +232,10 @@ export default function App() {
           ? prev.completedTaskIds.filter((id) => id !== taskId)
           : [...prev.completedTaskIds, taskId],
       };
+    });
+
+    syncTaskToServer(taskId, {
+      status: willComplete ? '已完成' : '待开始',
     });
   };
 
@@ -147,6 +246,8 @@ export default function App() {
         ? prev.deferredKnowledgeIds
         : [...prev.deferredKnowledgeIds, knowledgeId],
     }));
+
+    syncTaskToServer(`task-d0-${knowledgeId}`, { deferred: true });
   };
 
   const handleClearDeferrals = () => {
@@ -154,8 +255,18 @@ export default function App() {
       ...prev,
       deferredKnowledgeIds: [],
     }));
+
+    for (const knowledgeId of appState.deferredKnowledgeIds) {
+      syncTaskToServer(`task-d0-${knowledgeId}`, { deferred: false });
+    }
   };
 
+  /**
+   * 教练会话历史 —— 服务端持久化。
+   *
+   * 分离前只存 localStorage（换设备即丢，且每次 appState 变化整体重写）。
+   * 现在按「学生 + 知识点」存服务端，前端保留本地缓存做乐观渲染。
+   */
   const handleUpdateCoachHistory = (knowledgeId: string, messages: CoachMessage[]) => {
     setAppState((prev) => ({
       ...prev,
@@ -164,6 +275,14 @@ export default function App() {
         [knowledgeId]: messages.slice(-24),
       },
     }));
+
+    void api
+      .put(`/api/v1/students/${appState.student.id}/coaching/sessions/${knowledgeId}`, {
+        messages,
+      })
+      .catch((err) => {
+        console.warn('教练会话同步失败（本地缓存仍保留）:', err);
+      });
   };
 
   const handleUpdateTaskProgress = (
@@ -288,6 +407,48 @@ export default function App() {
   }) => {
     const now = new Date().toISOString();
     const paperId = `paper-${Date.now()}`;
+
+    /**
+     * 落库到服务端（分离后的唯一真相源）。
+     *
+     * 分离前诊断结果只存在于浏览器内存，刷新即丢。
+     * 现在服务端保存试卷 + 错题记录 + 事件日志。
+     *
+     * 服务端不可用时不阻塞本地渲染（本地状态作为乐观缓存）。
+     */
+    const studentId = appState.student.id;
+    const examId = payload.existingExamId ?? `exam-${Date.now()}`;
+
+    void api
+      .post(`/api/v1/exams/${examId}/papers`, {
+        studentId,
+        id: paperId,
+        examTitle: payload.examTitle,
+        examType: payload.examType,
+        subject: payload.subject,
+        title: payload.examTitle,
+        date: payload.examDate ?? now.slice(0, 10),
+        score: payload.score,
+        fullScore: payload.fullScore,
+        imageUrl: payload.imageUrl,
+        rawText: payload.rawText,
+        sourceFormat: payload.sourceFormat,
+        status: '待校验',
+        totalLostScore: payload.totalLostScore,
+        questionsCount: payload.questionsCount,
+        summary: payload.paperSummary,
+        knowledgeIds: [...new Set(payload.items.map((i) => i.knowledgeId))],
+        knowledgeNameById: Object.fromEntries(
+          payload.items.map((i) => [
+            i.knowledgeId,
+            KNOWLEDGE_MAP[i.knowledgeId]?.name ?? i.knowledgeId,
+          ])
+        ),
+        diagnosedItems: payload.items,
+      })
+      .catch((err) => {
+        console.warn('诊断结果落库失败（本地状态仍保留）:', err);
+      });
 
     setAppState((prev) => {
       const matchedExam = payload.existingExamId
@@ -615,19 +776,59 @@ export default function App() {
   };
 
   const handleMarkErrorCorrected = (errorId: string, note: string) => {
+    const nextStatus = '已订正' as const;
+
     setAppState((prev) => ({
       ...prev,
       errorRecords: prev.errorRecords.map((err) =>
         err.id === errorId
           ? {
               ...err,
-              status: err.status === '已闭环' ? '已闭环' : '已订正',
+              status: err.status === '已闭环' ? '已闭环' : nextStatus,
               correctionNote: note,
             }
           : err
       ),
     }));
+
+    // 同步到服务端（错题记录的订正状态是持久化业务数据）
+    void api
+      .patch(`/api/v1/error-records/${appState.student.id}/${errorId}`, {
+        status: nextStatus,
+        correctionNote: note,
+      })
+      .catch((err) => {
+        console.warn('错题状态同步失败:', err);
+      });
   };
+
+  /**
+   * 登录守卫。
+   *
+   * - authRequired 为 null：正在探测服务端配置
+   * - authRequired 为 true 且无会话：展示登录页
+   */
+  if (authRequired === null) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-sm text-slate-400">正在连接服务…</div>
+      </div>
+    );
+  }
+
+  if (authRequired && !session) {
+    return (
+      <LoginPage
+        onLoggedIn={(next) => {
+          setSession(next);
+          setAppState((prev) => ({
+            ...prev,
+            student: { ...prev.student, id: next.studentIds[0] ?? prev.student.id },
+          }));
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">

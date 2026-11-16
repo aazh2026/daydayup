@@ -82,6 +82,25 @@ export interface ExamPaper {
   summary: string;
   knowledgeIds?: string[];
   createdAt?: string;
+  /** AI 提取的原始元信息（未经人工确认，置信度可能为「待验证」） */
+  detectedMetadata?: DetectedMetadata;
+  /** 人工确认后的元信息 —— 与 AI 提取值分离，保证可追溯 */
+  confirmedMetadata?: DetectedMetadata;
+}
+
+/**
+ * AI 从试卷中提取的元信息。
+ *
+ * 与 ExamPaper 分离定义，但同属领域模型，故在此声明并由 api/diagnosis.ts 重导出。
+ */
+export interface DetectedMetadata {
+  subject: string;
+  examTitle: string;
+  examType: string;
+  examDate: string;
+  score: number;
+  fullScore: number;
+  metadataConfidence: string;
 }
 
 export interface KnowledgePoint {
