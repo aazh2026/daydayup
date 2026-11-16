@@ -7,6 +7,10 @@
  * 重要：本模块**不是**业务逻辑的权威实现。
  * 权威实现在 packages/server/src/engines/planning-engine.ts。
  * 此处仅在 UI 层做最小可用的降级（不参与任何评分、落库或状态迁移）。
+ *
+ * 降级只简化**优先级公式**（服务端有前置依赖/紧急度/复测等修正因子），
+ * 但**展示性字段**（学科、知识点名称）仍应取自知识体系资产 ——
+ * 否则英语/物理/化学的学生会看到一屏「数学」任务。
  */
 import type {
   AppState,
@@ -16,6 +20,7 @@ import type {
   PriorityOpportunity,
   MasteryState,
   Subject,
+  KnowledgePoint,
 } from '@daydayup/contracts';
 
 const DAY_LABELS = ['今天', '明天', '第3天', '第4天', '第5天', '第6天', '第7天'];
@@ -35,12 +40,23 @@ export function getEffectiveDailyBudgetFallback(student: AppState['student']): n
   return Math.max(30, Math.round((student.dailyBudgetMinutes * factor) / 5) * 5);
 }
 
-export function buildLocalPlanFallback(state: AppState): LearningPlan {
+/**
+ * 构造本地降级计划。
+ *
+ * @param state 应用状态
+ * @param knowledgeMap 知识体系索引（id → KnowledgePoint）——
+ *   用于还原学科与知识点名称。缺失时回退到 id（仅影响展示）。
+ */
+export function buildLocalPlanFallback(
+  state: AppState,
+  knowledgeMap: Record<string, KnowledgePoint> = {}
+): LearningPlan {
   const effectiveBudget = getEffectiveDailyBudgetFallback(state.student);
 
   const opportunities: PriorityOpportunity[] = Object.entries(state.masteryRecords)
     .filter(([, rec]) => rec.state !== '稳定掌握')
     .map(([knowledgeId, rec]) => {
+      const kp = knowledgeMap[knowledgeId];
       const lostScore = Math.max(1, rec.lostScoreEvidence);
       const expectedGain = Number((lostScore * rec.recoveryProbability).toFixed(1));
       const confWeight = CONFIDENCE_WEIGHT[rec.confidence] ?? 0.55;
@@ -49,16 +65,17 @@ export function buildLocalPlanFallback(state: AppState): LearningPlan {
       );
       return {
         knowledgeId,
-        subject: state.exams.length >= 0 ? ('数学' as Subject) : ('数学' as Subject),
-        knowledgeName: knowledgeId,
-        domain: '',
+        // 学科与名称取自知识体系资产（服务端同一来源）
+        subject: (kp?.subject ?? '数学') as Subject,
+        knowledgeName: kp?.name ?? knowledgeId,
+        domain: kp?.domain ?? '',
         lostScore,
         recoveryProbability: rec.recoveryProbability,
         expectedGain,
-        learningCostHours: 2,
+        learningCostHours: kp?.learningCostHours ?? 2,
         confidenceScore: confWeight,
         confidenceLabel: rec.confidence,
-        examWeight: 1,
+        examWeight: kp?.examWeight ?? 1,
         priorityScore,
         priorityTier:
           priorityScore >= 1.35

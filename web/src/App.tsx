@@ -164,8 +164,10 @@ export default function App() {
   }, [hydrationStudentId, appState.completedTaskIds, appState.deferredKnowledgeIds]);
 
   const plan = useMemo(
-    () => serverPlan ?? buildLocalPlanFallback(appState),
-    [serverPlan, appState]
+    // 服务端不可用时的展示降级：传入知识体系索引，
+    // 让学科与知识点名称与权威计划一致（否则英语/物理学生会看到一屏「数学」）
+    () => serverPlan ?? buildLocalPlanFallback(appState, KNOWLEDGE_MAP),
+    [serverPlan, appState, KNOWLEDGE_MAP]
   );
 
   const handleUpdateStudent = (updated: Student) => {
