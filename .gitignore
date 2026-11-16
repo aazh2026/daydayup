@@ -6,3 +6,12 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Cloned external resource repositories (independent git repos)
+resources/
+
+# Server runtime data (regenerate via: npm run seed --workspace=@daydayup/server)
+packages/server/data/db/
+packages/server/data/files/
+packages/server/data/logs/
+packages/server/data/jobs/

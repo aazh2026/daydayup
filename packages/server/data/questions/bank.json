@@ -1,0 +1,394 @@
+{
+  "version": "bank-2026.1",
+  "questions": [
+    {
+      "id": "q-math-rational-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "填空",
+      "level": "基础题",
+      "stem": "若分式 (x² - 4) / (x - 2) 的值为 0，则 x 的值为 ____ 。",
+      "standardAnswer": "-2",
+      "scoreValue": 4,
+      "difficulty": 2,
+      "solutionSteps": [
+        "分式值为 0 需同时满足两个条件：分子等于 0，且分母不等于 0。",
+        "由分子 x² - 4 = 0，解得 x = 2 或 x = -2。",
+        "由分母 x - 2 ≠ 0，得 x ≠ 2。",
+        "综上，舍去 x = 2，最终 x = -2。"
+      ],
+      "commonErrors": [
+        "直接填 ±2，忘记检验分母不为 0"
+      ],
+      "knowledgeIds": [
+        "math-alg-rational"
+      ]
+    },
+    {
+      "id": "q-math-rational-2",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "先化简，再求值：(1 - 1/(x-1)) ÷ (x² - 4x + 4)/(x - 1)，并在 -1、0、1、2 中选择一个合适的整数代入求值。",
+      "standardAnswer": "化简为 1/(x-2)，选 x = 0 时值为 -1/2（或选 x = -1 时值为 -1/3）",
+      "scoreValue": 6,
+      "difficulty": 3,
+      "solutionSteps": [
+        "括号内通分：(x - 2)/(x - 1)。",
+        "除法变乘法：[(x - 2)/(x - 1)] × [(x - 1)/(x - 2)²] = 1/(x - 2)。",
+        "原式隐含分母限制：x - 1 ≠ 0 且 (x - 2)² ≠ 0，故不能取 1 和 2。",
+        "取 x = 0 代入得 -1/2。"
+      ],
+      "commonErrors": [
+        "只看化简后的分母 x ≠ 2，忘记原式分母 x ≠ 1"
+      ],
+      "knowledgeIds": [
+        "math-alg-rational"
+      ]
+    },
+    {
+      "id": "q-math-eq-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "关于 x 的一元二次方程 (k - 1)x² + 2x - 1 = 0 有两个不相等的实数根，则 k 的取值范围是（ ）",
+      "options": [
+        "k > 0",
+        "k ≥ 0 且 k ≠ 1",
+        "k > 0 且 k ≠ 1",
+        "k ≠ 1"
+      ],
+      "standardAnswer": "k > 0 且 k ≠ 1",
+      "scoreValue": 4,
+      "difficulty": 2,
+      "solutionSteps": [
+        "一元二次方程二次项系数不为 0：k - 1 ≠ 0，即 k ≠ 1。",
+        "判别式 Δ = 2² - 4(k - 1)(-1) = 4 + 4k - 4 = 4k > 0，得 k > 0。",
+        "综合得 k > 0 且 k ≠ 1。"
+      ],
+      "commonErrors": [
+        "忘记二次项系数 k - 1 ≠ 0 漏掉 k ≠ 1"
+      ],
+      "knowledgeIds": [
+        "math-eq-ineq"
+      ]
+    },
+    {
+      "id": "q-math-linear-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "解答",
+      "level": "基础题",
+      "stem": "已知一次函数 y = kx + b 的图像经过点 (0, 2) 和 (-3, 0)，求该一次函数的解析式，并判断当 x > -3 时 y 的取值范围。",
+      "standardAnswer": "y = (2/3)x + 2，当 x > -3 时，y > 0",
+      "scoreValue": 8,
+      "difficulty": 2,
+      "solutionSteps": [
+        "将点 (0, 2) 代入 y = kx + b，得 b = 2。",
+        "将点 (-3, 0) 和 b = 2 代入，得 -3k + 2 = 0，解得 k = 2/3。",
+        "所以一次函数解析式为 y = (2/3)x + 2。",
+        "因为 k = 2/3 > 0，y 随 x 增大而增大，且 x = -3 时 y = 0，故当 x > -3 时，y > 0。"
+      ],
+      "commonErrors": [
+        "代入点坐标时把 x 和 y 写反",
+        "符号移项错误算出 k = -2/3"
+      ],
+      "knowledgeIds": [
+        "math-func-linear"
+      ]
+    },
+    {
+      "id": "q-math-geo-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "解答",
+      "level": "基础题",
+      "stem": "在 △ABC 中，AD 平分 ∠BAC 交 BC 于 D，且 ∠B = 2∠C。试说明可作何种辅助线来证明 AB + BD = AC。",
+      "standardAnswer": "在 AC 上截取 AE = AB，连接 DE（截长法），证 △ABD ≌ △AED 得 BD = ED 且 ∠AED = ∠B = 2∠C，再由外角性质证 ED = EC",
+      "scoreValue": 8,
+      "difficulty": 3,
+      "solutionSteps": [
+        "遇到角平分线且求证线段和差 (AB + BD = AC) 时，优先考虑“截长补短”法。",
+        "在 AC 上截取 AE = AB，连接 DE。",
+        "因为 AD 平分 ∠BAC，利用 SAS 可证 △ABD ≌ △AED，得 BD = DE，∠AED = ∠B。",
+        "又因为 ∠B = 2∠C，且 ∠AED = ∠C + ∠EDC，故 ∠EDC = ∠C，得 DE = EC。",
+        "因此 AC = AE + EC = AB + BD。"
+      ],
+      "commonErrors": [
+        "盲目作高线无法建立 AB 与 AC 的线段差关系"
+      ],
+      "knowledgeIds": [
+        "math-geo-triangle"
+      ]
+    },
+    {
+      "id": "q-math-stat-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "数学",
+      "questionType": "填空",
+      "level": "延迟复测",
+      "stem": "已知一组数据 4, 6, 5, 8, 7 的中位数是 m，若再加入一个数据 6，则新数据的中位数是 ____ 。",
+      "standardAnswer": "6",
+      "scoreValue": 4,
+      "difficulty": 2,
+      "solutionSteps": [
+        "加入数据 6 后从小到大排列：4, 5, 6, 6, 7, 8。",
+        "共 6 个数，取中间两个数的平均数：(6 + 6) / 2 = 6。"
+      ],
+      "commonErrors": [
+        "未重新排序直接取原序列中间数"
+      ],
+      "knowledgeIds": [
+        "math-stat-prob"
+      ]
+    },
+    {
+      "id": "q-eng-vocab-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "With the help of the AI tool, the students can solve these math problems much more ____ (easy).",
+      "standardAnswer": "easily",
+      "scoreValue": 2,
+      "difficulty": 2,
+      "solutionSteps": [
+        "判断空白处在句中的语法成分：修饰动词 solve，需用副词。",
+        "前面有比较级标志 much more，说明需要多音节副词的原级构成比较级。",
+        "形容词 easy 变副词规则：去 y 变 i 加 ly，即 easily。"
+      ],
+      "commonErrors": [
+        "直接填 easier（误用形容词比较级修饰动词）"
+      ],
+      "knowledgeIds": [
+        "eng-vocab-core"
+      ]
+    },
+    {
+      "id": "q-eng-grammar-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "变式题",
+      "stem": "Our physics teacher told us that light ____ much faster than sound.",
+      "options": [
+        "travels",
+        "traveled",
+        "will travel",
+        "is traveling"
+      ],
+      "standardAnswer": "travels",
+      "scoreValue": 2,
+      "difficulty": 2,
+      "solutionSteps": [
+        "主句 told 虽为一般过去时，但从句陈述的是“光速比声速快”这一客观真理。",
+        "宾语从句表示客观真理或自然规律时，一律用一般现在时，主语 light 为三单，故填 travels。"
+      ],
+      "commonErrors": [
+        "受主句 told 影响误选一般过去时 traveled"
+      ],
+      "knowledgeIds": [
+        "eng-grammar-tense"
+      ]
+    },
+    {
+      "id": "q-phys-ohm-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "物理",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "在串联电路中，定值电阻 R₁ 与滑动变阻器 R₂ 串联，电压表并联在 R₂ 两端。当滑片 P 向右移动使 R₂ 接入阻值增大时，下列说法正确的是（ ）",
+      "options": [
+        "电流表示数变小，电压表示数变小",
+        "电流表示数变小，电压表示数变大",
+        "电流表示数变大，电压表示数变小",
+        "电压表示数与电流表示数之比不变"
+      ],
+      "standardAnswer": "电流表示数变小，电压表示数变大",
+      "scoreValue": 2,
+      "difficulty": 2,
+      "solutionSteps": [
+        "R₂ 增大导致电路总电阻增大，电源电压不变，由 I = U/R总 可知电流表示数变小。",
+        "根据串联分压 U₁ = I·R₁ 变小，故 U₂ = U - U₁ 变大，即电压表示数变大。",
+        "电压表与电流表示数之比等于 R₂ 阻值，随 R₂ 增大而变大。"
+      ],
+      "commonErrors": [
+        "直接用 U₂ = I·R₂ 因 I 变小、R₂ 变大而无法判断，未先算定值电阻分压"
+      ],
+      "knowledgeIds": [
+        "phys-elec-ohm"
+      ]
+    },
+    {
+      "id": "q-phys-press-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "物理",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "实心均匀正方体放在水平地面上，若沿竖直方向切去一半，则剩余部分对地面的压力和压强变化情况是（ ）",
+      "options": [
+        "压力减半，压强减半",
+        "压力不变，压强减半",
+        "压力减半，压强不变",
+        "压力减半，压强变大"
+      ],
+      "standardAnswer": "压力减半，压强不变",
+      "scoreValue": 2,
+      "difficulty": 2,
+      "solutionSteps": [
+        "竖直切去一半后，重力 G 减半，故对水平地面压力 F = G 减半。",
+        "同时受力面积 S 也减半，由 p = F/S（或柱体公式 p = ρgh）可知压强不变。"
+      ],
+      "commonErrors": [
+        "只看压力减半而误认为压强也减半，忽略接触面积同步减半"
+      ],
+      "knowledgeIds": [
+        "phys-mech-pressure"
+      ]
+    },
+    {
+      "id": "q-phys-power-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "物理",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "在“测定小灯泡的电功率”实验中，为了测量额定电压为 2.5V 小灯泡的额定功率，移动滑动变阻器滑片时，眼睛应重点观察（ ）",
+      "options": [
+        "电流表的示数",
+        "电压表的示数",
+        "小灯泡的亮暗程度",
+        "滑动变阻器滑片的位置"
+      ],
+      "standardAnswer": "电压表的示数",
+      "scoreValue": 2,
+      "difficulty": 2,
+      "solutionSteps": [
+        "小灯泡在额定电压 2.5V 下工作时的电功率才是额定功率。",
+        "调节滑片过程中眼睛应注视电压表示数，直至其示数恰好达到 2.5V，再读出此时电流表示数。"
+      ],
+      "commonErrors": [
+        "误选观察灯泡亮暗或电流表示数"
+      ],
+      "knowledgeIds": [
+        "phys-elec-power"
+      ]
+    },
+    {
+      "id": "q-chem-concept-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "化学",
+      "questionType": "填空",
+      "stem": "写出实验室用氯酸钾与二氧化锰共热制取氧气的化学方程式，并指出其中二氧化锰的作用。",
+      "level": "基础题",
+      "standardAnswer": "2KClO₃ =(MnO₂, △)=> 2KCl + 3O₂↑；二氧化锰作催化剂",
+      "scoreValue": 3,
+      "difficulty": 2,
+      "solutionSteps": [
+        "确定反应物 KClO₃，生成物 KCl 和 O₂。",
+        "配平氧原子最小公倍数 6：2KClO₃ 生成 2KCl + 3O₂↑。",
+        "标注反应条件：等号上方写 MnO₂，下方写加热符号 △，氧气后加气体符号 ↑。",
+        "MnO₂ 改变反应速率且反应前后质量与化学性质不变，作催化剂。"
+      ],
+      "commonErrors": [
+        "漏写反应条件 △ 或气体符号 ↑",
+        "错把高锰酸钾与氯酸钾产物混淆"
+      ],
+      "knowledgeIds": [
+        "chem-concept-symbols"
+      ]
+    },
+    {
+      "id": "q-chem-exp-1",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "化学",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "要除去 CO₂ 中混有的少量 HCl 气体和水蒸气，下列试剂通过顺序正确的是（ ）",
+      "options": [
+        "先通过浓硫酸，再通过饱和碳酸氢钠溶液",
+        "先通过饱和碳酸氢钠溶液，再通过浓硫酸",
+        "先通过氢氧化钠溶液，再通过浓硫酸",
+        "只通过碱石灰即可"
+      ],
+      "standardAnswer": "先通过饱和碳酸氢钠溶液，再通过浓硫酸",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "除杂原则：先除杂质气体（HCl），再干燥（除去水蒸气），避免先干燥后经过水溶液又带出水蒸气。",
+        "不能用 NaOH 或碱石灰，因为它们会同时吸收主体气体 CO₂。"
+      ],
+      "commonErrors": [
+        "顺序颠倒先干燥后除杂，或误选 NaOH 吸收了 CO₂"
+      ],
+      "knowledgeIds": [
+        "chem-exp-gas"
+      ]
+    },
+    {
+      "id": "q-chi-classical-1",
+      "subject": "语文",
+      "region": "上海",
+      "grade": "初三",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "下列句子中加点“属”字与“神情与苏、黄不属”中的“属”意思相同的一项是（ ）",
+      "options": [
+        "有良田美池桑竹之属",
+        "属予作文以记之",
+        "忠之属也，可以一战",
+        "徒属皆曰：“敬受命。”"
+      ],
+      "standardAnswer": "有良田美池桑竹之属（注：均与“类/类似”相关，严格而言 B“属予作文”为通“嘱”嘱托，A/C 均为“类”，原句“不属”意为“不相类似”）",
+      "scoreValue": 3,
+      "difficulty": 3,
+      "solutionSteps": [
+        "“神情与苏、黄不属”中“属”意为“类似、同类”。",
+        "A“良田美池桑竹之属”与 C“忠之属也”中“属”均为“类”；B 通“嘱”意为嘱托；D 意为部属。",
+        "本题选 A（均表“类/相类似”语义场；其中 B 为高频通假字易混淆点）。"
+      ],
+      "commonErrors": [
+        "把“属予作文”中的通假字“嘱托”和“类”混淆"
+      ],
+      "knowledgeIds": [
+        "chi-classical-read"
+      ]
+    },
+    {
+      "id": "q-chi-modern-1",
+      "subject": "语文",
+      "region": "上海",
+      "grade": "初三",
+      "questionType": "解答",
+      "level": "基础题",
+      "stem": "在上海中考记叙文阅读中，分析文章结尾段写景句“秋风吹过老梧桐，阳光落满了整条弄堂”的作用，至少应从哪两个维度作答？",
+      "standardAnswer": "结构上总结全文/照应前文或标题；内容主旨上以景衬情，烘托人物释怀温暖的心境，深化主旨使文章余韵悠长。",
+      "scoreValue": 4,
+      "difficulty": 2,
+      "solutionSteps": [
+        "第一步：结构维度——分析是否收束全文、照应标题或前文伏笔。",
+        "第二步：内容与主旨维度——环境描写（融情于景/以景结情）烘托了什么氛围或人物情感，升华了怎样的主旨。"
+      ],
+      "commonErrors": [
+        "只写“使文章更生动优美”等空泛套话，缺少“结构+内容情感”踩点"
+      ],
+      "knowledgeIds": [
+        "chi-modern-read"
+      ]
+    }
+  ]
+}

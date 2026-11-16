@@ -1,0 +1,501 @@
+{
+  "version": "shanghai-junior-2026.1",
+  "publishedAt": "2026-11-17T00:00:00.000Z",
+  "status": "ACTIVE",
+  "subjects": [
+    "数学",
+    "英语",
+    "物理",
+    "化学",
+    "语文"
+  ],
+  "knowledgePoints": [
+    {
+      "id": "math-alg-rational",
+      "subject": "数学",
+      "chapter": "数与运算 / 代数式",
+      "domain": "代数与计算",
+      "name": "分式与代数式运算",
+      "subSkills": [
+        "分式有意义条件",
+        "通分与约分",
+        "负整数指数幂",
+        "代数式化简求值"
+      ],
+      "definition": "掌握分式有意义的条件（分母不为零），能熟练进行分式四则混合运算与符号变换。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "分式值为零的条件判断",
+        "先化简再求值解答题",
+        "含参分式方程增根问题"
+      ],
+      "commonTraps": [
+        "忘记检验分母不为0",
+        "减号去括号未变号",
+        "分子分母约分时漏项"
+      ],
+      "examWeight": 1.25,
+      "learningCostHours": 2
+    },
+    {
+      "id": "math-eq-ineq",
+      "subject": "数学",
+      "chapter": "方程与不等式",
+      "domain": "方程与不等式",
+      "name": "一元二次方程与分式方程",
+      "subSkills": [
+        "根的判别式",
+        "韦达定理应用",
+        "分式方程检验增根",
+        "列方程解应用题"
+      ],
+      "definition": "理解一元二次方程解法及判别式 Δ=b²-4ac 的几何与代数意义，能规范检验分式方程增根。",
+      "prerequisites": [
+        "math-alg-rational"
+      ],
+      "commonExamForms": [
+        "含参方程根的个数判断",
+        "工程/增长率应用题",
+        "分式方程去分母求解"
+      ],
+      "commonTraps": [
+        "忽略二次项系数不为0的前提",
+        "分式方程去分母漏乘常数项",
+        "忘记写检验步骤扣分"
+      ],
+      "examWeight": 1.15,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "math-func-linear",
+      "subject": "数学",
+      "chapter": "函数与图像",
+      "domain": "函数",
+      "name": "一次函数图像与性质",
+      "subSkills": [
+        "函数表达式",
+        "图像与性质",
+        "待定系数法",
+        "交点问题",
+        "实际应用"
+      ],
+      "definition": "掌握一次函数 y=kx+b (k≠0) 中 k、b 对图像象限和增减性的影响，熟练运用待定系数法求解析式及直线交点坐标。",
+      "prerequisites": [
+        "math-alg-rational",
+        "math-eq-ineq"
+      ],
+      "commonExamForms": [
+        "图像过象限与参数符号判断",
+        "两直线交点与三角形面积",
+        "行程/分段计费实际应用"
+      ],
+      "commonTraps": [
+        "正比例函数与一次函数条件混淆",
+        "求交点时联立方程计算失误",
+        "未结合自变量取值范围舍去无效段"
+      ],
+      "examWeight": 1.35,
+      "learningCostHours": 3.5
+    },
+    {
+      "id": "math-func-quadratic",
+      "subject": "数学",
+      "chapter": "函数与图像",
+      "domain": "函数",
+      "name": "二次函数综合与压轴",
+      "subSkills": [
+        "顶点式与对称轴",
+        "抛物线平移",
+        "动点与存在性问题",
+        "数形结合求最值"
+      ],
+      "definition": "掌握二次函数图像性质及几何动点结合的综合压轴题思路，涉及分类讨论与相似构造。",
+      "prerequisites": [
+        "math-func-linear",
+        "math-geo-triangle"
+      ],
+      "commonExamForms": [
+        "上海中考第24题抛物线综合",
+        "等腰/直角三角形存在性",
+        "面积最值问题"
+      ],
+      "commonTraps": [
+        "分类讨论漏解",
+        "计算冗长导致后半问时间不足",
+        "平移方向左加右减记反"
+      ],
+      "examWeight": 1,
+      "learningCostHours": 8
+    },
+    {
+      "id": "math-geo-triangle",
+      "subject": "数学",
+      "chapter": "图形与几何",
+      "domain": "几何",
+      "name": "全等与相似三角形辅助线",
+      "subSkills": [
+        "角平分线截长补短",
+        "平行线分线段成比例",
+        "A字型与8字型相似",
+        "一线三等角模型"
+      ],
+      "definition": "能根据已知角平分线、中点或等角条件，构造标准几何辅助线证明三角形全等或相似。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "三角形证明与线段比例",
+        "梯形/平行四边形背景几何推导",
+        "上海中考第23题证明"
+      ],
+      "commonTraps": [
+        "辅助线作法盲目尝试无明确模型",
+        "相似对应顶点顺序写错导致比例颠倒"
+      ],
+      "examWeight": 1.2,
+      "learningCostHours": 4
+    },
+    {
+      "id": "math-stat-prob",
+      "subject": "数学",
+      "chapter": "数据整理与概率",
+      "domain": "统计与概率",
+      "name": "数据统计量与树状图概率",
+      "subSkills": [
+        "中位数与众数",
+        "方差稳定性判断",
+        "列表法与树状图求概率"
+      ],
+      "definition": "理解平均数、中位数、众数及方差的统计意义，能用树状图或列表法不重不漏地计算古典概型概率。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "条形/扇形统计图信息提取",
+        "放回与不放回抽样概率"
+      ],
+      "commonTraps": [
+        "求中位数前未按大小排序",
+        "混淆放回与不放回条件"
+      ],
+      "examWeight": 0.9,
+      "learningCostHours": 1.5
+    },
+    {
+      "id": "eng-vocab-core",
+      "subject": "英语",
+      "chapter": "词汇与词法",
+      "domain": "核心词汇与词性转换",
+      "name": "上海中考高频核心词汇与词转",
+      "subSkills": [
+        "考纲高频动词短语",
+        "名词/形容词/副词词性转换",
+        "熟词生义辨析"
+      ],
+      "definition": "熟练掌握上海中考考纲核心词汇搭配及 Part 2 词性转换（Fill in the blanks with proper forms）规律。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "词性转换填空",
+        "首字母填空上下文推理",
+        "完形填空词义辨析"
+      ],
+      "commonTraps": [
+        "形容词与副词修饰对象判断失误",
+        "不可数名词误加复数",
+        "动词过去分词拼写错误"
+      ],
+      "examWeight": 1.35,
+      "learningCostHours": 3
+    },
+    {
+      "id": "eng-grammar-tense",
+      "subject": "英语",
+      "chapter": "句法与时态",
+      "domain": "时态语态与从句",
+      "name": "动词时态语态与宾语/状语从句",
+      "subSkills": [
+        "现在完成时延续性动词",
+        "被动语态结构",
+        "宾语从句语序与时态呼应",
+        "非谓语动词不定式"
+      ],
+      "definition": "准确判定句子时间状语与主被动关系，掌握宾语从句陈述语序及主从时态一致原则。",
+      "prerequisites": [
+        "eng-vocab-core"
+      ],
+      "commonExamForms": [
+        "语法单项选择",
+        "句型转换合并为宾语从句",
+        "长难句结构分析"
+      ],
+      "commonTraps": [
+        "宾语从句仍用疑问语序",
+        "客观真理误改过去时",
+        "非谓语动词 to do 与 doing 混淆"
+      ],
+      "examWeight": 1.2,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "eng-read-cloze",
+      "subject": "英语",
+      "chapter": "综合阅读",
+      "domain": "阅读与首字母填空",
+      "name": "首字母填空与阅读主旨推理",
+      "subSkills": [
+        "上下文逻辑衔接词",
+        "首字母词性预判",
+        "细节定位与同义替换"
+      ],
+      "definition": "结合词性预判、固定搭配与语篇逻辑推进完成上海中考特色首字母填空及阅读推理题。",
+      "prerequisites": [
+        "eng-vocab-core",
+        "eng-grammar-tense"
+      ],
+      "commonExamForms": [
+        "首字母填空 (14分)",
+        "任务型阅读回答问题",
+        "主旨大意与态度推断"
+      ],
+      "commonTraps": [
+        "只看单句不看上下文转折关系",
+        "拼出正确单词但漏掉三单或时态变形"
+      ],
+      "examWeight": 1.3,
+      "learningCostHours": 4
+    },
+    {
+      "id": "phys-mech-pressure",
+      "subject": "物理",
+      "chapter": "压强与浮力",
+      "domain": "力学核心",
+      "name": "固体压强、液体压强与浮力计算",
+      "subSkills": [
+        "p=F/S 柱体切割变化",
+        "p=ρgh 深度与容器底压力",
+        "阿基米德原理与浮沉判断"
+      ],
+      "definition": "掌握柱形固体压强叠加/切割技巧、液体压强与液面高度关系，以及漂浮/悬浮/沉底受力分析。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "柱体竖切/横切压强变化比较",
+        "容器底部压强与桌面压强对比",
+        "浮力与压强综合压轴"
+      ],
+      "commonTraps": [
+        "混淆液体对容器底压力与容器对桌面压力",
+        "切割后密度不变但接触面积与重力同步变化判断出错"
+      ],
+      "examWeight": 1.35,
+      "learningCostHours": 3.5
+    },
+    {
+      "id": "phys-elec-ohm",
+      "subject": "物理",
+      "chapter": "欧姆定律与电路",
+      "domain": "电学核心",
+      "name": "动态电路分析与电路故障判断",
+      "subSkills": [
+        "串并联识别与电表测量对象",
+        "滑动变阻器极值与范围",
+        "断路/短路故障定位"
+      ],
+      "definition": "熟练运用串联分压、并联分流及欧姆定律 I=U/R 分析滑片移动或开关通断时各电表示数变化与比值关系。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "动态电路电表示数变化选择",
+        "电路故障原因排查",
+        "电学计算与滑动变阻器安全范围"
+      ],
+      "commonTraps": [
+        "误将电压表所测对象看成滑动变阻器以外电阻",
+        "未考虑电表量程与电流极限约束"
+      ],
+      "examWeight": 1.4,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "phys-elec-power",
+      "subject": "物理",
+      "chapter": "电功率与实验",
+      "domain": "电学实验与功率",
+      "name": "伏安法测电阻/电功率与实验数据处理",
+      "subSkills": [
+        "电路连接与滑动变阻器规格选取",
+        "额定功率图像读取",
+        "多次测量目的区分"
+      ],
+      "definition": "掌握上海中考必考电学实验原理、器材选择依据、故障排查及利用 U-I 图像求解小灯泡额定功率的方法。",
+      "prerequisites": [
+        "phys-elec-ohm"
+      ],
+      "commonExamForms": [
+        "上海中考电学实验大题",
+        "额定电压下电功率计算",
+        "实验误差与表格数据归纳"
+      ],
+      "commonTraps": [
+        "混淆测电阻（求平均减小误差）与测小灯泡电功率（不能求平均）的目的",
+        "漏算变阻器最小阻值要求"
+      ],
+      "examWeight": 1.3,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "chem-concept-symbols",
+      "subject": "化学",
+      "chapter": "物质构成的奥秘",
+      "domain": "化学用语与基础概念",
+      "name": "化学符号、化合价与方程式配平",
+      "subSkills": [
+        "常见元素化合价",
+        "化学式书写",
+        "质量守恒定律配平",
+        "物质分类（氧化物/酸碱盐）"
+      ],
+      "definition": "规范书写元素符号、离子符号、化学式及化学方程式，理解质量守恒与微粒数目关系。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "化学用语正误判断",
+        "陌生方程式配平与条件标注",
+        "物质类别判断"
+      ],
+      "commonTraps": [
+        "化学式角标写错",
+        "方程式漏写气体↑/沉淀↓符号或反应条件",
+        "混淆单质与化合物"
+      ],
+      "examWeight": 1.4,
+      "learningCostHours": 2
+    },
+    {
+      "id": "chem-solution-calc",
+      "subject": "化学",
+      "chapter": "溶液与定量计算",
+      "domain": "溶液与化学计算",
+      "name": "溶解度曲线与物质的量计算",
+      "subSkills": [
+        "溶解度曲线交点与析晶判断",
+        "溶质质量分数换算",
+        "化学方程式基础计算"
+      ],
+      "definition": "读懂溶解度曲线随温度变化趋势，准确进行饱和溶液稀释、降温析晶及基于化学方程式的定量计算。",
+      "prerequisites": [
+        "chem-concept-symbols"
+      ],
+      "commonExamForms": [
+        "溶解度曲线综合选择",
+        "溶液配制误差分析",
+        "化学方程式定量计算大题"
+      ],
+      "commonTraps": [
+        "未注意温度改变后溶质质量是否变化",
+        "把溶液质量直接代入化学方程式计算"
+      ],
+      "examWeight": 1.15,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "chem-exp-gas",
+      "subject": "化学",
+      "chapter": "常见物质与实验探究",
+      "domain": "气体制取与实验探究",
+      "name": "O₂/CO₂制取装置与实验推理",
+      "subSkills": [
+        "发生与收集装置选择",
+        "启普发生器原理",
+        "气体检验与除杂顺序",
+        "控制变量对比实验"
+      ],
+      "definition": "根据反应物状态与条件选择发生装置，根据气体密度和溶解性选择收集装置，掌握先除杂后干燥原则。",
+      "prerequisites": [
+        "chem-concept-symbols"
+      ],
+      "commonExamForms": [
+        "实验室制气装置连接题",
+        "实验现象描述与误差分析",
+        "探究性实验方案设计"
+      ],
+      "commonTraps": [
+        "长颈漏斗未液封",
+        "除杂与干燥顺序颠倒导致重新引入水蒸气",
+        "实验结论未紧扣单一变量"
+      ],
+      "examWeight": 1.25,
+      "learningCostHours": 3
+    },
+    {
+      "id": "chi-classical-read",
+      "subject": "语文",
+      "chapter": "古诗文阅读",
+      "domain": "文言文与古诗词",
+      "name": "上海考纲文言实词与课外文言迁移",
+      "subSkills": [
+        "150个考纲实词一词多义",
+        "重点句子直译踩点",
+        "人物品质与主旨概括"
+      ],
+      "definition": "扎实掌握上海中考文言文实词虚词及特殊句式，能够将课内所学词义准确迁移至课外浅易文言文语段。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "古诗文默写与理解",
+        "课内文言实词解释与句子翻译",
+        "课外文言文主旨理解"
+      ],
+      "commonTraps": [
+        "默写出现错别字（整句扣分）",
+        "文言翻译遗漏关键词或倒装句语序未调整"
+      ],
+      "examWeight": 1.35,
+      "learningCostHours": 2.5
+    },
+    {
+      "id": "chi-modern-read",
+      "subject": "语文",
+      "chapter": "现代文阅读",
+      "domain": "记叙文与议论文阅读",
+      "name": "现代文关键词句赏析与结构作用",
+      "subSkills": [
+        "中心论点与论证方法",
+        "人物描写与环境描写作用",
+        "标题含义与段落结构作用"
+      ],
+      "definition": "建立上海中考现代文规范答题模板，从内容、结构、情感主旨三维度精准踩中阅卷得分点。",
+      "prerequisites": [],
+      "commonExamForms": [
+        "说明文/议论文论证思路",
+        "记叙文加点词表达效果",
+        "文章结尾段作用分析"
+      ],
+      "commonTraps": [
+        "只答手法名称不结合文本具体内容分析",
+        "漏答结构上的承上启下或照应标题"
+      ],
+      "examWeight": 1.25,
+      "learningCostHours": 3
+    },
+    {
+      "id": "chi-writing-struct",
+      "subject": "语文",
+      "chapter": "综合写作",
+      "domain": "中考作文",
+      "name": "作文审题立意、选材详略与扣题升华",
+      "subSkills": [
+        "半命题/命题作文审题破题",
+        "以小见大细节描写",
+        "首尾呼应与情感转折"
+      ],
+      "definition": "避免走题与流水账，学会围绕核心题眼构建“铺垫—转折波澜—细节特写—点题升华”的考场一类文结构。",
+      "prerequisites": [
+        "chi-modern-read"
+      ],
+      "commonExamForms": [
+        "上海中考600字全命题作文",
+        "材料审题立意提纲训练"
+      ],
+      "commonTraps": [
+        "开头入题过慢",
+        "全文平均用力缺少核心高潮细节描写",
+        "结尾空喊口号与前文脱节"
+      ],
+      "examWeight": 1.2,
+      "learningCostHours": 4.5
+    }
+  ]
+}
