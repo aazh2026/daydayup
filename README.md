@@ -255,6 +255,10 @@ SSE 用 `node:http` 原生实现，保持零第三方依赖。
 | POST | `/students/:id/plans` | 重新生成计划 |
 | PATCH | `/plans/:studentId/tasks/:taskId` | 更新任务状态与进度 |
 | GET | `/students/:id/error-records` | 错题记录列表 |
+| GET | `/students/:id/exams` | 考试场次列表 |
+| GET | `/students/:id/papers` | 试卷存档库（含五维错因分布） |
+| GET | `/students/:id/papers/:paperId` | 单份试卷详情（含错题明细） |
+| GET | `/students/:id/attempts` | 作答流水 |
 | PATCH | `/error-records/:studentId/:id` | 错题订正 / 闭环 |
 | POST | `/exams` | 创建考试 |
 | POST | `/exams/:id/papers` | 保存试卷 + 诊断结果落库 |
@@ -269,6 +273,29 @@ SSE 用 `node:http` 原生实现，保持零第三方依赖。
 
 旧路径（`/api/diagnose-paper` 等）保留一个发布周期作为兼容层，
 前端全量切换后可删除。
+
+---
+
+## 产品验收用例
+
+`docs/PRODUCT_DESIGN_SPEC.md` §八 的 9 条 MVP 验收用例（TC-01~TC-09）
+已全部实现并有自动化测试覆盖：
+
+```bash
+npm run test --workspace=@daydayup/server -- tests/acceptance.test.ts
+```
+
+| 用例 | 场景 | 断言要点 |
+|---|---|---|
+| TC-01 | 试卷拍照诊断闭环 | 产出错题记录并关联知识点；每条结论带证据 |
+| TC-02 | 约束变化触发重排 | 调整时长后每日排期严格 ≤ 新预算 |
+| TC-03 | 苏格拉底引导与逃生 | 教学行为受控、阶段 0-4、快捷回复 |
+| TC-04 | 变式评测推进状态机 | 变式通过 → 掌握；错题可闭环 |
+| TC-05 | 连续失误降阶保护 | 连续两次错误 → 回退待学习 |
+| TC-06 | 三层效果报告 | 过程/能力/成绩三层数据齐备 |
+| TC-07 | 多维错题整理 | 五维错因、订正状态、订正心得 |
+| TC-08 | 自动元信息识别与试卷存档 | 存档库含元信息+错因分布+知识点 |
+| TC-09 | 思维导图标记问题点 | 错题带试卷归属 → 按卷高亮 |
 
 ---
 

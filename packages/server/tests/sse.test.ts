@@ -48,6 +48,11 @@ before(async () => {
   await container.jobEngine.start();
 });
 
+/** 认证头 —— 任务端点需要认证 */
+function auth(): Record<string, string> {
+  return { Authorization: 'Bearer test-token' };
+}
+
 after(async () => {
   await container.jobEngine.stop();
   await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -65,7 +70,10 @@ async function readSse(
     options.timeoutMs ?? 5000
   );
 
-  const response = await fetch(url, { signal: controller.signal });
+  const response = await fetch(url, {
+    signal: controller.signal,
+    headers: auth(),
+  });
   assert.equal(response.status, 200);
   assert.match(
     response.headers.get('content-type') ?? '',
@@ -171,14 +179,16 @@ describe('SSE 进度推送', () => {
   });
 
   test('不存在的任务返回 404', async () => {
-    const res = await fetch(`${baseUrl}/api/v1/jobs/job_nonexistent/events`);
+    const res = await fetch(`${baseUrl}/api/v1/jobs/job_nonexistent/events`, {
+      headers: auth(),
+    });
     assert.equal(res.status, 404);
     const body = (await res.json()) as { error: { code: string } };
     assert.equal(body.error.code, 'NOT_FOUND');
   });
 
   test('GET /jobs 列出任务', async () => {
-    const res = await fetch(`${baseUrl}/api/v1/jobs`);
+    const res = await fetch(`${baseUrl}/api/v1/jobs`, { headers: auth() });
     assert.equal(res.status, 200);
     const body = (await res.json()) as {
       jobs: Array<{ id: string; type: string; status: string }>;

@@ -42,14 +42,22 @@ interface SeedState {
 }
 
 function loadSeedState(): SeedState {
-  const seedPath = path.join(dataDir, 'seed', 'demo-student.json');
-  if (!fs.existsSync(seedPath)) {
-    throw new Error(
-      `Seed asset not found: ${seedPath}\n` +
-        '请先运行: npx tsx scripts/extract-seed.mjs'
-    );
+  // 优先用 DATA_DIR 下的种子；缺失时回落到打包的默认资产
+  // （测试与多实例部署会指定自定义 DATA_DIR）
+  const candidates = [
+    path.join(dataDir, 'seed', 'demo-student.json'),
+    path.resolve(__dirname, '../data/seed/demo-student.json'),
+  ];
+
+  for (const seedPath of candidates) {
+    if (!fs.existsSync(seedPath)) continue;
+    return JSON.parse(fs.readFileSync(seedPath, 'utf8')) as SeedState;
   }
-  return JSON.parse(fs.readFileSync(seedPath, 'utf8')) as SeedState;
+
+  throw new Error(
+    `Seed asset not found:\n  ${candidates.join('\n  ')}\n` +
+      '请先运行: npx tsx scripts/extract-seed.mjs'
+  );
 }
 
 async function main(): Promise<void> {

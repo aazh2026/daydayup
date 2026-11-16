@@ -208,7 +208,153 @@ export function createExamRoutes(container: Container): Router {
   );
 
   /**
-   * GET /api/v1/students/:id/exam-results
+   * GET /api/v1/students/:id/exams
+   *
+   * 学生的考试列表（报告页的场次筛选、存档库的场次名回填用）。
+   */
+  router.get(
+    '/students/:id/exams',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        assertStudentAccess(req, req.params.id);
+
+        const examIds = await container.db.list(EXAMS_DIR);
+        const exams: Exam[] = [];
+
+        for (const fileId of examIds) {
+          const exam = await container.db.read<Exam>([
+            ...EXAMS_DIR,
+            fileId.replace(/\.json$/, ''),
+          ]);
+          if (exam) exams.push(exam);
+        }
+
+        exams.sort((a, b) => (a.date < b.date ? 1 : -1));
+        res.json({ exams, total: exams.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /**
+   * GET /api/v1/students/:id/papers
+   *
+   * 试卷存档库列表（产品验收 TC-08）。
+   *
+   * 每份诊断过的试卷独立留存：元信息、五维错因分布、涉及知识点、
+   * 原始文本/图像引用。
+   */
+  router.get(
+    '/students/:id/papers',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const studentId = req.params.id;
+        assertStudentAccess(req, studentId);
+
+        const paperIds = await container.db.list(PAPERS_DIR);
+        const papers: ExamPaper[] = [];
+
+        for (const fileId of paperIds) {
+          const paper = await container.db.read<ExamPaper>([
+            ...PAPERS_DIR,
+            fileId.replace(/\.json$/, ''),
+          ]);
+          if (!paper) continue;
+          papers.push(paper);
+        }
+
+        // 按创建时间倒序（最近诊断的在前）
+        papers.sort((a, b) =>
+          (a.createdAt ?? '') < (b.createdAt ?? '') ? 1 : -1
+        );
+
+        // 附带错因分布与关联错题数量
+        const errorIds = await container.db.list([...ERRORS_DIR, studentId]);
+        const records: ErrorRecord[] = [];
+        for (const id of errorIds) {
+          const record = await container.db.read<ErrorRecord>([
+            ...ERRORS_DIR,
+            studentId,
+            id.replace(/\.json$/, ''),
+          ]);
+          if (record) records.push(record);
+        }
+
+        const enriched = papers.map((paper) => {
+          const related = records.filter(
+            (r) =>
+              r.examPaperId === paper.id ||
+              (r.examId === paper.examId && r.subject === paper.subject)
+          );
+
+          // 五维错因分布
+          const errorTypeCounts = related.reduce<
+            Record<string, number>
+          >((acc, r) => {
+            acc[r.errorType] = (acc[r.errorType] ?? 0) + 1;
+            return acc;
+          }, {});
+
+          return {
+            ...paper,
+            errorRecordCount: related.length,
+            errorTypeCounts,
+          };
+        });
+
+        res.json({ papers: enriched, total: enriched.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /**
+   * GET /api/v1/students/:id/papers/:paperId
+   *
+   * 单份试卷的完整存档（含关联错题明细）。
+   */
+  router.get(
+    '/students/:id/papers/:paperId',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const studentId = req.params.id;
+        assertStudentAccess(req, studentId);
+
+        const paper = await container.db.read<ExamPaper>([
+          ...PAPERS_DIR,
+          req.params.paperId,
+        ]);
+        if (!paper) {
+          throw new ApiException('NOT_FOUND', '试卷不存在');
+        }
+
+        const errorIds = await container.db.list([...ERRORS_DIR, studentId]);
+        const records: ErrorRecord[] = [];
+        for (const id of errorIds) {
+          const record = await container.db.read<ErrorRecord>([
+            ...ERRORS_DIR,
+            studentId,
+            id.replace(/\.json$/, ''),
+          ]);
+          if (record) records.push(record);
+        }
+
+        const related = records.filter(
+          (r) =>
+            r.examPaperId === paper.id ||
+            (r.examId === paper.examId && r.subject === paper.subject)
+        );
+
+        res.json({ paper, errorRecords: related });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /** GET /api/v1/students/:id/exam-results
    *
    * 学生的历次考试成绩（报告页的「成绩趋势对比矩阵」用）。
    */

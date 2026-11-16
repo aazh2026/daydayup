@@ -108,10 +108,16 @@ export function createApp(container: Container): Express {
   /**
    * 任务路由。
    *
-   * SSE 需要在认证中间件之前保持连接，因此这里只挂载读接口，
-   * 写操作（取消任务）通过 studentDataRouter 鉴权。
+   * 必须认证：任务输出可能包含学生的诊断结论与作答内容，
+   * 不能仅凭 jobId 就被读取。
+   *
+   * SSE 也需要认证——前端用 fetch + ReadableStream 手动解析 SSE 帧，
+   * 正是为了能携带 Authorization 头（EventSource 不支持自定义 header）。
    */
   const jobRouter = express.Router();
+  if (container.config.authRequired) {
+    jobRouter.use(requireAuth(container));
+  }
   jobRouter.use(createJobRoutes(container));
   v1.use(jobRouter);
 

@@ -171,6 +171,7 @@ describe('异步诊断完整链路', () => {
     const controller = new AbortController();
     const sseRes = await fetch(`${baseUrl}${enqueued.streamUrl}`, {
       signal: controller.signal,
+      headers: { Authorization: 'Bearer test-token' },
     });
     assert.equal(sseRes.status, 200);
     assert.match(sseRes.headers.get('content-type') ?? '', /text\/event-stream/);
@@ -288,7 +289,9 @@ describe('异步诊断完整链路', () => {
     // 轮询直到完成
     let result: any = null;
     for (let i = 0; i < 50; i++) {
-      const res = await fetch(`${baseUrl}/api/v1/exams/exam-poll/diagnosis/${jobId}`);
+      const res = await fetch(`${baseUrl}/api/v1/exams/exam-poll/diagnosis/${jobId}`, {
+        headers: { Authorization: 'Bearer test-token' },
+      });
       const body = (await res.json()) as { mode: string; data?: unknown };
       if (body.mode === 'sync') {
         result = body.data;

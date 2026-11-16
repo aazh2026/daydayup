@@ -33,6 +33,19 @@ interface ExamResultsResponse {
   results: Array<Partial<AppState['examResults'][number]>>;
 }
 
+interface ExamsResponse {
+  exams: Array<Partial<AppState['exams'][number]>>;
+}
+
+interface PapersResponse {
+  papers: Array<
+    Partial<AppState['examPapers'][number]> & {
+      errorRecordCount?: number;
+      errorTypeCounts?: Record<string, number>;
+    }
+  >;
+}
+
 export function useServerHydration(
   studentId: string | undefined,
   setAppState: React.Dispatch<React.SetStateAction<AppState>>
@@ -141,6 +154,62 @@ export function useServerHydration(
             independent: a.independent ?? false,
             aiFeedback: a.aiFeedback ?? '',
             timestamp: a.timestamp ?? new Date().toISOString(),
+          })),
+        }));
+      } catch {
+        // 忽略
+      }
+
+      // ---- 考试场次列表 ----
+      try {
+        const exams = await api.get<ExamsResponse>(
+          `/api/v1/students/${studentId}/exams`
+        );
+        if (cancelled) return;
+        const list = exams.exams ?? [];
+
+        setAppState((prev) => ({
+          ...prev,
+          exams: list.map((e, idx) => ({
+            id: e.id ?? `exam-${idx}`,
+            title: e.title ?? '未命名考试',
+            type: e.type ?? '随堂诊断',
+            date: e.date ?? '',
+          })),
+        }));
+      } catch {
+        // 忽略
+      }
+
+      // ---- 试卷存档库（TC-08）----
+      try {
+        const papers = await api.get<PapersResponse>(
+          `/api/v1/students/${studentId}/papers`
+        );
+        if (cancelled) return;
+        const list = papers.papers ?? [];
+
+        setAppState((prev) => ({
+          ...prev,
+          examPapers: list.map((p, idx) => ({
+            id: p.id ?? `paper-${idx}`,
+            examId: p.examId ?? '',
+            examTitle: p.examTitle,
+            examType: p.examType,
+            subject: p.subject ?? '数学',
+            title: p.title ?? p.examTitle ?? '试卷',
+            date: p.date ?? (p.createdAt ?? '').slice(0, 10),
+            score: p.score,
+            fullScore: p.fullScore,
+            imageUrl: p.imageUrl,
+            rawText: p.rawText,
+            sourceFormat: p.sourceFormat,
+            status: p.status ?? '待校验',
+            totalLostScore: p.totalLostScore ?? 0,
+            questionsCount: p.questionsCount ?? 0,
+            summary: p.summary ?? '',
+            knowledgeIds: p.knowledgeIds ?? [],
+            createdAt: p.createdAt,
           })),
         }));
       } catch {

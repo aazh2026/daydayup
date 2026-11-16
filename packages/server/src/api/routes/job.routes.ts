@@ -8,8 +8,8 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
-import { assertStudentAccess } from '../middleware/auth.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
+import type { Job } from '../../infrastructure/jobs/job-types.ts';
 
 export function createJobRoutes(container: Container): Router {
   const router = Router();
@@ -24,6 +24,7 @@ export function createJobRoutes(container: Container): Router {
       if (!job) {
         throw new ApiException('NOT_FOUND', '任务不存在');
       }
+      assertJobAccess(req, job);
       res.json(job);
     } catch (err) {
       next(err);
@@ -51,6 +52,7 @@ export function createJobRoutes(container: Container): Router {
       if (!job) {
         throw new ApiException('NOT_FOUND', '任务不存在');
       }
+      assertJobAccess(req, job);
 
       // ---- SSE 响应头 ----
       res.writeHead(200, {
@@ -144,6 +146,11 @@ export function createJobRoutes(container: Container): Router {
    */
   router.post('/jobs/:id/cancel', async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const job = await container.jobEngine.getJob(req.params.id);
+      if (!job) {
+        throw new ApiException('NOT_FOUND', '任务不存在');
+      }
+      assertJobAccess(req, job);
       await container.jobEngine.cancel(req.params.id);
       res.json({ ok: true, jobId: req.params.id });
     } catch (err) {
@@ -157,7 +164,13 @@ export function createJobRoutes(container: Container): Router {
    */
   router.get('/jobs', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const jobs = await container.jobEngine.list();
+      const allJobs = await container.jobEngine.list();
+      const auth = req.auth;
+      // 只返回调用者可访问的任务
+      // （开发模式无认证上下文时返回全部，与其他端点的行为一致）
+      const jobs = auth
+        ? allJobs.filter((j) => canAccessJob(auth, j))
+        : allJobs;
       res.json({
         jobs: jobs.map((j) => ({
           id: j.id,
@@ -176,4 +189,39 @@ export function createJobRoutes(container: Container): Router {
   });
 
   return router;
+}
+
+
+/**
+ * 校验调用者是否有权访问该任务。
+ *
+ * 任务的 input.studentId 决定归属：
+ * - 拥有该学生数据的账号可访问
+ * - 老师可访问全部（教学场景）
+ *
+ * 关键：任务输出可能包含学生的诊断结论与作答内容，
+ * 不能仅凭 jobId 就能读取。
+ */
+function assertJobAccess(req: Request, job: Job): void {
+  const auth = req.auth;
+
+  // 开发模式（未配置 AUTH_SECRET）：无认证上下文，放行
+  if (!auth) {
+    if (!req.app.locals.authRequired) return;
+    throw new ApiException('UNAUTHORIZED', '缺少访问令牌');
+  }
+
+  if (!canAccessJob(auth, job)) {
+    throw new ApiException('FORBIDDEN', '无权访问该任务');
+  }
+}
+
+function canAccessJob(
+  auth: { role: string; studentIds: string[] },
+  job: Job
+): boolean {
+  if (auth.role === 'teacher') return true;
+  const input = job.input as { studentId?: string } | undefined;
+  const owner = input?.studentId;
+  return Boolean(owner && auth.studentIds.includes(owner));
 }
