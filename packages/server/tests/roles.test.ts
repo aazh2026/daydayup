@@ -73,7 +73,11 @@ before(async () => {
         principalId: 'parent-001',
         secret: 'parent-key',
         role: 'parent',
-        studentIds: [STUDENT_ID],
+        studentIds: [
+          STUDENT_ID,
+          'stu-audit-parent',
+          'stu-teacher-case',
+        ],
       },
       {
         principalId: 'teacher-001',
@@ -320,6 +324,35 @@ describe('数据删除权边界', () => {
 });
 
 describe('数据删除审计留痕', () => {
+  test('一次删除只产生一条审计记录', async () => {
+    const token = await login('teacher-key');
+    const res = await fetch(
+      `${baseUrl}/api/v1/admin/students/stu-single-entry/data`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    assert.equal(res.status, 200);
+
+    const entries = await readAuditToday();
+    const matched = entries.filter(
+      (e) =>
+        e.event_type === 'StudentDataDeleted' &&
+        e.aggregate_id === 'stu-single-entry'
+    );
+    // 历史缺陷：retention 服务与 API 路由各写一条，同一次删除产生两条记录，
+    // 审计追溯时无法确定「谁删的」。
+    assert.equal(
+      matched.length,
+      1,
+      '一次删除只能产生一条审计记录（避免重复条目造成追溯歧义）'
+    );
+    assert.equal(matched[0].actor, 'teacher-001');
+    assert.equal(matched[0].actor_role, 'teacher');
+    assert.equal(matched[0].payload?.via, 'teacher');
+  });
+
   test('家长代删记录 via=parent', async () => {
     const token = await login('parent-key');
     const res = await fetch(

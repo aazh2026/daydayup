@@ -11,6 +11,7 @@
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import type { FileDatabase } from '../persistence/file-database.ts';
 import type { FileStorage } from '../storage/file-storage.ts';
 import { logger } from '../logging/logger.ts';
@@ -100,11 +101,17 @@ export class RetentionService {
    * 删除某个学生的全部数据（家长/学生行使删除权）。
    *
    * @param studentId 学生 ID
-   * @param audit 是否保留审计记录（合规要求应保留）
+   * @param options.keepAudit 是否保留审计记录（合规要求应保留）
+   * @param options.actor 删除发起人信息（写入审计，实现「谁删的」可追溯）
+   * @param options.via 删除发起人的身份类别：owner / parent / teacher
    */
   async deleteStudentData(
     studentId: string,
-    options: { keepAudit?: boolean } = {}
+    options: {
+      keepAudit?: boolean;
+      actor?: { principalId: string; role: string; ip?: string; requestId?: string };
+      via?: 'owner' | 'parent' | 'teacher';
+    } = {}
   ): Promise<{ deletedAt: string; studentId: string }> {
     const deletedAt = new Date().toISOString();
 
@@ -133,19 +140,31 @@ export class RetentionService {
       ]);
     }
 
-    // 审计记录（保留，合规要求可追溯）
+    /**
+     * 审计记录（保留，合规要求可追溯）。
+     *
+     * 注意：这里只写**一条**记录。
+     * 早期实现在本服务与 API 路由各写一条，导致同一次删除产生两条
+     * `StudentDataDeleted`（一条有 actor、一条没有），
+     * 审计追溯时无法确定「谁删的」。现在由调用方把 actor 传进来，统一在此落盘。
+     */
     if (options.keepAudit !== false) {
       await this.db.append(
         ['audit', `${deletedAt.slice(0, 10)}.jsonl`],
         JSON.stringify({
-          event_id: `audit_${Date.now()}`,
+          event_id: `audit_${randomUUID()}`,
           event_type: 'StudentDataDeleted',
           aggregate_id: studentId,
           occurred_at: deletedAt,
+          actor: options.actor?.principalId ?? 'system',
+          actor_role: options.actor?.role ?? 'system',
+          ip: options.actor?.ip,
+          request_id: options.actor?.requestId,
           payload: {
             studentId,
             scope: 'all',
             reason: 'data_subject_request',
+            via: options.via ?? 'owner',
           },
         })
       );

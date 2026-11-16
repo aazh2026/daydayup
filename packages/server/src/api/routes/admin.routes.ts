@@ -63,23 +63,22 @@ export function createAdminRoutes(container: Container): Router {
           throw new ApiException('FORBIDDEN', '无权删除该学生的数据');
         }
 
-        const result = await container.retention.deleteStudentData(studentId);
-
         /**
-         * 审计留痕：记录「谁以什么身份」行使了删除权。
+         * 审计留痕由 retention 服务统一落盘（只写一条）。
          *
          * 注意区分三种身份——老师删除是「管理需要」，
          * 不能记成「owner」（数据主体本人），否则审计追溯失真。
          */
         const via = isTeacher ? 'teacher' : isParentOfStudent ? 'parent' : 'owner';
 
-        await container.audit.record('StudentDataDeleted', {
-          aggregateId: studentId,
-          actor: auth.principalId,
-          actorRole: auth.role,
-          ip: req.ip,
-          requestId: req.requestId,
-          payload: { studentId, via },
+        const result = await container.retention.deleteStudentData(studentId, {
+          actor: {
+            principalId: auth.principalId,
+            role: auth.role,
+            ip: req.ip,
+            requestId: req.requestId,
+          },
+          via,
         });
 
         res.json(result);
