@@ -60,7 +60,8 @@ async function startServer() {
       } = req.body ?? {};
 
       const ai = createAiClient();
-      const ontologyText = buildOntologySummary(subject);
+      // Include full 5-subject curriculum ontology so auto-detected subject always maps to valid knowledgeIds
+      const ontologyText = buildOntologySummary();
 
       const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
       let hasImageInput = false;
@@ -118,22 +119,38 @@ ${trimmedText}
 """`
         : '请结合图片中的印刷体题目、学生手写过程和红笔批改痕迹进行逐题识别与诊断。';
 
+      const subjectHintText =
+        subject && subject !== '自动识别'
+          ? `用户预选学科提示：${subject}（如试卷实际明显属于其他学科，请以试卷实际内容为准识别）`
+          : '用户未指定学科，请完全根据试卷内容自动识别学科';
+      const titleHintText = examTitle
+        ? `用户填写考试名称参考：${examTitle}（如试卷页眉或文本中已有明确考试名称，请优先提取试卷真实名称）`
+        : '请自动提取或概括考试名称';
+
       const instructionPrompt = `你是上海初三中考“试卷诊断 Agent”（覆盖数学、英语、物理、化学、语文五门学科）。
 学生可能上传“原始试卷照片”，也可能直接提供“AI已识别后的文本解读、OCR转录稿、Markdown/JSON结构化解析试卷或含批改记录的纯文本”。请严格完成以下任务：
-1. 从图片或已识别/解析文本中提取所有**失分、做错、漏答或存疑的题目**（跳过明确标注全对/得满分的题目，但在 questionsDetectedCount 中统计整卷涉及的总题数）。提取字段包含：题号(questionNumber)、题干(stem)、学生作答(studentAnswer)、规范答案(correctAnswer)、扣分分值(scoreLost)。
-2. 如果输入的文本中已经包含前序 AI 的初步解读、错因提示或教师批注，请充分吸收其中的有效事实与解题细节，并统一规范化到上海初三知识本体：
+1. **自动识别考试元信息 (detectedMetadata)**：
+   - subject：从 "数学" | "英语" | "物理" | "化学" | "语文" 中识别所属学科。
+   - examTitle：提取试卷页眉、标题或文本中的完整考试名称（如“2026学年第一学期初三物理期中测试”）；若无明确标题，则结合学科与门类生成简洁名称。
+   - examType：从 "期中考试" | "月考" | "一模" | "二模" | "随堂诊断" 中判断考试门类。
+   - examDate：若试卷中有明确考试日期，请转为 "YYYY-MM-DD" 格式；否则返回空字符串 ""。
+   - score：提取试卷上的实得分数（数字）；若未标明实得分，请返回 -1（严禁随意编造）。
+   - fullScore：提取卷面满分（如 100 / 70 / 50 / 150）；若未写明且无法确认，请返回 -1。
+   - metadataConfidence："确定" | "较可能" | "待验证"。
+2. 从图片或已识别/解析文本中提取所有**失分、做错、漏答或存疑的题目**（跳过明确标注全对/得满分的题目，但在 questionsDetectedCount 中统计整卷涉及的总题数）。提取字段包含：题号(questionNumber)、题干(stem)、学生作答(studentAnswer)、规范答案(correctAnswer)、扣分分值(scoreLost)。
+3. 如果输入的文本中已经包含前序 AI 的初步解读、错因提示或教师批注，请充分吸收其中的有效事实与解题细节，并统一规范化到上海初三知识本体中**与识别学科相匹配**的 knowledgeId：
 ${ontologyText}
-3. 严格区分知识点与失分原因，errorType 必须从以下 5 类中选择：
+4. 严格区分知识点与失分原因，errorType 必须从以下 5 类中选择：
    - 知识问题
    - 方法问题
    - 计算问题
    - 熟练度问题
    - 审题问题
-4. 为每条诊断结论提供：证据(evidence，注明来自哪道题及具体作答/批注表现)、判断(aiAnalysis)、置信度(confidence: "确定" | "较可能" | "待验证")、验证方式(verificationMethod)。
-5. 严禁武断定论：若输入文本缺少具体扣分分值、学生原答不完整或仅凭单题存疑，请合理估算或保留原貌，并将 confidence 标为“待验证”以便人工校验台核对。
+5. 为每条诊断结论提供：证据(evidence，注明来自哪道题及具体作答/批注表现)、判断(aiAnalysis)、置信度(confidence: "确定" | "较可能" | "待验证")、验证方式(verificationMethod)。
+6. 严禁武断定论：若输入文本缺少具体扣分分值、学生原答不完整或仅凭单题存疑，请合理估算或保留原貌，并将 confidence 标为“待验证”以便人工校验台核对。
 
-当前学科：${subject}
-试卷名称：${examTitle}
+${subjectHintText}
+${titleHintText}
 ${textContextPrompt}
 `;
 
@@ -147,6 +164,27 @@ ${textContextPrompt}
           responseSchema: {
             type: Type.OBJECT,
             properties: {
+              detectedMetadata: {
+                type: Type.OBJECT,
+                properties: {
+                  subject: { type: Type.STRING },
+                  examTitle: { type: Type.STRING },
+                  examType: { type: Type.STRING },
+                  examDate: { type: Type.STRING },
+                  score: { type: Type.NUMBER },
+                  fullScore: { type: Type.NUMBER },
+                  metadataConfidence: { type: Type.STRING },
+                },
+                required: [
+                  'subject',
+                  'examTitle',
+                  'examType',
+                  'examDate',
+                  'score',
+                  'fullScore',
+                  'metadataConfidence',
+                ],
+              },
               paperSummary: { type: Type.STRING },
               questionsDetectedCount: { type: Type.INTEGER },
               totalLostScore: { type: Type.NUMBER },
@@ -183,7 +221,13 @@ ${textContextPrompt}
                 },
               },
             },
-            required: ['paperSummary', 'questionsDetectedCount', 'totalLostScore', 'diagnosedItems'],
+            required: [
+              'detectedMetadata',
+              'paperSummary',
+              'questionsDetectedCount',
+              'totalLostScore',
+              'diagnosedItems',
+            ],
           },
         },
       });

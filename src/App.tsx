@@ -26,7 +26,7 @@ import type {
   VariantQuestion,
 } from './types.ts';
 
-const STORAGE_KEY = 'shanghai_ai_score_os_v4';
+const STORAGE_KEY = 'shanghai_ai_score_os_v5';
 
 function loadInitialState(): AppState {
   try {
@@ -227,10 +227,15 @@ export default function App() {
     existingExamId?: string;
     examType?: Exam['type'];
     examDate?: string;
+    score?: number;
+    fullScore?: number;
+    targetScore?: number;
+    syncScoreToBaseline?: boolean;
     paperSummary: string;
     questionsCount: number;
     totalLostScore: number;
     imageUrl?: string;
+    rawText?: string;
     sourceFormat?: '试卷拍照' | '文本试卷' | '单题录入';
     items: Array<{
       questionNumber: string;
@@ -327,22 +332,61 @@ export default function App() {
         };
       }
 
+      const resolvedExamType = matchedExam ? matchedExam.type : (payload.examType ?? '随堂诊断');
+      const uniqueKnowledgeIds = Array.from(new Set(payload.items.map((it) => it.knowledgeId)));
+
+      let nextExamResults = prev.examResults;
+      if (
+        payload.syncScoreToBaseline &&
+        payload.score !== undefined &&
+        payload.fullScore !== undefined &&
+        payload.fullScore > 0
+      ) {
+        const defaultTarget = Math.round(payload.fullScore * 0.9);
+        const existingResIdx = prev.examResults.findIndex(
+          (r) => r.examId === examId && r.subject === payload.subject
+        );
+        const newResult: ExamResult = {
+          id: existingResIdx >= 0 ? prev.examResults[existingResIdx].id : `res-${Date.now()}`,
+          examId,
+          examTitle: resolvedExamTitle,
+          subject: payload.subject,
+          score: payload.score,
+          fullScore: payload.fullScore,
+          targetScore: payload.targetScore ?? (existingResIdx >= 0 ? prev.examResults[existingResIdx].targetScore : defaultTarget),
+          date: resolvedDate,
+        };
+        if (existingResIdx >= 0) {
+          nextExamResults = prev.examResults.map((r, i) => (i === existingResIdx ? newResult : r));
+        } else {
+          nextExamResults = [newResult, ...prev.examResults];
+        }
+      }
+
       return {
         ...prev,
         exams: nextExams,
+        examResults: nextExamResults,
         examPapers: [
           {
             id: paperId,
             examId,
+            examTitle: resolvedExamTitle,
+            examType: resolvedExamType,
             subject: payload.subject,
             title: `${resolvedExamTitle}（${payload.subject}试卷）`,
             date: resolvedDate,
+            score: payload.score,
+            fullScore: payload.fullScore,
             imageUrl: payload.imageUrl,
+            rawText: payload.rawText,
             sourceFormat: payload.sourceFormat ?? (payload.imageUrl ? '试卷拍照' : '文本试卷'),
             status: '已识别',
             totalLostScore: payload.totalLostScore,
             questionsCount: payload.questionsCount,
             summary: payload.paperSummary,
+            knowledgeIds: uniqueKnowledgeIds,
+            createdAt: now,
           },
           ...prev.examPapers,
         ],
@@ -576,6 +620,7 @@ export default function App() {
           <ReportPage
             exams={appState.exams}
             examResults={appState.examResults}
+            examPapers={appState.examPapers}
             errorRecords={appState.errorRecords}
             masteryRecords={appState.masteryRecords}
             masteryHistory={appState.masteryHistory}

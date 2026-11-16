@@ -66,15 +66,22 @@ export interface ExamResult {
 export interface ExamPaper {
   id: string;
   examId: string;
+  examTitle?: string;
+  examType?: Exam['type'];
   subject: Subject;
   title: string;
   date: string;
+  score?: number;
+  fullScore?: number;
   imageUrl?: string;
+  rawText?: string;
   sourceFormat?: '试卷拍照' | '文本试卷' | '单题录入';
   status: '已识别' | '待校验';
   totalLostScore: number;
   questionsCount: number;
   summary: string;
+  knowledgeIds?: string[];
+  createdAt?: string;
 }
 
 export interface KnowledgePoint {

@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, CheckCircle2, Layers, Search, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, FileText, GitBranch, Layers, Search, TrendingDown, TrendingUp } from 'lucide-react';
 import { KNOWLEDGE_MAP, SHANGHAI_CURRICULUM } from '../data/shanghaiCurriculum.ts';
 import { MASTERY_ORDER } from '../engine/planner.ts';
 import { ALL_SUBJECTS } from '../types.ts';
+import { SubjectKnowledgeMindMap } from './SubjectKnowledgeMindMap.tsx';
 import type {
   ErrorRecord,
   ErrorType,
   Exam,
+  ExamPaper,
   ExamResult,
   LearningAttempt,
   LearningPlan,
@@ -19,6 +21,7 @@ import type {
 interface ReportPageProps {
   exams: Exam[];
   examResults: ExamResult[];
+  examPapers: ExamPaper[];
   errorRecords: ErrorRecord[];
   masteryRecords: Record<string, MasteryRecord>;
   masteryHistory: MasteryTransitionEvent[];
@@ -29,7 +32,7 @@ interface ReportPageProps {
   onLaunchCoach: (knowledgeId: string) => void;
 }
 
-type ReportTab = 'evaluation' | 'knowledge' | 'errors';
+type ReportTab = 'evaluation' | 'papers' | 'knowledge' | 'errors';
 
 const ERROR_TYPES: ErrorType[] = [
   '知识问题',
@@ -49,6 +52,7 @@ const ERROR_STATUSES: ErrorRecord['status'][] = [
 export const ReportPage: React.FC<ReportPageProps> = ({
   exams,
   examResults,
+  examPapers,
   errorRecords,
   masteryRecords,
   masteryHistory,
@@ -66,7 +70,16 @@ export const ReportPage: React.FC<ReportPageProps> = ({
   const [historyDirectionFilter, setHistoryDirectionFilter] = useState<'all' | 'up' | 'down'>('all');
   const [historySubjectFilter, setHistorySubjectFilter] = useState<'全部' | Subject>('全部');
 
-  // Multi-Dimensional Error Organization Filters (Tab 3)
+  // Paper Analysis Archive Filters (Tab 2)
+  const [paperExamFilter, setPaperExamFilter] = useState<string>('全部');
+  const [paperFormatFilter, setPaperFormatFilter] = useState<
+    '全部' | '试卷拍照' | '文本试卷' | '单题录入'
+  >('全部');
+  const [paperSearchKeyword, setPaperSearchKeyword] = useState('');
+  const [expandedArchivePaperId, setExpandedArchivePaperId] = useState<string | null>(null);
+  const [mindMapArchivePaperId, setMindMapArchivePaperId] = useState<string | null>(null);
+
+  // Multi-Dimensional Error Organization Filters (Tab 4)
   const [errorTypeFilter, setErrorTypeFilter] = useState<'全部' | ErrorType>('全部');
   const [statusFilter, setStatusFilter] = useState<'全部' | ErrorRecord['status']>('全部');
   const [examFilter, setExamFilter] = useState<string>('全部');
@@ -259,6 +272,27 @@ export const ReportPage: React.FC<ReportPageProps> = ({
     return [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [errorRecords, subjectFilter, errorTypeFilter, statusFilter, examFilter, exams, searchKeyword, errorSortBy]);
 
+  const filteredPapers = useMemo(() => {
+    const kw = paperSearchKeyword.trim().toLowerCase();
+    return [...examPapers]
+      .filter((p) => {
+        if (subjectFilter !== '全部' && p.subject !== subjectFilter) return false;
+        if (paperExamFilter !== '全部' && p.examId !== paperExamFilter) return false;
+        const fmt = p.sourceFormat ?? '试卷拍照';
+        if (paperFormatFilter !== '全部' && fmt !== paperFormatFilter) return false;
+        if (kw) {
+          const hay = `${p.title} ${p.examTitle ?? ''} ${p.summary} ${p.rawText ?? ''}`.toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const dateCmp = b.date.localeCompare(a.date);
+        if (dateCmp !== 0) return dateCmp;
+        return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
+      });
+  }, [examPapers, subjectFilter, paperExamFilter, paperFormatFilter, paperSearchKeyword]);
+
   return (
     <div className="space-y-8">
       {/* Header + Segmented Navigation */}
@@ -272,9 +306,10 @@ export const ReportPage: React.FC<ReportPageProps> = ({
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-start">
+        <div className="inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100 rounded-lg self-start">
           {[
             { id: 'evaluation' as ReportTab, label: '提分效果与掌握变化' },
+            { id: 'papers' as ReportTab, label: '试卷分析存档库' },
             { id: 'knowledge' as ReportTab, label: '知识点档案' },
             { id: 'errors' as ReportTab, label: '错题整理与归因分析' },
           ].map((t) => (
@@ -657,8 +692,8 @@ export const ReportPage: React.FC<ReportPageProps> = ({
         </div>
       )}
 
-      {/* Subject filter bar for Knowledge & Error Asset Tabs */}
-      {(activeTab === 'knowledge' || activeTab === 'errors') && (
+      {/* Subject filter bar for Papers, Knowledge & Error Asset Tabs */}
+      {(activeTab === 'papers' || activeTab === 'knowledge' || activeTab === 'errors') && (
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1 p-1 bg-slate-200/70 rounded-lg overflow-x-auto">
             {(['全部', ...ALL_SUBJECTS] as const).map((sub) => (
@@ -679,7 +714,395 @@ export const ReportPage: React.FC<ReportPageProps> = ({
         </div>
       )}
 
-      {/* Tab 2: Knowledge Point Archive (Module 05A) */}
+      {/* Tab 2: Paper Analysis Archive Library */}
+      {activeTab === 'papers' && (
+        <div className="space-y-6">
+          <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  试卷分析存档库（共归档 {examPapers.length} 份 · 当前匹配 {filteredPapers.length} 份）
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  每份诊断过的图片或文本试卷均独立留存元信息、五维错因分布、原始文本/图像及后续知识点掌握变化，支持跨考复盘分析
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={paperSearchKeyword}
+                    onChange={(e) => setPaperSearchKeyword(e.target.value)}
+                    placeholder="搜索试卷名称、场次、摘要或文本..."
+                    className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg w-60 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                <select
+                  value={paperExamFilter}
+                  onChange={(e) => setPaperExamFilter(e.target.value)}
+                  className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:border-blue-600"
+                >
+                  <option value="全部">全部考试场次</option>
+                  {chronologicalExams.map((ex) => (
+                    <option key={ex.id} value={ex.id}>
+                      {ex.date} · {ex.title}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={paperFormatFilter}
+                  onChange={(e) =>
+                    setPaperFormatFilter(
+                      e.target.value as '全部' | '试卷拍照' | '文本试卷' | '单题录入'
+                    )
+                  }
+                  className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:border-blue-600"
+                >
+                  <option value="全部">全部输入形式</option>
+                  <option value="试卷拍照">试卷拍照</option>
+                  <option value="文本试卷">文本试卷</option>
+                  <option value="单题录入">单题录入</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {filteredPapers.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-xs text-slate-500">
+              当前筛选条件下暂无试卷分析存档，可前往「考试诊断」上传图片或解析文本试卷生成存档。
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {filteredPapers.map((paper) => {
+                const matchedExam = exams.find((ex) => ex.id === paper.examId);
+                const displayExamTitle = paper.examTitle ?? matchedExam?.title ?? '未归类场次';
+                const displayExamType = paper.examType ?? matchedExam?.type ?? '随堂诊断';
+                const linkedErrors = errorRecords.filter(
+                  (err) =>
+                    err.examPaperId === paper.id ||
+                    (err.examId === paper.examId && err.subject === paper.subject)
+                );
+                const closedErrorsCount = linkedErrors.filter(
+                  (err) => err.status === '已闭环'
+                ).length;
+
+                const kpIds = Array.from(
+                  new Set([
+                    ...(paper.knowledgeIds ?? []),
+                    ...linkedErrors.map((err) => err.knowledgeId),
+                  ])
+                );
+
+                const paperErrorBreakdown = ERROR_TYPES.map((et) => {
+                  const matched = linkedErrors.filter((e) => e.errorType === et);
+                  const lost = matched.reduce((s, e) => s + e.scoreLost, 0);
+                  return { errorType: et, count: matched.length, lost };
+                }).filter((x) => x.count > 0);
+
+                const isExpanded = expandedArchivePaperId === paper.id;
+
+                return (
+                  <article
+                    key={paper.id}
+                    className="bg-white border border-slate-200 rounded-xl p-6 space-y-5"
+                  >
+                    {/* Header Metadata */}
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                          <span className="font-mono tabular-nums">{paper.date}</span>
+                          <span aria-hidden="true">·</span>
+                          <span className="font-semibold text-blue-700">{paper.subject}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{displayExamType}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{displayExamTitle}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{paper.sourceFormat ?? '试卷拍照'}</span>
+                          <span aria-hidden="true">·</span>
+                          <span className="text-emerald-700 font-medium">{paper.status}</span>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span>{paper.title}</span>
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono tabular-nums shrink-0">
+                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                          <div className="text-slate-500 font-sans">卷面得分</div>
+                          <div className="font-bold text-slate-900 mt-0.5">
+                            {typeof paper.score === 'number' && paper.score >= 0
+                              ? `${paper.score} / ${paper.fullScore ?? 100}`
+                              : '未记录'}
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                          <div className="text-slate-500 font-sans">识别题量</div>
+                          <div className="font-bold text-slate-900 mt-0.5">
+                            {paper.questionsCount} 题
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                          <div className="text-slate-500 font-sans">本卷失分</div>
+                          <div className="font-bold text-red-700 mt-0.5">
+                            -{paper.totalLostScore} 分
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                          <div className="text-slate-500 font-sans">错题闭环</div>
+                          <div className="font-bold text-emerald-700 mt-0.5">
+                            {closedErrorsCount} / {linkedErrors.length}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Diagnostic Summary */}
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-700 leading-relaxed">
+                      <span className="font-semibold text-slate-900">AI 卷面分析摘要：</span>
+                      {paper.summary}
+                    </div>
+
+                    {/* 5-Dimension Breakdown + Subsequent Knowledge Mastery Tracking */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="p-4 border border-slate-200 rounded-lg space-y-2.5">
+                        <div className="text-xs font-semibold text-slate-900">
+                          本卷五维错因失分拆解
+                        </div>
+                        {paperErrorBreakdown.length === 0 ? (
+                          <div className="text-xs text-slate-500">本卷暂未关联结构化错题记录</div>
+                        ) : (
+                          <div className="space-y-2">
+                            {paperErrorBreakdown.map((eb) => {
+                              const baseTotal = linkedErrors.reduce((s, e) => s + e.scoreLost, 0);
+                              const pct = baseTotal > 0 ? Math.round((eb.lost / baseTotal) * 100) : 0;
+                              return (
+                                <div key={eb.errorType} className="space-y-1 text-xs">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-slate-700 font-medium">{eb.errorType}</span>
+                                    <span className="font-mono tabular-nums text-slate-600">
+                                      {eb.count} 题 · -{eb.lost} 分 ({pct}%)
+                                    </span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-700 rounded-full"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 border border-slate-200 rounded-lg space-y-2.5">
+                        <div className="text-xs font-semibold text-slate-900">
+                          涉及知识点当前掌握追踪（诊断后复盘）
+                        </div>
+                        {kpIds.length === 0 ? (
+                          <div className="text-xs text-slate-500">暂无关联知识点记录</div>
+                        ) : (
+                          <div className="divide-y divide-slate-100">
+                            {kpIds.map((kpId) => {
+                              const kp = KNOWLEDGE_MAP[kpId];
+                              const rec = masteryRecords[kpId];
+                              const state = rec?.state ?? '未诊断';
+                              const isGood =
+                                state === '初步掌握' ||
+                                state === '掌握' ||
+                                state === '稳定掌握';
+                              return (
+                                <div
+                                  key={kpId}
+                                  className="py-2 first:pt-0 last:pb-0 flex items-center justify-between gap-2 text-xs"
+                                >
+                                  <div className="min-w-0">
+                                    <span className="font-medium text-slate-800">
+                                      {kp?.name ?? kpId}
+                                    </span>
+                                    <span className="text-slate-400 mx-1.5">·</span>
+                                    <span
+                                      className={`font-semibold ${
+                                        isGood ? 'text-emerald-700' : 'text-amber-700'
+                                      }`}
+                                    >
+                                      {state}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => onLaunchCoach(kpId)}
+                                    className="text-blue-700 hover:underline font-medium shrink-0"
+                                  >
+                                    去训练
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expandable Full Archive Details & Mind Map Localization */}
+                    <div className="pt-2 border-t border-slate-100 space-y-4">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMindMapArchivePaperId(
+                              mindMapArchivePaperId === paper.id ? null : paper.id
+                            )
+                          }
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800 hover:text-blue-700"
+                        >
+                          <GitBranch className="w-3.5 h-3.5 text-blue-700" />
+                          <span>
+                            {mindMapArchivePaperId === paper.id
+                              ? '收起学科知识思维导图'
+                              : '在学科思维导图上标记本卷问题点'}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedArchivePaperId(isExpanded ? null : paper.id)
+                          }
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-800"
+                        >
+                          {isExpanded ? (
+                            <>
+                              <ChevronUp className="w-3.5 h-3.5" />
+                              <span>收起归因错题与原始文本/图片存档</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-3.5 h-3.5" />
+                              <span>
+                                查看归因错题与原始文本/图片存档（{linkedErrors.length} 道关联错题
+                                {paper.rawText ? ' · 含原始文本' : ''}
+                                {paper.imageUrl ? ' · 含卷面图像' : ''}）
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {mindMapArchivePaperId === paper.id && (
+                        <SubjectKnowledgeMindMap
+                          subject={paper.subject}
+                          examPapers={examPapers}
+                          exams={exams}
+                          errorRecords={errorRecords}
+                          masteryRecords={masteryRecords}
+                          selectedPaperId={paper.id}
+                          onLaunchCoach={onLaunchCoach}
+                          compactHeader={true}
+                        />
+                      )}
+
+                      {isExpanded && (
+                        <div className="space-y-4">
+                          {linkedErrors.length > 0 && (
+                            <div className="space-y-2.5">
+                              <div className="text-xs font-semibold text-slate-900">
+                                本卷关联错题归因清单（{linkedErrors.length} 题）
+                              </div>
+                              <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg">
+                                {linkedErrors.map((err) => (
+                                  <div
+                                    key={err.id}
+                                    className="p-3.5 text-xs space-y-1.5 bg-white first:rounded-t-lg last:rounded-b-lg"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex flex-wrap items-center gap-1.5 text-slate-600">
+                                        <span className="font-semibold text-slate-900">
+                                          {err.questionNumber}
+                                        </span>
+                                        <span aria-hidden="true">·</span>
+                                        <span>{err.knowledgeName}</span>
+                                        <span aria-hidden="true">·</span>
+                                        <span className="text-red-700 font-medium">
+                                          {err.errorType}
+                                        </span>
+                                        <span aria-hidden="true">·</span>
+                                        <span className="font-mono tabular-nums">
+                                          -{err.scoreLost}分
+                                        </span>
+                                        <span aria-hidden="true">·</span>
+                                        <span
+                                          className={
+                                            err.status === '已闭环' || err.status === '已订正'
+                                              ? 'text-emerald-700 font-medium'
+                                              : 'text-amber-700 font-medium'
+                                          }
+                                        >
+                                          {err.status}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => onLaunchCoach(err.knowledgeId)}
+                                        className="text-blue-700 hover:underline font-medium shrink-0"
+                                      >
+                                        变式复测
+                                      </button>
+                                    </div>
+                                    <div className="text-slate-800">{err.stem}</div>
+                                    <div className="text-slate-500">
+                                      原答：{err.studentAnswer} ｜ 参考：{err.correctAnswer} ｜ 归因：
+                                      {err.aiAnalysis}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {paper.rawText && (
+                            <div className="space-y-1.5">
+                              <div className="text-xs font-semibold text-slate-900">
+                                归档原始文本试卷 / AI 前序解读稿
+                              </div>
+                              <pre className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto">
+                                {paper.rawText}
+                              </pre>
+                            </div>
+                          )}
+
+                          {paper.imageUrl && (
+                            <div className="space-y-1.5">
+                              <div className="text-xs font-semibold text-slate-900">
+                                归档卷面图像
+                              </div>
+                              <img
+                                src={paper.imageUrl}
+                                alt={paper.title}
+                                referrerPolicy="no-referrer"
+                                className="max-h-72 rounded-lg border border-slate-200 object-contain bg-slate-50"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab 3: Knowledge Point Archive (Module 05A) */}
       {activeTab === 'knowledge' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredKps.map((kp) => {
