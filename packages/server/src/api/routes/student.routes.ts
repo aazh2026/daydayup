@@ -55,6 +55,16 @@ export function createStudentRoutes(container: Container): Router {
       }
 
       await container.db.write(fileSegments, updated);
+
+      await container.audit.record('StudentProfileUpdated', {
+        aggregateId: req.params.id,
+        actor: req.auth?.principalId,
+        actorRole: req.auth?.role,
+        ip: req.ip,
+        requestId: req.requestId,
+        payload: { fields: Object.keys(patch) },
+      });
+
       res.json(updated);
     } catch (err) {
       next(err);

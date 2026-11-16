@@ -7,6 +7,7 @@ import { PlanningPage } from './components/PlanningPage.tsx';
 import { CoachPage } from './components/CoachPage.tsx';
 import { ReportPage } from './components/ReportPage.tsx';
 import { LoginPage } from './components/LoginPage.tsx';
+import { TeacherDashboard } from './components/TeacherDashboard.tsx';
 import { INITIAL_APP_STATE } from './data/initialStore.ts';
 import { submitMasteryAttempt, fetchCurrentPlan } from './engine/planner.ts';
 import { buildLocalPlanFallback } from './engine/plan-fallback.ts';
@@ -837,6 +838,16 @@ export default function App() {
         onNavigate={setActivePage}
         student={appState.student}
         onOpenProfile={() => setIsProfileOpen(true)}
+        role={session?.role ?? 'student'}
+        displayName={session?.displayName}
+        onLogout={
+          session?.token
+            ? () => {
+                clearSession();
+                setSession(null);
+              }
+            : undefined
+        }
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -893,6 +904,17 @@ export default function App() {
             onSimulateRetestUnlock={handleSimulateRetestUnlock}
             onRecordPracticeAttempt={handleRecordPracticeAttempt}
             onAddGeneratedVariant={handleAddGeneratedVariant}
+          />
+        )}
+
+        {activePage === 'teacher' && session?.role === 'teacher' && (
+          <TeacherDashboard
+            studentIds={session.studentIds}
+            onSelectStudent={(studentId) => {
+              // 切换到指定学生的视角
+              setAppState((prev) => ({ ...prev, student: { ...prev.student, id: studentId } }));
+              setActivePage('today');
+            }}
           />
         )}
 

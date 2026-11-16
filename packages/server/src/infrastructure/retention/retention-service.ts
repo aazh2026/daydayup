@@ -48,11 +48,19 @@ export interface CleanupResult {
 }
 
 export class RetentionService {
+  private readonly db: FileDatabase;
+  private readonly storage: FileStorage;
+  private readonly policy: RetentionPolicy;
+
   constructor(
-    private readonly db: FileDatabase,
-    private readonly storage: FileStorage,
-    private readonly policy: RetentionPolicy = DEFAULT_RETENTION
-  ) {}
+    db: FileDatabase,
+    storage: FileStorage,
+    policy: RetentionPolicy = DEFAULT_RETENTION
+  ) {
+    this.db = db;
+    this.storage = storage;
+    this.policy = policy;
+  }
 
   /**
    * 清理过期数据。

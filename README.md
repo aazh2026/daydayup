@@ -36,6 +36,23 @@ npm run dev:web       # 前端 → http://localhost:5173
 
 ---
 
+## 生产部署
+
+```bash
+# Docker（推荐）
+cp .env.example .env   # 填入 GEMINI_API_KEY 与 AUTH_SECRET
+docker compose up -d
+
+# 或无 Docker（需 Node 24+，服务端免编译）
+npm ci --legacy-peer-deps
+npm run build --workspace=@daydayup/web
+node --experimental-strip-types packages/server/src/main.ts
+```
+
+完整部署说明见 [`docs/deployment.md`](docs/deployment.md)。
+
+---
+
 ## npm scripts
 
 | 命令 | 说明 |
@@ -48,6 +65,9 @@ npm run dev:web       # 前端 → http://localhost:5173
 | `npm run lint` | 全包 lint |
 | `npm test --workspace=@daydayup/server` | 领域引擎测试（node:test） |
 | `npm run seed --workspace=@daydayup/server` | 播种演示数据 |
+| `npm run backup --workspace=@daydayup/server` | 创建备份（自动验证） |
+| `npm run restore --workspace=@daydayup/server -- --name <名>` | 从备份恢复 |
+| `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
 
 ---
 
@@ -235,9 +255,19 @@ POST /api/v1/auth/login  { "secret": "1234" }
     "role": "parent",
     "studentIds": ["stu-sh-zhangwei"],
     "displayName": "张伟家长"
+  },
+  {
+    "principalId": "teacher-001",
+    "secret": "教师APIKey",
+    "role": "teacher",
+    "studentIds": [],
+    "displayName": "王老师"
   }
 ]
 ```
+
+> `teacher` 角色的 `studentIds` 为空表示可访问全部学生。
+> 教师登录后顶部导航会出现「教师工作台」，可汇总各学生的掌握概况与优先提分点。
 
 ---
 
@@ -276,8 +306,18 @@ data/
 │   ├── attempts/{studentId}/{yyyy-MM}.jsonl  作答流水
 │   ├── quota/{principalId}.json             AI 用量计数
 │   └── credentials.json                     凭证（生产模式）
-└── events/{yyyy-MM-dd}.jsonl                业务事件日志
+├── events/{yyyy-MM-dd}.jsonl                业务事件日志
+└── audit/{yyyy-MM-dd}.jsonl                 审计日志（只追加）
 ```
+
+上传文件按学生分目录（**存储路径即隔离边界**）：
+
+```
+files/papers/{studentId}/{paperId}/{fileId}.jpg
+```
+
+访问须经鉴权接口，**不暴露静态目录**；元数据索引（`db/files/`）
+记录归属，鉴权不依赖文件名猜测。
 
 写入特性（`FileDatabase`）：
 - **原子写入**：临时文件 + rename

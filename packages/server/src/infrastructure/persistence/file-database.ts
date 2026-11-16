@@ -41,7 +41,11 @@ export interface StoredDocument<T> {
 }
 
 export class FileDatabase {
-  constructor(private readonly rootDir: string) {}
+  private readonly rootDir: string;
+
+  constructor(rootDir: string) {
+    this.rootDir = rootDir;
+  }
 
   private resolvePath(...segments: string[]): string {
     const target = path.join(this.rootDir, ...segments);

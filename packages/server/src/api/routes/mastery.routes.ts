@@ -193,6 +193,21 @@ export function createMasteryRoutes(container: Container): Router {
           (o) => o.knowledgeId === knowledgeId
         );
 
+        await container.audit.record('MasteryTransitionApplied', {
+          aggregateId: knowledgeId,
+          actor: req.auth?.principalId,
+          actorRole: req.auth?.role,
+          ip: req.ip,
+          requestId: req.requestId,
+          payload: {
+            studentId,
+            from: transition.fromState,
+            to: transition.toState,
+            mode,
+            isCorrect,
+          },
+        });
+
         logger.info('mastery.transition', {
           requestId: req.requestId,
           studentId,

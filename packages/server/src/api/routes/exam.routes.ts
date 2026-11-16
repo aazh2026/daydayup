@@ -281,6 +281,15 @@ export function createExamRoutes(container: Container): Router {
 
         await container.db.write([...ERRORS_DIR, studentId, `${id}.json`], updated);
 
+        await container.audit.record('ErrorRecordUpdated', {
+          aggregateId: id,
+          actor: req.auth?.principalId,
+          actorRole: req.auth?.role,
+          ip: req.ip,
+          requestId: req.requestId,
+          payload: { studentId, status: updated.status },
+        });
+
         const now = new Date().toISOString();
         await container.db.append(
           [...EVENTS_DIR, `${now.slice(0, 10)}.jsonl`],
@@ -341,6 +350,16 @@ export function createExamRoutes(container: Container): Router {
         };
 
         await container.db.write([...PAPERS_DIR, `${existing.id}.json`], updated);
+
+        await container.audit.record('PaperMetadataConfirmed', {
+          aggregateId: existing.id,
+          actor: req.auth?.principalId,
+          actorRole: req.auth?.role,
+          ip: req.ip,
+          requestId: req.requestId,
+          payload: { studentId },
+        });
+
         res.json(updated);
       } catch (err) {
         next(err);

@@ -38,10 +38,13 @@ const FILES_DIR = 'files';
 const BACKUP_TARGETS = ['db', 'files', 'events', 'audit', 'knowledge', 'questions'];
 
 export class BackupService {
-  constructor(
-    private readonly dataDir: string,
-    private readonly backupDir: string
-  ) {}
+  private readonly dataDir: string;
+  private readonly backupDir: string;
+
+  constructor(dataDir: string, backupDir: string) {
+    this.dataDir = dataDir;
+    this.backupDir = backupDir;
+  }
 
   /**
    * 创建备份。

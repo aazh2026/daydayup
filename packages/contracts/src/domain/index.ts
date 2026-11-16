@@ -294,7 +294,13 @@ export interface MasteryTransitionEvent {
   timestamp: string;
 }
 
-export type AppPage = 'today' | 'diagnosis' | 'planning' | 'coach' | 'report';
+export type AppPage =
+  | 'today'
+  | 'diagnosis'
+  | 'planning'
+  | 'coach'
+  | 'report'
+  | 'teacher';
 
 /**
  * 掌握度状态的显示顺序（常量，非业务逻辑）。

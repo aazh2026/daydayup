@@ -7,6 +7,7 @@
  * 3. GET /jobs/:id/events → SSE 进度
  */
 import { Router } from 'express';
+import path from 'node:path';
 import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
@@ -88,30 +89,42 @@ export function createUploadRoutes(container: Container): Router {
    * GET /api/v1/uploads/papers/:fileId
    *
    * 下载试卷图片（鉴权后按 ID 返回，不暴露文件目录）。
+   *
+   * 鉴权依据**元数据索引**中的 studentId，而非文件名猜测——
+   * 知道 fileId 也不足以访问他人文件。
    */
   router.get(
     '/uploads/papers/:fileId',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const studentId = String(req.query.studentId ?? '');
-        if (studentId) {
-          assertStudentAccess(req, studentId);
+        if (!studentId) {
+          throw new ApiException('VALIDATION_FAILED', '缺少 studentId');
         }
+        assertStudentAccess(req, studentId);
 
         const fileId = req.params.fileId;
-        const relativePath = await findFilePath(container, fileId);
-        if (!relativePath) {
+
+        // 元数据索引鉴权：文件必须属于该学生
+        const meta = await container.storage.getMeta(fileId);
+        if (!meta) {
           throw new ApiException('NOT_FOUND', '文件不存在');
         }
+        if (meta.studentId !== studentId) {
+          throw new ApiException('FORBIDDEN', '无权访问该文件');
+        }
 
-        const buffer = await container.storage.read(relativePath);
+        const buffer = await container.storage.read(meta.relativePath);
         if (!buffer) {
           throw new ApiException('NOT_FOUND', '文件不存在');
         }
 
-        const stat = await container.storage.stat(relativePath);
-        res.setHeader('Content-Type', stat?.mimeType ?? 'application/octet-stream');
+        res.setHeader('Content-Type', meta.mimeType);
+        res.setHeader('Content-Length', String(buffer.length));
         res.setHeader('Cache-Control', 'private, max-age=3600');
+        // 防止浏览器 MIME 嗅探导致的 XSS
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', `inline; filename="${path.basename(meta.originalName)}"`);
         res.send(buffer);
       } catch (err) {
         next(err);

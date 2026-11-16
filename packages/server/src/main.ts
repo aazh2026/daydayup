@@ -30,9 +30,13 @@ async function main(): Promise<void> {
   // ---- 启动 Job Engine（会恢复上次崩溃遗留的任务）----
   await container.jobEngine.start();
 
+  // ---- 启动定时任务（每日备份 + 每日清理）----
+  await container.scheduler.start();
+
   const shutdown = async (signal: string) => {
     logger.info('boot.shutdown', { signal });
-    // 优雅退出：等待进行中的任务完成
+    // 优雅退出：停止调度并等待进行中的任务完成
+    container.scheduler.stop();
     await container.jobEngine.stop();
     server.close(() => process.exit(0));
     // 兜底：10 秒后强制退出

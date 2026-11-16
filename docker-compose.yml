@@ -1,0 +1,45 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: daydayup:latest
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      # ---- 必需 ----
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      # 生产环境必须配置，否则任何人都能用默认凭证登录
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      # ---- 可选 ----
+      AUTH_REQUIRED: 'true'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      DAILY_TOKEN_QUOTA: ${DAILY_TOKEN_QUOTA:-100}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-120}
+      RATE_LIMIT_AI_PER_MINUTE: ${RATE_LIMIT_AI_PER_MINUTE:-10}
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-2}
+      # 单容器部署时由后端托管前端产物
+      STATIC_DIR: /app/web/dist
+    volumes:
+      # 数据持久化（试卷图片、掌握度、事件日志）
+      - server-data:/app/packages/server/data
+      # 备份目录
+      - server-backups:/app/packages/server/backups
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  server-data:
+  server-backups:

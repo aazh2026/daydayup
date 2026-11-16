@@ -6,6 +6,12 @@ interface TopBarProps {
   onNavigate: (page: AppPage) => void;
   student: Student;
   onOpenProfile: () => void;
+  /** 当前角色 —— teacher 时显示工作台入口 */
+  role?: 'student' | 'parent' | 'teacher';
+  /** 当前登录者显示名 */
+  displayName?: string;
+  /** 退出登录 */
+  onLogout?: () => void;
 }
 
 const NAV_ITEMS: { id: AppPage; label: string }[] = [
@@ -21,7 +27,12 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNavigate,
   student,
   onOpenProfile,
+  role = 'student',
+  displayName,
+  onLogout,
 }) => {
+  const isTeacher = role === 'teacher';
+
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
@@ -34,7 +45,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           智学中枢
         </button>
 
-        {/* Zone 2: 5 concise single-line navigation links */}
+        {/* Zone 2: navigation links */}
         <nav
           aria-label="主导航"
           className="hidden md:flex items-center gap-7"
@@ -54,51 +65,59 @@ export const TopBar: React.FC<TopBarProps> = ({
               >
                 {item.label}
                 {isActive && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-700"
-                  />
+                  <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-blue-600 rounded-full" />
                 )}
               </button>
             );
           })}
+
+          {/* 教师角色：工作台入口 */}
+          {isTeacher && (
+            <button
+              type="button"
+              onClick={() => onNavigate('teacher')}
+              className={`relative py-5 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                activePage === 'teacher'
+                  ? 'text-blue-700'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              教师工作台
+              {activePage === 'teacher' && (
+                <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-blue-600 rounded-full" />
+              )}
+            </button>
+          )}
         </nav>
 
-        {/* Zone 3: 1 primary action */}
-        <div className="shrink-0">
+        {/* Zone 3: user badge */}
+        <div className="flex items-center gap-3 shrink-0">
+          {isTeacher && (
+            <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
+              教师
+            </span>
+          )}
           <button
             type="button"
             onClick={onOpenProfile}
-            className="px-4 py-2 text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors whitespace-nowrap"
           >
-            {student.name} · {student.grade}档案
+            <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+              {(displayName ?? student.name ?? '学').slice(0, 1)}
+            </span>
+            {displayName ?? student.name} · 初三档案
           </button>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="text-xs text-slate-400 hover:text-slate-700 transition-colors whitespace-nowrap"
+            >
+              退出
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Mobile horizontal navigation bar */}
-      <nav
-        aria-label="移动端导航"
-        className="md:hidden border-t border-slate-100 px-3 flex items-center justify-between overflow-x-auto"
-      >
-        {NAV_ITEMS.map((item) => {
-          const isActive = activePage === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onNavigate(item.id)}
-              className={`py-2.5 px-2 text-xs font-medium whitespace-nowrap shrink-0 border-b-2 transition-colors ${
-                isActive
-                  ? 'border-blue-700 text-blue-700'
-                  : 'border-transparent text-slate-600'
-              }`}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
     </header>
   );
 };

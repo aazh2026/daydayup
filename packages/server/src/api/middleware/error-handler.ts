@@ -13,13 +13,14 @@ import {
 import { logger } from '../../infrastructure/logging/logger.ts';
 
 export class ApiException extends Error {
-  constructor(
-    public readonly code: ApiErrorCode,
-    message?: string,
-    public readonly details?: unknown
-  ) {
+  readonly code: ApiErrorCode;
+  readonly details?: unknown;
+
+  constructor(code: ApiErrorCode, message?: string, details?: unknown) {
     super(message ?? code);
     this.name = 'ApiException';
+    this.code = code;
+    this.details = details;
   }
 }
 

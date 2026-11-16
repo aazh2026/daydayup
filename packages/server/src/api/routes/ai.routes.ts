@@ -7,7 +7,7 @@
  * - 响应附带 meta 可追溯信息
  */
 import { Router } from 'express';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
@@ -51,7 +51,10 @@ function throwAiFailure(result: { error: string | null; attempts: number }): nev
   );
 }
 
-export function createAiRoutes(container: Container): Router {
+export function createAiRoutes(
+  container: Container,
+  extraLimiter?: RequestHandler
+): Router {
   const router = Router();
 
   /**
@@ -66,11 +69,11 @@ export function createAiRoutes(container: Container): Router {
     path: string,
     handler: (req: Request, res: Response, next: NextFunction) => void
   ) => {
-    if (container.config.authRequired) {
-      router.post(path, requireAuth(container), requireQuota(container), handler);
-    } else {
-      router.post(path, requireQuota(container), handler);
-    }
+    const middlewares: RequestHandler[] = [];
+    if (container.config.authRequired) middlewares.push(requireAuth(container));
+    middlewares.push(requireQuota(container));
+    if (extraLimiter) middlewares.push(extraLimiter);
+    router.post(path, ...middlewares, handler);
   };
 
   /**

@@ -79,6 +79,15 @@ export function createCoachingRoutes(container: Container): Router {
           session
         );
 
+        await container.audit.record('CoachingSessionSaved', {
+          aggregateId: req.params.knowledgeId,
+          actor: req.auth?.principalId,
+          actorRole: req.auth?.role,
+          ip: req.ip,
+          requestId: req.requestId,
+          payload: { studentId: req.params.id, messageCount: messages.length },
+        });
+
         res.json({
           studentId: session.studentId,
           knowledgeId: session.knowledgeId,

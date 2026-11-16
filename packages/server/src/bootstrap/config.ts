@@ -24,6 +24,13 @@ export interface AppConfig {
   authSecret: string;
   /** 是否强制要求认证（生产默认 true） */
   authRequired: boolean;
+  /**
+   * 前端静态资源目录。
+   *
+   * 为空则不托管前端（前后端完全独立部署）。
+   * 设置后由后端一并托管（单容器部署）。
+   */
+  staticDir: string;
   /** 数据保留策略（天） */
   retention: {
     eventLogDays: number;
@@ -61,6 +68,9 @@ export function loadConfig(): AppConfig {
       process.env.AUTH_REQUIRED !== undefined
         ? process.env.AUTH_REQUIRED === 'true'
         : authSecret.length > 0,
+    staticDir: process.env.STATIC_DIR
+      ? path.resolve(process.env.STATIC_DIR)
+      : '',
     retention: {
       eventLogDays: Number(process.env.RETENTION_EVENT_LOG_DAYS ?? 180),
       attemptDays: Number(process.env.RETENTION_ATTEMPT_DAYS ?? 365),

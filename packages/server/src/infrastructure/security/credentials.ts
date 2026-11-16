@@ -29,8 +29,11 @@ export interface CredentialStore {
 
 export class FileCredentialStore implements CredentialStore {
   private cache: Credential[] | null = null;
+  private readonly filePath: string;
 
-  constructor(private readonly filePath: string) {}
+  constructor(filePath: string) {
+    this.filePath = filePath;
+  }
 
   private async load(): Promise<Credential[]> {
     if (this.cache) return this.cache;
@@ -67,7 +70,11 @@ export class FileCredentialStore implements CredentialStore {
  * 内存凭证存储（测试与开发用）。
  */
 export class MemoryCredentialStore implements CredentialStore {
-  constructor(private credentials: Credential[]) {}
+  private credentials: Credential[];
+
+  constructor(credentials: Credential[]) {
+    this.credentials = credentials;
+  }
 
   async findBySecret(secret: string): Promise<Credential | null> {
     return this.credentials.find((c) => c.secret === secret && !c.disabled) ?? null;

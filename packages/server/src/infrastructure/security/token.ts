@@ -48,10 +48,13 @@ function fromBase64url(input: string): Buffer {
 }
 
 export class TokenService {
-  constructor(
-    private readonly secret: string,
-    private readonly ttlSeconds: number = TOKEN_TTL_SECONDS
-  ) {}
+  private readonly secret: string;
+  private readonly ttlSeconds: number;
+
+  constructor(secret: string, ttlSeconds: number = TOKEN_TTL_SECONDS) {
+    this.secret = secret;
+    this.ttlSeconds = ttlSeconds;
+  }
 
   /**
    * 签发 token。

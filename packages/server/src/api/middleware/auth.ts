@@ -10,6 +10,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from './error-handler.ts';
 import type { Role } from '../../infrastructure/security/token.ts';
+import { logger } from '../../infrastructure/logging/logger.ts';
 
 export interface AuthContext {
   principalId: string;
@@ -75,6 +76,12 @@ export function assertStudentAccess(req: Request, studentId: string): void {
   // 老师角色可访问全部学生（受限于教学场景）
   if (auth.role === 'teacher') return;
   if (!auth.studentIds.includes(studentId)) {
+    logger.warn('audit.cross_student_denied', {
+      requestId: req.requestId,
+      actor: auth.principalId,
+      role: auth.role,
+      targetStudentId: studentId,
+    });
     throw new ApiException('FORBIDDEN', '无权访问该学生数据');
   }
 }
@@ -92,6 +99,11 @@ export function assertStudentWriteAccess(req: Request, studentId: string): void 
     throw new ApiException('UNAUTHORIZED', '缺少访问令牌');
   }
   if (auth.role === 'parent') {
+    logger.warn('audit.parent_write_denied', {
+      requestId: req.requestId,
+      actor: auth.principalId,
+      targetStudentId: studentId,
+    });
     throw new ApiException('FORBIDDEN', '家长账号为只读角色，无法修改学习数据');
   }
   assertStudentAccess(req, studentId);

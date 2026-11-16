@@ -16,10 +16,13 @@ interface QuotaRecord {
 }
 
 export class QuotaService {
-  constructor(
-    private readonly db: FileDatabase,
-    private readonly limit: number
-  ) {}
+  private readonly db: FileDatabase;
+  private readonly limit: number;
+
+  constructor(db: FileDatabase, limit: number) {
+    this.db = db;
+    this.limit = limit;
+  }
 
   private today(): string {
     return new Date().toISOString().slice(0, 10);

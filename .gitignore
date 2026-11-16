@@ -15,4 +15,6 @@ packages/server/data/db/
 packages/server/data/files/
 packages/server/data/logs/
 packages/server/data/jobs/
+packages/server/data/events/
+packages/server/data/audit/
 packages/server/backups/

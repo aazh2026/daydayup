@@ -6,11 +6,14 @@
  */
 import express from 'express';
 import type { Express } from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { Container } from './bootstrap/container.ts';
 import { requestIdMiddleware } from './api/middleware/request-id.ts';
 import { corsMiddleware } from './api/middleware/cors.ts';
 import { errorHandler, notFoundHandler } from './api/middleware/error-handler.ts';
 import { requireAuth } from './api/middleware/auth.ts';
+import { rateLimit } from './api/middleware/rate-limit.ts';
 import { createAiRoutes } from './api/routes/ai.routes.ts';
 import { createAuthRoutes } from './api/routes/auth.routes.ts';
 import { createKnowledgeRoutes } from './api/routes/knowledge.routes.ts';
@@ -52,7 +55,34 @@ export function createApp(container: Container): Express {
   // ---- v1 API ----
   const v1 = express.Router();
   v1.use(createAuthRoutes(container));
-  v1.use(createAiRoutes(container));
+
+  /**
+   * 全局限流（保护整个 API 面）。
+   *
+   * 与 AI 配额分工：
+   * - 限流：单位时间请求数，防瞬时刷量
+   * - 配额：每日总量，防成本失控
+   */
+  v1.use(
+    rateLimit({
+      windowMs: 60_000,
+      max: Number(process.env.RATE_LIMIT_PER_MINUTE ?? 120),
+      skipAuthenticated: true,
+    })
+  );
+
+  /**
+   * AI 端点更严格的限流。
+   * 每个 AI 调用都可能产生真实费用，因此单独收紧。
+   */
+  const aiLimiter = rateLimit({
+    windowMs: 60_000,
+    max: Number(process.env.RATE_LIMIT_AI_PER_MINUTE ?? 10),
+    skipAuthenticated: true,
+    message: 'AI 请求过于频繁',
+  });
+
+  v1.use(createAiRoutes(container, aiLimiter));
   v1.use(createKnowledgeRoutes());
 
   /**
@@ -94,8 +124,48 @@ export function createApp(container: Container): Express {
    * 旧路径映射到新实现，避免前后端版本组合时 404。
    */
   const legacy = express.Router();
+  legacy.use(aiLimiter);
   legacy.use(createAiRoutes(container));
   app.use('/api', legacy);
+
+  /**
+   * 生产环境的静态前端托管。
+   *
+   * 前后端分离部署时，前端产物由独立静态托管服务提供；
+   * 但也支持由后端一并托管（单容器部署），此时通过
+   * STATIC_DIR 指定 web/dist 路径。
+   *
+   * 注意：**不托管 data/files 目录** —— 试卷图片必须经鉴权接口访问。
+   */
+  if (container.config.staticDir) {
+    const staticDir = container.config.staticDir;
+    if (fs.existsSync(staticDir)) {
+      app.use(
+        express.static(staticDir, {
+          index: false,
+          maxAge: '1h',
+          setHeaders(res, filePath) {
+            if (filePath.endsWith('.html')) {
+              res.setHeader('Cache-Control', 'no-cache');
+            }
+          },
+        })
+      );
+
+      // SPA fallback
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) {
+          next();
+          return;
+        }
+        res.sendFile(path.join(staticDir, 'index.html'));
+      });
+
+      logger.info('app.static_mounted', { staticDir });
+    } else {
+      logger.warn('app.static_missing', { staticDir });
+    }
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -57,11 +57,11 @@ export class JobEngine extends EventEmitter {
   private readonly pollIntervalMs: number;
   private readonly backoffBaseMs: number;
 
-  constructor(
-    private readonly db: FileDatabase,
-    options: JobEngineOptions = {}
-  ) {
+  private readonly db: FileDatabase;
+
+  constructor(db: FileDatabase, options: JobEngineOptions = {}) {
     super();
+    this.db = db;
     this.concurrency = options.concurrency ?? 2;
     this.leaseMs = options.leaseMs ?? 5 * 60 * 1000;
     this.jobTimeoutMs = options.jobTimeoutMs ?? 10 * 60 * 1000;
