@@ -40,7 +40,13 @@ const EMPTY: CurriculumData = {
 
 const CurriculumContext = createContext<CurriculumData>(EMPTY);
 
-function loadSnapshot(): { version: string; knowledgePoints: KnowledgePoint[] } | null {
+/**
+ * 读取本地快照（离线兜底）。
+ *
+ * 导出以便单测 —— 快照损坏时的降级行为直接影响
+ * 「断网还能不能浏览知识体系」这条产品承诺。
+ */
+export function loadSnapshot(): { version: string; knowledgePoints: KnowledgePoint[] } | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
@@ -57,12 +63,25 @@ function loadSnapshot(): { version: string; knowledgePoints: KnowledgePoint[] } 
   }
 }
 
-function saveSnapshot(version: string, knowledgePoints: KnowledgePoint[]): void {
+/** 写入本地快照（供离线浏览） */
+export function saveSnapshot(version: string, knowledgePoints: KnowledgePoint[]): void {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ version, knowledgePoints }));
   } catch {
     // 忽略配额错误
   }
+}
+
+/** 构造知识体系数据（含 id → KnowledgePoint 索引） */
+export function buildCurriculumData(
+  version: string,
+  knowledgePoints: KnowledgePoint[]
+): Pick<CurriculumData, 'version' | 'knowledgePoints' | 'knowledgeMap'> {
+  return {
+    version,
+    knowledgePoints,
+    knowledgeMap: Object.fromEntries(knowledgePoints.map((kp) => [kp.id, kp])),
+  };
 }
 
 export const CurriculumProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -72,11 +91,7 @@ export const CurriculumProvider: React.FC<{ children: React.ReactNode }> = ({
     const snapshot = loadSnapshot();
     if (!snapshot) return EMPTY;
     return {
-      version: snapshot.version,
-      knowledgePoints: snapshot.knowledgePoints,
-      knowledgeMap: Object.fromEntries(
-        snapshot.knowledgePoints.map((kp) => [kp.id, kp])
-      ),
+      ...buildCurriculumData(snapshot.version, snapshot.knowledgePoints),
       isLoading: false,
       error: null,
     };
@@ -94,11 +109,7 @@ export const CurriculumProvider: React.FC<{ children: React.ReactNode }> = ({
         const knowledgePoints = res.knowledgePoints ?? [];
         saveSnapshot(res.version, knowledgePoints);
         setData({
-          version: res.version,
-          knowledgePoints,
-          knowledgeMap: Object.fromEntries(
-            knowledgePoints.map((kp) => [kp.id, kp])
-          ),
+          ...buildCurriculumData(res.version, knowledgePoints),
           isLoading: false,
           error: null,
         });
