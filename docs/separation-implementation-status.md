@@ -39,6 +39,9 @@
 | Phase 8b | 水合逻辑解耦（可独立测试） | ✅ 完成 |
 | Phase 8c | 水合核心测试（7 例） | ✅ 完成 |
 | Phase 8d | SSE 帧解析测试（21 例） | ✅ 完成 |
+| Phase 8e | 登录态与知识体系缓存测试（25 例） | ✅ 完成 |
+| Phase 8f | 降级计划学科硬编码修复（+21 例） | ✅ 完成 |
+| Phase 8g | 中考倒计时时区修复（+17 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -456,7 +459,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       251/251 通过（contracts 41 + server 145 + web 65）
+测试       315/315 通过（contracts 41 + server 155 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -494,6 +497,8 @@ Phase 4 又发现 3 个：
 | 18 | **任务路由未挂认证中间件** | **任何人知道 jobId 即可读取学生诊断结论** |
 | 19 | 水合漏了 `examPapers` / `exams` | **TC-08 存档库刷新后为空**（接口有了、前端没拉） |
 | 20 | 水合中「错题为空」提前 return 整个流程 | **无错题学生丢失后 4 类数据**（含刚补好的存档库） |
+| 21 | 降级计划学科硬编码「数学」（恒真三元残留） | **非数学学生看到一屏「数学」任务** |
+| 22 | 中考倒计时目标日期按 UTC 零点解析 | **倒计时一直多一天**（明天显示成 2 天，UTC+8 受害） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -666,6 +671,59 @@ if (line.startsWith(':')) continue;   // 注释/心跳
 该判断在当前实现下**永远不会为真**。留着它会让人误以为
 「注释是被显式处理的」，实际并非如此。已移除，
 并用行为测试（注释行不产生事件）锁住真实语义。
+
+### 降级计划的学科硬编码
+
+`plan-fallback.ts` 的提分机会构造里留着一段恒真三元：
+
+```ts
+subject: state.exams.length >= 0 ? ('数学' as Subject) : ('数学' as Subject),
+knowledgeName: knowledgeId,
+```
+
+等价于硬编码 `subject: '数学'`。影响：降级路径下
+**英语/物理/化学学生会看到一屏「数学」任务**，知识点名称还是 id。
+
+知识体系资产客户端本来就有（`useCurriculum()` 的 knowledgeMap），
+服务端也从同一来源取 `kp.subject` / `kp.name` ——
+降级路径只是没接上。已接入；**优先级公式仍保持简化**
+（服务端有前置依赖/紧急度/复测等修正因子，那是权威逻辑，不在降级侧复制）。
+
+### 中考倒计时差一天（时区）
+
+```ts
+const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 本地零点
+const target = new Date(targetExamDate);                                // UTC 零点！
+```
+
+`new Date('2027-06-20')` 按 **UTC 零点**解析，「今天」按**本地零点**计算。
+在上海（UTC+8）两者差 8 小时，`Math.ceil` 多算一天。
+
+| 目标日期 | 正确 | 修复前 |
+|---|---|---|
+| 明天 | 1 | **2** |
+| 后天 | 2 | **3** |
+| 跨月（12-17） | 30 | **31** |
+| 跨年（2027-06-20） | 215 | **216** |
+
+学生每天在首页看到的「距离中考还有 N 天」**一直多一天**——
+而本项目的主要使用地恰好是 UTC+8。
+
+修复：目标日期按**本地日历日**解析（`YYYY-MM-DD` 用正则拆年月日），
+非该格式时回退原行为。前后端两处重复实现同步修复。
+
+### 前端逻辑补测汇总
+
+| 文件 | 例数 | 覆盖 |
+|---|---|---|
+| `web/tests/hydration.test.ts` | 7 | 7 类数据加载、**空列表不中断后续**、单类失败隔离、全部失败保留骨架、掌握度合并语义、取消处理 |
+| `web/tests/sse-frame.test.ts` | 21 | 5 种事件类型、帧边界（心跳/多行 data/非法 JSON）、字段缺失兜底、缺回调不抛错 |
+| `web/tests/auth-store.test.ts` | 12 | 会话读写、独立 token 键、过期判定（含边界）、过期即清除、存储异常容错 |
+| `web/tests/curriculum-cache.test.ts` | 9 | 快照读写、空列表视为无快照、非法内容返回 null、knowledgeMap 索引构建 |
+| `web/tests/plan-fallback.test.ts` | 21 | 有效时长预算（与服务端逐条对齐）、7 天日程、每日总时长 ≤ 预算、**展示字段取自知识体系**、步骤拆分 |
+| `web/tests/countdown.test.ts` | 8 | 中考倒计时时区正确性 |
+| `web/tests/api-client.test.ts` | 24 | 令牌注入、错误码透出、重试策略、超时、401 事件 |
+| `web/tests/local-state.test.ts` | 13 | 遗留数据清理、骨架构造、UI 偏好 |
 
 ---
 
