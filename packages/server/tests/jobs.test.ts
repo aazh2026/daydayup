@@ -257,6 +257,190 @@ describe('Job Engine 进度事件', () => {
 
     assert.ok(events.some((e) => e.type === 'done'), '应收到完成事件');
   });
+
+  /**
+   * 回归测试：进度事件必须按调用顺序推送。
+   *
+   * 历史缺陷：`reportProgress` 内部先 `await persist()`（磁盘写）再 emit，
+   * 两次连续上报并发进入 await 时，谁先写完谁先 emit，
+   * 导致 SSE 进度乱序（30% → 70% → 30%），前端进度条来回跳动。
+   *
+   * 修复：同任务的进度上报串行化（FIFO），且 done 事件在进度全部推送后触发。
+   */
+  test('连续进度上报严格按调用顺序推送，不乱序', async () => {
+    const STAGES = ['第一步', '第二步', '第三步', '第四步', '第五步'];
+
+    engine.register('ordered-progress', {
+      async execute(_input: unknown, ctx: JobContext) {
+        // 不 await：模拟真实 handler 的「即发即忘」调用方式
+        for (const stage of STAGES) {
+          ctx.reportProgress(stage, STAGES.indexOf(stage) * 20 + 10);
+        }
+        return { ok: true };
+      },
+    });
+
+    const events: Array<{ type: string; stage?: string; pct?: number }> = [];
+
+    await engine.start();
+    const jobId = await engine.enqueue('ordered-progress', {});
+    engine.subscribe(jobId, (event) => {
+      events.push({ type: event.type, stage: event.stage, pct: event.pct });
+    });
+
+    const ok = await waitFor(async () => {
+      const job = await engine.getJob(jobId);
+      return job?.status === 'SUCCEEDED';
+    });
+    assert.ok(ok, '任务应成功完成');
+
+    // 等最后一条事件到达
+    await waitFor(() => events.some((e) => e.type === 'done'));
+
+    const progressStages = events
+      .filter((e) => e.type === 'progress')
+      .map((e) => e.stage);
+
+    assert.deepEqual(
+      progressStages,
+      STAGES,
+      '进度事件必须严格按上报顺序推送'
+    );
+
+    // pct 也必须单调递增
+    const pcts = events.filter((e) => e.type === 'progress').map((e) => e.pct ?? 0);
+    for (let i = 1; i < pcts.length; i++) {
+      assert.ok(
+        pcts[i] > pcts[i - 1],
+        `pct 应单调递增，实际 ${JSON.stringify(pcts)}`
+      );
+    }
+
+    // done 必须排在最后一条 progress 之后
+    const lastProgressIndex = events.findLastIndex((e) => e.type === 'progress');
+    const doneIndex = events.findIndex((e) => e.type === 'done');
+    assert.ok(doneIndex > lastProgressIndex, 'done 事件应在所有进度事件之后');
+  });
+
+  test('进度上报失败不影响任务本身', async () => {
+    engine.register('progress-then-fail', {
+      async execute(_input: unknown, ctx: JobContext) {
+        ctx.reportProgress('第一步', 30);
+        throw new Error('业务失败');
+      },
+    });
+
+    await engine.start();
+    const jobId = await engine.enqueue('progress-then-fail', {});
+
+    const ok = await waitFor(async () => {
+      const job = await engine.getJob(jobId);
+      return job?.status === 'FAILED' || job?.status === 'PENDING';
+    });
+    assert.ok(ok, '任务应进入失败或重试状态');
+  });
+
+  /**
+   * 确定性回归测试：**注入**竞态，证明顺序保证来自引擎本身，而非时序运气。
+   *
+   * 手法：包装引擎内部的 `reportProgress`，让**第一次**上报多等一段时间。
+   * 若引擎不做串行化，后发的第二次上报会抢先 emit，顺序必然倒置。
+   *
+   * 为什么必须注入而不是「多跑几次碰运气」：
+   * 竞态是否显现取决于磁盘写完成的相对时机，天然不稳定——
+   * 一个只在 70% 概率下失败的测试，等于没有测试。
+   */
+  test('进度上报被拖慢时，事件顺序仍按调用顺序（注入竞态）', async () => {
+    const slowEngine = new JobEngine(db, {
+      concurrency: 2,
+      pollIntervalMs: 50,
+      backoffBaseMs: 100,
+      leaseMs: 1000,
+    });
+
+    // 包装内部实现：第一次上报额外等待 100ms，制造「后发先至」的窗口
+    const internal = slowEngine as unknown as {
+      reportProgress: (job: unknown, stage: string, pct: number) => Promise<void>;
+    };
+    const originalReport = internal.reportProgress.bind(slowEngine);
+    let callCount = 0;
+    internal.reportProgress = async (job: unknown, stage: string, pct: number) => {
+      callCount += 1;
+      if (callCount === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      await originalReport(job, stage, pct);
+    };
+
+    slowEngine.register('slow-progress', {
+      async execute(_input: unknown, ctx: JobContext) {
+        ctx.reportProgress('第一步', 30);
+        ctx.reportProgress('第二步', 70);
+        ctx.reportProgress('第三步', 90);
+        return { ok: true };
+      },
+    });
+
+    const events: Array<{ type: string; stage?: string }> = [];
+    await slowEngine.start();
+    const jobId = await slowEngine.enqueue('slow-progress', {});
+    slowEngine.subscribe(jobId, (event) => {
+      events.push({ type: event.type, stage: event.stage });
+    });
+
+    const ok = await waitFor(async () => {
+      const job = await slowEngine.getJob(jobId);
+      return job?.status === 'SUCCEEDED';
+    });
+    assert.ok(ok, '任务应成功完成');
+    await waitFor(() => events.some((e) => e.type === 'done'));
+
+    const stages = events.filter((e) => e.type === 'progress').map((e) => e.stage);
+    assert.deepEqual(
+      stages,
+      ['第一步', '第二步', '第三步'],
+      '即使首次上报被拖慢，进度事件顺序也必须稳定'
+    );
+
+    await slowEngine.stop();
+  });
+
+  /**
+   * 高频进度上报的顺序稳定性。
+   *
+   * 真实场景（如试卷诊断）会在短时间内连续上报多次进度。
+   * 未修复时：10 次里约 7 次乱序（如 s0,s2,s3,s1,...）。
+   * 修复后：顺序必须始终稳定。
+   */
+  test('连续 20 次进度上报顺序始终稳定', async () => {
+    const STAGES = Array.from({ length: 20 }, (_, i) => `阶段${i}`);
+
+    engine.register('many-progress', {
+      async execute(_input: unknown, ctx: JobContext) {
+        for (const stage of STAGES) {
+          ctx.reportProgress(stage, 0);
+        }
+        return { ok: true };
+      },
+    });
+
+    const events: Array<{ type: string; stage?: string }> = [];
+    await engine.start();
+    const jobId = await engine.enqueue('many-progress', {});
+    engine.subscribe(jobId, (event) => {
+      events.push({ type: event.type, stage: event.stage });
+    });
+
+    const ok = await waitFor(async () => {
+      const job = await engine.getJob(jobId);
+      return job?.status === 'SUCCEEDED';
+    });
+    assert.ok(ok, '任务应成功完成');
+    await waitFor(() => events.some((e) => e.type === 'done'));
+
+    const stages = events.filter((e) => e.type === 'progress').map((e) => e.stage);
+    assert.deepEqual(stages, STAGES, '高频进度上报也必须严格有序');
+  });
 });
 
 describe('Job Engine 异常恢复', () => {

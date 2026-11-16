@@ -26,6 +26,11 @@
 | Phase 4e | 教师角色界面 | ✅ 完成 |
 | Phase 4f | 独立部署（Dockerfile / compose / CI） | ✅ 完成 |
 | Phase 4g | 服务端免编译（Node 原生类型剥离） | ✅ 完成 |
+| Phase 5a | 运维接口角色校验（安全修复） | ✅ 完成 |
+| Phase 5b | 移除旧路径兼容层 | ✅ 完成 |
+| Phase 5c | localStorage 边界收紧（只留 token/偏好/快照） | ✅ 完成 |
+| Phase 5d | 补全服务端水合（历史/流水/成绩） | ✅ 完成 |
+| Phase 5e | 清理一次性迁移脚本 | ✅ 完成 |
 
 ---
 
@@ -276,13 +281,71 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ---
 
+## Phase 5 — 收尾清理与安全补漏
+
+### 运维接口角色校验（安全修复）
+
+审计中发现：**家长（只读角色）可以触发运维接口**。
+
+| 接口 | 修复前 | 修复后 |
+|---|---|---|
+| `POST /admin/backup` | 任何登录用户 | 仅 teacher |
+| `POST /admin/cleanup` | 任何登录用户 | 仅 teacher |
+| `GET /admin/backups` | 任何登录用户 | 仅 teacher |
+| `GET /admin/audit` | 任何登录用户 | 仅 teacher |
+| `DELETE /admin/students/:id/data` | 拒绝家长 | **允许家长代为行使孩子的删除权**（数据主体权利） |
+
+`admin/cleanup` 尤其危险——它会删除**所有学生**的过期数据。
+
+### localStorage 边界收紧
+
+分离前前端把完整 AppState（约 20KB，含全部聊天记录与试卷）写 localStorage，
+每次状态变化全量重写。这让「服务端是唯一真相源」名存实亡。
+
+现在 localStorage 只保留：
+
+| 数据 | 保留 | 说明 |
+|---|---|---|
+| 访问令牌 | ✅ | 必须本地持有 |
+| UI 偏好 | ✅ | 纯客户端状态 |
+| 知识体系只读快照 | ✅ | 减少请求，支持离线浏览 |
+| 掌握度/错题/计划/会话/成绩 | ❌ | **一律从服务端水合** |
+
+旧 key（`shanghai_ai_score_os_v5`）在首次访问时自动清理。
+
+### 补全服务端水合
+
+原先只水合掌握度与错题记录，导致报告页缺失：
+- 掌握度迁移历史 → `GET /mastery/history`
+- 作答流水 → `GET /attempts`（新增）
+- 考试成绩 → `GET /exam-results`（新增）
+
+### 移除旧路径兼容层
+
+前端已全量切换到 `/api/v1`，删除 `/api/*` 兼容层。
+前后端版本不再需要错配保护。
+
+### 清理一次性脚本
+
+`extract-knowledge.mjs` / `extract-seed.mjs` 的产物已是正式资产（JSON），
+脚本删除。
+
+### 修复 seed 非幂等
+
+`seed` 用 append 写作答流水，重复执行会产生重复记录（导致 React key 冲突）。
+现改为先清空再写，读接口另加按 ID 去重防御。
+
+---
+
 ## 验证结果
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       93/93 通过（单元 18 + 鉴权 10 + Job 13 + 集成 15 + SSE 7 + 异步 4 + 保留/备份 9 + 安全/运维 17）
+测试       110/110 通过（单元 18 + 鉴权 10 + Job 13 + 集成 15 + SSE 7 + 异步 4
+                + 保留/备份 9 + 安全/运维 17 + 角色权限 13）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
+localStorage 仅剩 7.3KB 知识体系快照（原 19.7KB 业务数据）
 教师工作台  ✓ 角色徽章 + 学生卡片 + 优先提分点
 原生剥离启动 ✓ node --experimental-strip-types 直接运行 TS 源码
 架构边界   后端不依赖 web/ ✓  前端不依赖后端实现 ✓
@@ -311,6 +374,8 @@ Phase 4 又发现 3 个：
 | 8 | `storage.read()` 吞掉路径穿越异常 | **安全检查形同虚设**（异常被 catch 后返回 null） |
 | 9 | `Scheduler` 每日任务绕过每日守卫 | **每日备份/清理会每 6 小时执行一次** |
 | 10 | `FileStorage.listForStudent('')` 恒空 | 上传文件找不到（同 #5 同源） |
+| 11 | 运维接口无角色校验 | **家长可触发全量数据清理** |
+| 12 | `seed` 用 append 写流水 | 重复播种产生重复记录（React key 冲突） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。

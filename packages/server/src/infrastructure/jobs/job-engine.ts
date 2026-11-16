@@ -51,6 +51,19 @@ export class JobEngine extends EventEmitter {
   private ticking = false;
   private timer: NodeJS.Timeout | null = null;
 
+  /**
+   * 每个任务的进度上报串行链。
+   *
+   * 为什么需要：`reportProgress` 内部先 `await persist()`（磁盘写）再 emit，
+   * 若不加串行化，两次连续上报会并发进入 await，谁先完成就谁先 emit——
+   * 导致 SSE 进度事件**乱序**（如 30% 之后先收到 70%，再收到 30%）。
+   * 这会让前端的进度条来回跳动。
+   *
+   * 用 promise 链把同任务的进度上报排成 FIFO，
+   * 保证「先调用的一定先推送」。
+   */
+  private progressChains = new Map<string, Promise<void>>();
+
   private readonly concurrency: number;
   private readonly leaseMs: number;
   private readonly jobTimeoutMs: number;
@@ -331,13 +344,31 @@ export class JobEngine extends EventEmitter {
       const context: JobContext = {
         jobId: job.id,
         reportProgress: (stage, pct, message) => {
-          void this.reportProgress(job, stage, pct, message);
+          // 串行化：把本次上报挂到该任务的进度链尾部，
+          // 保证同任务的进度事件按调用顺序推送（不乱序）。
+          const previous = this.progressChains.get(job.id) ?? Promise.resolve();
+          const next = previous
+            .catch(() => undefined)
+            .then(() => this.reportProgress(job, stage, pct, message))
+            .catch((err) => {
+              // 进度上报失败不应影响任务本身（只影响进度展示）
+              logger.warn('jobs.progress_failed', {
+                jobId: job.id,
+                error: err instanceof Error ? err.message : String(err),
+              });
+            });
+          this.progressChains.set(job.id, next);
         },
         isCancelled: async () => this.cancelled.has(job.id),
         signal: controller.signal,
       };
 
       const output = await handler.execute(job.input, context);
+
+      // 关键：等待所有排队中的进度事件推送完毕，
+      // 否则 done 事件可能先于最后一条 progress 到达，
+      // 订阅者会先收到「完成」再收到「99%」这种乱序。
+      await this.drainProgress(job.id);
 
       if (this.cancelled.has(job.id)) {
         await this.cancelJob(job);
@@ -394,6 +425,21 @@ export class JobEngine extends EventEmitter {
       clearTimeout(timeoutTimer);
       this.running.delete(job.id);
       this.cancelled.delete(job.id);
+      // 释放进度链（任务已终结，不会再有新进度）
+      this.progressChains.delete(job.id);
+    }
+  }
+
+  /**
+   * 等待某任务当前排队的进度事件全部推送完毕。
+   */
+  private async drainProgress(jobId: string): Promise<void> {
+    const pending = this.progressChains.get(jobId);
+    if (!pending) return;
+    try {
+      await pending;
+    } catch {
+      // 单次进度上报失败已在链内兜底，此处忽略
     }
   }
 

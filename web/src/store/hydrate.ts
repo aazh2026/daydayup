@@ -2,10 +2,11 @@
  * 服务端状态水合。
  *
  * 分离后服务端是唯一真相源：应用启动时从服务端拉取
- * 掌握度、错题记录、教练会话，覆盖本地缓存。
+ * 掌握度、掌握度历史、错题记录、作答流水、考试成绩，
+ * 覆盖本地骨架。
  *
- * 设计：本地 localStorage 仅作为「乐观缓存 + 离线兜底」，
- * 服务端数据到达后即被权威值覆盖。
+ * 设计：本地不再持久化业务数据（见 store/local-state.ts），
+ * localStorage 仅作 token / UI 偏好 / 只读快照。
  */
 import { useEffect } from 'react';
 import type { AppState } from '@daydayup/contracts';
@@ -16,8 +17,20 @@ interface MasteryResponse {
   records: Record<string, AppState['masteryRecords'][string]>;
 }
 
+interface MasteryHistoryResponse {
+  history: AppState['masteryHistory'];
+}
+
 interface ErrorRecordsResponse {
   records: Array<Partial<AppState['errorRecords'][number]>>;
+}
+
+interface AttemptsResponse {
+  attempts: Array<Partial<AppState['learningAttempts'][number]>>;
+}
+
+interface ExamResultsResponse {
+  results: Array<Partial<AppState['examResults'][number]>>;
 }
 
 export function useServerHydration(
@@ -31,7 +44,7 @@ export function useServerHydration(
     let cancelled = false;
 
     void (async () => {
-      // ---- 掌握度（服务端权威） ----
+      // ---- 掌握度（服务端权威）----
       try {
         const mastery = await api.get<MasteryResponse>(
           `/api/v1/students/${studentId}/mastery`
@@ -45,7 +58,21 @@ export function useServerHydration(
           },
         }));
       } catch {
-        // 服务端不可用：保留本地缓存
+        // 服务端不可用：保留骨架
+      }
+
+      // ---- 掌握度迁移历史 ----
+      try {
+        const history = await api.get<MasteryHistoryResponse>(
+          `/api/v1/students/${studentId}/mastery/history`
+        );
+        if (cancelled) return;
+        setAppState((prev) => ({
+          ...prev,
+          masteryHistory: history.history ?? [],
+        }));
+      } catch {
+        // 忽略
       }
 
       // ---- 错题记录 ----
@@ -87,7 +114,62 @@ export function useServerHydration(
           })),
         }));
       } catch {
-        // 服务端不可用：保留本地缓存
+        // 忽略
+      }
+
+      // ---- 作答流水 ----
+      try {
+        const attempts = await api.get<AttemptsResponse>(
+          `/api/v1/students/${studentId}/attempts`
+        );
+        if (cancelled) return;
+        const list = attempts.attempts ?? [];
+
+        setAppState((prev) => ({
+          ...prev,
+          learningAttempts: list.map((a, idx) => ({
+            id: a.id ?? `att-${idx}`,
+            taskId: a.taskId,
+            knowledgeId: a.knowledgeId ?? '',
+            subject: a.subject ?? '数学',
+            mode: a.mode ?? '基础练习',
+            questionStem: a.questionStem ?? '',
+            userAnswer: a.userAnswer ?? '',
+            isCorrect: a.isCorrect ?? false,
+            hintsUsed: a.hintsUsed ?? 0,
+            timeSpentSeconds: a.timeSpentSeconds ?? 0,
+            independent: a.independent ?? false,
+            aiFeedback: a.aiFeedback ?? '',
+            timestamp: a.timestamp ?? new Date().toISOString(),
+          })),
+        }));
+      } catch {
+        // 忽略
+      }
+
+      // ---- 考试成绩 ----
+      try {
+        const examResults = await api.get<ExamResultsResponse>(
+          `/api/v1/students/${studentId}/exam-results`
+        );
+        if (cancelled) return;
+        const list = examResults.results ?? [];
+
+        setAppState((prev) => ({
+          ...prev,
+          examResults: list.map((r, idx) => ({
+            id: r.id ?? `res-${idx}`,
+            examId: r.examId ?? '',
+            examTitle: r.examTitle ?? '',
+            subject: r.subject ?? '数学',
+            score: r.score ?? 0,
+            fullScore: r.fullScore ?? 100,
+            targetScore: r.targetScore ?? 0,
+            date: r.date ?? '',
+          })),
+        }));
+      } catch {
+        // 忽略
       }
     })();
 

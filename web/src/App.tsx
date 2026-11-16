@@ -21,6 +21,10 @@ import {
   AUTH_EXPIRED_EVENT,
   type AuthSession,
 } from './store/auth.ts';
+import {
+  createLocalSkeleton,
+  purgeLegacyState,
+} from './store/local-state.ts';
 import type {
   AppPage,
   AppState,
@@ -39,8 +43,6 @@ import type {
   VariantQuestion,
 } from './types.ts';
 
-const STORAGE_KEY = 'shanghai_ai_score_os_v5';
-
 /**
  * 开发模式会话。
  *
@@ -55,34 +57,16 @@ const DEV_SESSION: AuthSession = {
   displayName: '张伟',
 };
 
-function loadInitialState(): AppState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as AppState;
-      if (parsed && parsed.student && parsed.masteryRecords) {
-        return {
-          ...INITIAL_APP_STATE,
-          ...parsed,
-          masteryRecords: {
-            ...INITIAL_APP_STATE.masteryRecords,
-            ...parsed.masteryRecords,
-          },
-          masteryHistory: parsed.masteryHistory ?? INITIAL_APP_STATE.masteryHistory,
-          deferredKnowledgeIds: parsed.deferredKnowledgeIds ?? [],
-          coachHistoryByKnowledge: parsed.coachHistoryByKnowledge ?? {},
-          taskProgressByKnowledge: parsed.taskProgressByKnowledge ?? {},
-        };
-      }
-    }
-  } catch {
-    // Fallback to initial seed
-  }
-  return INITIAL_APP_STATE;
-}
-
 export default function App() {
-  const [appState, setAppState] = useState<AppState>(loadInitialState);
+  /**
+   * 本地状态仅保留骨架（无业务数据）。
+   *
+   * 业务数据（掌握度、错题、计划、会话）一律由服务端水合，
+   * 不再写 localStorage —— 服务端是唯一真相源。
+   */
+  const [appState, setAppState] = useState<AppState>(() =>
+    createLocalSkeleton(INITIAL_APP_STATE)
+  );
   const [activePage, setActivePage] = useState<AppPage>('today');
   const [activeKnowledgeId, setActiveKnowledgeId] = useState<string>('math-alg-rational');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -138,13 +122,12 @@ export default function App() {
    */
   const [serverPlan, setServerPlan] = useState<LearningPlan | null>(null);
 
+  // 一次性清理分离前遗留的 localStorage 业务数据
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-    } catch {
-      // Ignore quota errors
+    if (purgeLegacyState()) {
+      console.info('已清理历史本地数据（已迁移至服务端）');
     }
-  }, [appState]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,9 +161,10 @@ export default function App() {
   };
 
   const handleResetDemo = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setAppState(INITIAL_APP_STATE);
+    // 重置演示数据：恢复本地骨架（业务数据由服务端水合）
+    setAppState(createLocalSkeleton(INITIAL_APP_STATE));
     setActiveKnowledgeId('math-alg-rational');
+    setServerPlan(null);
   };
 
   const handleStartTask = (task: LearningTask) => {

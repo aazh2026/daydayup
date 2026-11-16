@@ -1,3 +1,13 @@
+/**
+ * 教师工作台 E2E 测试。
+ *
+ * 前置条件：
+ *   1. 后端运行在 :3000（需配置 AUTH_SECRET 与教师凭证）
+ *   2. 前端运行在 :5173
+ *   3. 已安装浏览器：npx playwright install chromium
+ *
+ * 运行：npm run test:e2e
+ */
 import { chromium } from 'playwright';
 
 const browser = await chromium.launch();

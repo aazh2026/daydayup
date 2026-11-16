@@ -96,6 +96,54 @@ export function createMasteryRoutes(container: Container): Router {
     }
   );
 
+  /**
+   * GET /api/v1/students/:id/attempts
+   *
+   * 作答流水（用于报告页的评测记录与学习时长统计）。
+   *
+   * 数据来自事件日志文件（data/db/attempts/{studentId}/{yyyy-MM}.jsonl）。
+   */
+  router.get(
+    '/students/:id/attempts',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        assertStudentAccess(req, req.params.id);
+        const studentId = req.params.id;
+
+        const files = await container.db.list(['db', 'attempts', studentId]);
+        const attempts: unknown[] = [];
+        const seen = new Set<string>();
+
+        for (const file of files) {
+          const lines = await container.db.readLines<Record<string, unknown>>([
+            'db',
+            'attempts',
+            studentId,
+            file,
+          ]);
+          for (const line of lines) {
+            // 按 ID 去重（重复 seed 或多次写入时的防御）
+            const id = String(line.id ?? '');
+            if (id && seen.has(id)) continue;
+            if (id) seen.add(id);
+            attempts.push(line);
+          }
+        }
+
+        // 按时间倒序（最近在前）
+        attempts.sort((a, b) => {
+          const ta = String((a as { timestamp?: string }).timestamp ?? '');
+          const tb = String((b as { timestamp?: string }).timestamp ?? '');
+          return ta < tb ? 1 : -1;
+        });
+
+        res.json({ attempts, total: attempts.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   /** GET /api/v1/students/:id/mastery/:knowledgeId/retest-status */
   router.get(
     '/students/:id/mastery/:knowledgeId/retest-status',

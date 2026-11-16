@@ -118,17 +118,6 @@ export function createApp(container: Container): Express {
   app.use('/api/v1', v1);
 
   /**
-   * 旧路径兼容层（迁移期保留一个发布周期）。
-   *
-   * 前端全量切换到 /api/v1 后删除。
-   * 旧路径映射到新实现，避免前后端版本组合时 404。
-   */
-  const legacy = express.Router();
-  legacy.use(aiLimiter);
-  legacy.use(createAiRoutes(container));
-  app.use('/api', legacy);
-
-  /**
    * 生产环境的静态前端托管。
    *
    * 前后端分离部署时，前端产物由独立静态托管服务提供；

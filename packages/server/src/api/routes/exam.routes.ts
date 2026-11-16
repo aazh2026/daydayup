@@ -207,6 +207,56 @@ export function createExamRoutes(container: Container): Router {
     }
   );
 
+  /**
+   * GET /api/v1/students/:id/exam-results
+   *
+   * 学生的历次考试成绩（报告页的「成绩趋势对比矩阵」用）。
+   */
+  router.get(
+    '/students/:id/exam-results',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        assertStudentAccess(req, req.params.id);
+
+        const examIds = await container.db.list(EXAMS_DIR);
+        const paperIds = await container.db.list(PAPERS_DIR);
+        const results: Array<Record<string, unknown>> = [];
+
+        for (const examFileId of examIds) {
+          const exam = await container.db.read<Exam>([
+            ...EXAMS_DIR,
+            examFileId.replace(/\.json$/, ''),
+          ]);
+          if (!exam) continue;
+
+          for (const paperFileId of paperIds) {
+            const paper = await container.db.read<ExamPaper>([
+              ...PAPERS_DIR,
+              paperFileId.replace(/\.json$/, ''),
+            ]);
+            if (!paper || paper.examId !== exam.id) continue;
+
+            results.push({
+              id: `res-${paper.id}`,
+              examId: exam.id,
+              examTitle: paper.examTitle ?? exam.title,
+              subject: paper.subject,
+              score: paper.score ?? 0,
+              fullScore: paper.fullScore ?? 100,
+              targetScore: paper.score ?? 0,
+              date: paper.date,
+            });
+          }
+        }
+
+        results.sort((a, b) => (String(a.date) < String(b.date) ? 1 : -1));
+        res.json({ results, total: results.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   /** GET /api/v1/students/:id/error-records */
   router.get(
     '/students/:id/error-records',

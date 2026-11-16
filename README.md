@@ -68,6 +68,7 @@ node --experimental-strip-types packages/server/src/main.ts
 | `npm run backup --workspace=@daydayup/server` | 创建备份（自动验证） |
 | `npm run restore --workspace=@daydayup/server -- --name <名>` | 从备份恢复 |
 | `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
+| `npm run test:e2e` | 教师工作台 E2E（需 `npx playwright install chromium`） |
 
 ---
 
@@ -79,6 +80,17 @@ node --experimental-strip-types packages/server/src/main.ts
 | 前端**禁止** import `packages/server` | `grep -rn "packages/server" web/src` |
 | 契约包**禁止**包含业务逻辑 | 仅 `domain/` + `api/` 类型与校验函数 |
 | 业务算法**只在服务端** | `packages/server/src/engines/` |
+
+### 浏览器本地存储的边界
+
+| 数据 | 保留 | 理由 |
+|---|---|---|
+| 访问令牌 | ✅ | 必须本地持有才能发请求 |
+| UI 偏好 | ✅ | 纯客户端状态 |
+| 知识体系只读快照 | ✅ | 减少请求，支持离线浏览 |
+| 掌握度 / 错题 / 计划 / 会话 / 成绩 | ❌ | **服务端是唯一真相源**，一律水合填充 |
+
+分离前前端把完整 AppState（约 20KB）写 localStorage，每次状态变化全量重写。
 
 ### 为什么契约包不放引擎
 
@@ -149,6 +161,7 @@ SSE 用 `node:http` 原生实现，保持零第三方依赖。
 | 命令 | 说明 |
 |---|---|
 | `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
+| `npm run test:e2e` | 教师工作台 E2E（需 `npx playwright install chromium`） |
 | `DELETE /api/v1/admin/students/:id/data` | 删除某学生全部数据（数据主体删除权） |
 
 保留期可通过环境变量配置（事件日志 180 天、作答流水 365 天、

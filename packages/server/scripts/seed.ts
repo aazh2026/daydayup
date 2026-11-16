@@ -77,6 +77,10 @@ async function main(): Promise<void> {
     lastComputedAt: new Date().toISOString(),
   });
 
+  // 作答流水：先清空再写入，保证 seed 幂等
+  // （append 语义下重复执行会产生重复记录，导致 React key 冲突）
+  await db.remove(['db', 'attempts', student.id]);
+
   for (const attempt of seed.learningAttempts) {
     const dateKey = attempt.timestamp.slice(0, 10);
     await db.append(
