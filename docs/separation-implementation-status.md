@@ -51,6 +51,8 @@
 | Phase 8n | 路径穿越修复 + 回归测试（12 例） | ✅ 完成 |
 | Phase 8o | 限流按用户隔离修复（10 例） | ✅ 完成 |
 | Phase 8p | AI 配额并发超发修复（8 例） | ✅ 完成 |
+| Phase 8q | Job 幂等并发失效修复（4 例） | ✅ 完成 |
+| Phase 8r | 跨学生数据丢失修复（2 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -468,7 +470,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       478/478 通过（contracts 41 + server 318 + web 119）
+测试       484/484 通过（contracts 41 + server 324 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -516,6 +518,8 @@ Phase 4 又发现 3 个：
 | 28 | URL 参数直接拼进文件路径（未清洗） | **老师可覆盖 `credentials.json`**（凭证被改写） |
 | 29 | 限流器挂在 `requireAuth` 前，`skipAuthenticated` 是死代码 | **同 IP 的不同用户互相挤掉额度** |
 | 30 | AI 配额「读-判-写」非原子 | **并发下护栏完全失效**（限额 5 放行 20） |
+| 31 | `enqueue` 幂等检查与记录之间有 await | **同一 key 并发产生 10 个任务**（重复 AI 诊断） |
+| 32 | 删除学生时遍历 `listAll()` 删全部文件 | **删学生 A 连学生 B 的试卷一起删**（跨学生数据丢失） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -910,6 +914,52 @@ AI 配额是保护 GEMINI_API_KEY 成本的**最后一道护栏**，
 
 顺带明确了另一条语义：**失败的 AI 调用也计入配额**。
 模型确实被调用了、token 确实花了，退还反而会让「故意触发失败」绕过限制。
+
+### 删除学生 A 会删掉学生 B 的试卷（跨学生数据丢失）
+
+`RetentionService.deleteStudentData` 删除试卷文件时：
+
+```ts
+const allFiles = await this.storage.listAll();   // ← 全部学生的文件
+for (const relativePath of allFiles) {
+  await this.storage.remove(relativePath);        // ← 逐个删除
+}
+```
+
+`listAll()` 返回 `files/papers/` 下的**所有**文件（所有学生），
+于是「删除学生 A」把**学生 B 的试卷也删了**。
+
+实测（两个学生各一份试卷）：
+
+```
+BEFORE: [papers/stu-A/p1/file_xxx.jpg, papers/stu-B/p2/file_yyy.jpg]
+AFTER : []                                    ← 两个学生的文件都没了
+```
+
+跨越学生的数据丢失，**没有任何报错**，接口照样返回 200。
+这是数据主体删除权（「删除我的数据」）的实现 —— 用户以为只删自己的，
+实际把别人的数据也删了。
+
+修复：按学生过滤（索引优先，路径前缀兜底），
+并改用 `removeByFileId` —— 后者会同时清理元数据索引，
+而 `remove(relativePath)` 只删文件、留下孤儿索引条目。
+
+### 幂等性在并发下失效
+
+`enqueue` 的「查已存在 → 建任务 → 记映射」三步之间有 `await persist()`，
+并发调用同一 idempotencyKey 时**全部**通过存在性检查，各自建出任务。
+
+实测（同一 key 并发 10 次）：
+
+```
+unique count: 10   （应为 1）
+jobs on disk: 10
+```
+
+诊断接口用幂等键防止「客户端重试 → 多次 AI 诊断」，而 AI 诊断是真金白银。
+已有的幂等测试是**顺序**调用的，永远发现不了 —— 必须真的并发发起。
+
+修复：按幂等键串行化整个入队流程。
 
 ### 前端逻辑补测汇总
 
