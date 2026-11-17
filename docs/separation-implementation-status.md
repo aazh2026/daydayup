@@ -49,6 +49,8 @@
 | Phase 8l | 配置解析测试（18 例）+ NaN/缺密钥修复 | ✅ 完成 |
 | Phase 8m | 日志保留字段保护（14 例） | ✅ 完成 |
 | Phase 8n | 路径穿越修复 + 回归测试（12 例） | ✅ 完成 |
+| Phase 8o | 限流按用户隔离修复（10 例） | ✅ 完成 |
+| Phase 8p | AI 配额并发超发修复（8 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -466,7 +468,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       460/460 通过（contracts 41 + server 300 + web 119）
+测试       478/478 通过（contracts 41 + server 318 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -512,6 +514,8 @@ Phase 4 又发现 3 个：
 | 26 | `AUTH_REQUIRED=true` 但无 `AUTH_SECRET` | **强制认证却用公开密钥签发令牌**（可伪造 teacher 身份） |
 | 27 | 日志上下文覆盖 `ts`/`level`/`message` | **事件名与级别被冲掉**（按事件名聚合日志失效） |
 | 28 | URL 参数直接拼进文件路径（未清洗） | **老师可覆盖 `credentials.json`**（凭证被改写） |
+| 29 | 限流器挂在 `requireAuth` 前，`skipAuthenticated` 是死代码 | **同 IP 的不同用户互相挤掉额度** |
+| 30 | AI 配额「读-判-写」非原子 | **并发下护栏完全失效**（限额 5 放行 20） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -856,6 +860,56 @@ logger.error('api.unhandled', { requestId, message, path, stack });
 | `student.routes.ts` | studentId |
 | `exam.routes.ts` | exams / papers 的 id |
 | `plan.routes.ts` | mastery 的 studentId |
+
+### 限流未按用户隔离
+
+限流器的选项写着 `skipAuthenticated: true`（已认证用户按用户维度），
+但限流中间件挂在 `requireAuth` **之前**（登录等公开端点不能要求认证），
+此时 `req.auth` 恒为 undefined —— **那个分支从未执行过**。
+
+实测（max=5）：
+
+```
+用户A: [200,200,200,200]
+用户B: [200,429,429,429]     ← 被用户A挤掉
+```
+
+同一局域网 / NAT / 公司出口下的**不同用户互相影响** ——
+学校机房、家长手机连同一个 WiFi 都会撞车。
+
+修复：限流器自己解析令牌（`TokenService.resolvePrincipalId`，
+做完整签名+过期校验），按主体 ID 分桶；令牌无效则回落到 IP 维度，
+**伪造令牌拿不到独立桶**，无法借此绕过限流。
+
+### AI 配额在并发下完全失效
+
+`QuotaService.consume()` 是非原子的「读-判-写」：
+
+```ts
+const current = await this.getUsed();    // 读
+if (current >= this.limit) return false; // 判
+await this.db.write(..., { used: current + 1 }); // 写
+```
+
+三步之间有 `await`，并发请求全部读到同一个 `current`，
+于是全部通过检查、全部写成 `current + 1`。
+
+实测（限额 5，并发 20）：
+
+```
+allowed: 20 / 20      ← 全部放行
+recorded used: 1      ← 用量还记错了
+```
+
+AI 配额是保护 GEMINI_API_KEY 成本的**最后一道护栏**，
+而「并发发请求」正是刷量的典型手法。
+
+修复：按账号串行化整个「读-判-写」
+（与 `FileDatabase.withLock` 同款 promise 锁链模式）。
+修复后：allowed 5/20，recorded used 5 —— 与限额完全一致。
+
+顺带明确了另一条语义：**失败的 AI 调用也计入配额**。
+模型确实被调用了、token 确实花了，退还反而会让「故意触发失败」绕过限制。
 
 ### 前端逻辑补测汇总
 
