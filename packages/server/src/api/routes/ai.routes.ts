@@ -31,6 +31,7 @@ import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.
 import { toGeminiSchema } from '../../infrastructure/ai/gemini-provider.ts';
 import { requireAuth } from '../middleware/auth.ts';
 import { requireQuota } from '../middleware/quota.ts';
+import type { Role } from '../../infrastructure/security/token.ts';
 
 function requireAi(container: Container) {
   if (!container.ai) {
@@ -61,16 +62,54 @@ export function createAiRoutes(
    * AI 端点保护：
    * 1. 身份认证 —— 防止他人白嫖 GEMINI_API_KEY
    * 2. 配额限制 —— 防止单账号刷量
+   * 3. 角色限制 —— 家长是只读角色，不能替孩子执行学习动作
    *
    * 注意：authRequired=false（未配置 AUTH_SECRET）时跳过认证，
    * 仅保留配额保护，便于本地开发。
+   *
+   * @param path 端点路径
+   * @param handler 处理函数
+   * @param options.roles 允许的角色（缺省为 student + teacher；
+   *   家长只读，不在允许列表里）
    */
   const guard = (
     path: string,
-    handler: (req: Request, res: Response, next: NextFunction) => void
+    handler: (req: Request, res: Response, next: NextFunction) => void,
+    options: { roles?: Role[] } = {}
   ) => {
     const middlewares: RequestHandler[] = [];
     if (container.config.authRequired) middlewares.push(requireAuth(container));
+
+    /**
+     * 角色限制。
+     *
+     * 家长是**只读**角色（见文档「角色与权限」）：
+     * 可以看报告，但**不能替孩子提交作答**。
+     *
+     * 此前 AI 端点只有身份校验、没有角色校验，
+     * 于是家长可以调用 `/practice/evaluate` 替孩子提交作答，
+     * 拿到判定结果与分步提示 —— 既越过了只读边界，
+     * 也消耗了孩子的 AI 配额。
+     */
+    const allowedRoles: Role[] = options.roles ?? ['student', 'teacher'];
+    middlewares.push((req, _res, next) => {
+      // 开发模式：无认证上下文，放行（本地单用户演示）
+      if (!req.auth) {
+        next();
+        return;
+      }
+      if (!allowedRoles.includes(req.auth.role)) {
+        next(
+          new ApiException(
+            'FORBIDDEN',
+            `家长账号为只读角色，无法执行该操作（当前 ${req.auth.role}）`
+          )
+        );
+        return;
+      }
+      next();
+    });
+
     middlewares.push(requireQuota(container));
     if (extraLimiter) middlewares.push(extraLimiter);
     router.post(path, ...middlewares, handler);
