@@ -160,7 +160,7 @@ export function createUploadRoutes(container: Container): Router {
           : [];
 
         for (const fileId of fileIds) {
-          const relativePath = await findFilePath(container, fileId);
+          const relativePath = await findFilePath(container, fileId, studentId, req.requestId);
           if (relativePath) imagePaths.push(relativePath);
         }
 
@@ -285,10 +285,40 @@ export function createUploadRoutes(container: Container): Router {
   return router;
 }
 
-/** 由 fileId 查找存储相对路径 */
+/**
+ * 由 fileId 查找存储相对路径（**并校验归属**）。
+ *
+ * 关键：`storage.findById` 只按 ID 查路径，**不做归属校验** ——
+ * 任何知道 fileId 的人都能拿到别人的试卷图片路径。
+ *
+ * 这里必须按学生维度查找：否则学生 A 可以把学生 B 的试卷图片
+ * 挂进自己的诊断请求，AI 就会去读 B 的卷子。
+ *
+ * @param studentId 已通过鉴权的学生（请求体里的，已由 assertStudentWriteAccess 校验）
+ */
 async function findFilePath(
   container: Container,
-  fileId: string
+  fileId: string,
+  studentId: string,
+  requestId?: string
 ): Promise<string | null> {
-  return container.storage.findById(fileId);
+  const relativePath = await container.storage.findByIdForStudent(
+    fileId,
+    studentId
+  );
+
+  if (!relativePath) {
+    // 区分「文件不存在」与「不是自己的文件」，便于排查
+    const meta = await container.storage.getMeta(fileId);
+    if (meta) {
+      logger.warn('upload.file_access_denied', {
+        requestId,
+        studentId,
+        fileId,
+      });
+    }
+    return null;
+  }
+
+  return relativePath;
 }

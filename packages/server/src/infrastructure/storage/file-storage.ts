@@ -221,6 +221,39 @@ export class FileStorage {
     return match ?? null;
   }
 
+  /**
+   * 按文件 ID 查找相对路径（**并校验归属**）。
+   *
+   * 与 `findById` 的区别：`findById` 只按 ID 查路径，**不做归属校验** ——
+   * 任何知道 fileId 的人都能拿到别人的试卷图片路径。
+   * 凡是「按调用方身份使用某个文件」的场景，都必须走这个方法。
+   *
+   * @param fileId 文件 ID
+   * @param studentId 调用方学生 ID（必须是文件的主人）
+   * @returns 相对路径；文件不存在或不属于该学生时返回 null
+   */
+  async findByIdForStudent(
+    fileId: string,
+    studentId: string
+  ): Promise<string | null> {
+    const meta = await this.getMeta(fileId);
+    if (meta) {
+      // 归属不符 → 不返回路径
+      if (meta.studentId !== studentId) return null;
+      return meta.relativePath;
+    }
+
+    // 索引缺失（老数据）：回退到路径匹配，并按路径前缀校验归属
+    const all = await this.listAll();
+    const match = all.find((p) => path.basename(p).startsWith(`${fileId}.`));
+    if (!match) return null;
+
+    const prefix = `files/papers/${studentId}/`;
+    if (!match.startsWith(prefix)) return null;
+
+    return match;
+  }
+
   /** 列出某学生的全部文件（按索引） */
   async listForStudent(studentId: string): Promise<StoredFile[]> {
     if (!this.options.db) return [];
