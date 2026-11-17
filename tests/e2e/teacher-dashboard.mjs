@@ -324,6 +324,63 @@ async function main() {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
 
+  // ---- 5c. 畸形会话不应让应用白屏 ----
+  console.log('\n▶ 畸形会话容错');
+  const errorsBeforeSession = pageErrors.length;
+  await page.evaluate(() => {
+    // 缺 studentIds 的会话 —— App.tsx 渲染时会访问 session.studentIds[0]
+    localStorage.setItem('daydayup.auth.token', 'tok');
+    localStorage.setItem(
+      'daydayup.auth.session',
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+        principalId: 'p1',
+        role: 'student',
+      })
+    );
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2000);
+
+  const aliveAfterBadSession = await page.evaluate(
+    () => document.body.innerText.length
+  );
+  /**
+   * 畸形会话被拒绝后，应用应回到**登录页**（而不是白屏）。
+   *
+   * 判据用「有内容」而非具体长度 ——
+   * 登录页本身内容就短（几十字），用长度阈值容易误判。
+   * 白屏的特征是 innerText 完全为空。
+   */
+  check(
+    aliveAfterBadSession > 0,
+    '畸形会话下应用仍正常渲染（不应白屏）',
+    `页面内容长度 ${aliveAfterBadSession}`
+  );
+  const loginVisible = await page.evaluate(
+    () => document.body.innerText.includes('登录凭证')
+  );
+  check(
+    loginVisible,
+    '畸形会话被拒绝后回到登录页'
+  );
+  const sessionErrors = pageErrors.slice(errorsBeforeSession);
+  checkEqual(
+    sessionErrors.length,
+    0,
+    '畸形会话不产生未捕获异常',
+    sessionErrors.join(' | ')
+  );
+
+  // 恢复正常会话
+  await page.evaluate(() => {
+    localStorage.removeItem('daydayup.auth.session');
+    localStorage.removeItem('daydayup.auth.token');
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+
   // ---- 6. 无致命错误 ----
   console.log('\n▶ 运行时错误');
   const fatalConsole = consoleErrors.filter(

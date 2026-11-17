@@ -127,6 +127,85 @@ describe('过期判定', () => {
     storage.setItem(SESSION_KEY, '"just a string"');
     assert.equal(loadSession(), null);
   });
+
+  /**
+   * 回归：会话字段缺失会让整个应用白屏。
+   *
+   * 历史缺陷：`loadSession` 只校验 `session.token`，
+   * 而 `App.tsx` 后续直接访问 `session.studentIds[0]`
+   * （水合目标计算）—— 缺 `studentIds` 时抛
+   * `Cannot read properties of undefined (reading '0')`，
+   * 而那行在**渲染函数体内** → 整个应用白屏。
+   */
+  test('缺 studentIds 的会话被拒绝（否则渲染时崩溃）', () => {
+    storage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        principalId: 'p1',
+        role: 'student',
+        // studentIds 缺失
+      })
+    );
+    assert.equal(loadSession(), null);
+  });
+
+  test('studentIds 不是数组时被拒绝', () => {
+    storage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        principalId: 'p1',
+        role: 'student',
+        studentIds: 'not-an-array',
+      })
+    );
+    assert.equal(loadSession(), null);
+  });
+
+  test('缺 role 时被拒绝', () => {
+    storage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        principalId: 'p1',
+        studentIds: ['stu-1'],
+      })
+    );
+    assert.equal(loadSession(), null);
+  });
+
+  test('缺 principalId 时被拒绝', () => {
+    storage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        role: 'student',
+        studentIds: ['stu-1'],
+      })
+    );
+    assert.equal(loadSession(), null);
+  });
+
+  test('空 studentIds 数组是合法的（老师角色场景）', () => {
+    storage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        token: 'tok',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        principalId: 't1',
+        role: 'teacher',
+        studentIds: [],
+      })
+    );
+    const loaded = loadSession();
+    assert.ok(loaded, '空数组是合法值（老师可访问全部学生）');
+    assert.deepEqual(loaded.studentIds, []);
+  });
 });
 
 describe('容错', () => {

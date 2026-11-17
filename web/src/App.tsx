@@ -93,7 +93,7 @@ export default function App() {
    */
   const hydrationStudentId =
     session && session.role !== 'teacher'
-      ? (session.studentIds[0] ?? appState.student?.id)
+      ? (session.studentIds?.[0] ?? appState.student?.id)
       : authRequired === false
         ? appState.student?.id
         : undefined;
@@ -920,7 +920,7 @@ export default function App() {
 
         {activePage === 'teacher' && session?.role === 'teacher' && (
           <TeacherDashboard
-            studentIds={session.studentIds}
+            studentIds={session.studentIds ?? []}
             onSelectStudent={(studentId) => {
               // 切换到指定学生的视角
               setAppState((prev) => ({ ...prev, student: { ...prev.student, id: studentId } }));
