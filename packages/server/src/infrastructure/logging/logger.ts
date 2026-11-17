@@ -25,14 +25,37 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
+/** 日志自身的保留字段 —— 不允许被上下文覆盖 */
+const RESERVED_FIELDS = ['ts', 'level', 'message'] as const;
+
 function write(level: Level, message: string, context?: LogContext): void {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[MIN_LEVEL]) return;
 
+  /**
+   * 上下文字段先铺开，日志自身字段后铺开。
+   *
+   * 顺序很重要：若上下文先展开，调用方传入的 `message` / `level` / `ts`
+   * 就会**覆盖**日志自身的字段 ——
+   * 比如 `logger.error('api.unhandled', { message })` 会让事件名
+   * `api.unhandled` 消失，日志里只剩错误正文，
+   * 按事件名聚合日志就失效了。
+   *
+   * 反过来（自身字段后展开）则保证 `ts`/`level`/`message` 永远可信，
+   * 上下文里的同名字段会被改名保留为 `context_message` 之类，不丢信息。
+   */
+  const safeContext: Record<string, unknown> = { ...(context ?? {}) };
+  for (const field of RESERVED_FIELDS) {
+    if (field in safeContext) {
+      safeContext[`context_${field}`] = safeContext[field];
+      delete safeContext[field];
+    }
+  }
+
   const entry = {
+    ...safeContext,
     ts: new Date().toISOString(),
     level,
     message,
-    ...(context ?? {}),
   };
 
   const line = JSON.stringify(entry);

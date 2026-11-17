@@ -53,6 +53,12 @@ export function errorHandler(
   }
 
   const message = err instanceof Error ? err.message : '服务内部错误';
-  logger.error('api.unhandled', { requestId, message, path: req.path, stack: err instanceof Error ? err.stack : undefined });
+  // 注意字段名：日志的 `message` 字段是事件名，不能被覆盖
+  logger.error('api.unhandled', {
+    requestId,
+    errorMessage: message,
+    path: req.path,
+    stack: err instanceof Error ? err.stack : undefined,
+  });
   res.status(500).json(buildApiError('INTERNAL_ERROR', undefined, undefined, requestId));
 }
