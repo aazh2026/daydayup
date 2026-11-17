@@ -57,7 +57,30 @@ export function loadSnapshot(): { version: string; knowledgePoints: KnowledgePoi
     if (!Array.isArray(parsed.knowledgePoints) || parsed.knowledgePoints.length === 0) {
       return null;
     }
-    return parsed;
+
+    /**
+     * 逐条校验元素结构。
+     *
+     * 只检查「是数组且非空」不够 —— 数组里混进 null / 缺字段的元素时，
+     * 后面 `buildCurriculumData` 里的 `kp.id` 会抛 TypeError，
+     * 而它发生在 React 的 `useState` 初始化器里 → **整个应用白屏**。
+     *
+     * 快照可能来自：写入被中断、旧版本应用、缓存被外部改过。
+     * 宁可当作「没有快照」回落到服务端，也不让它拖垮整个应用。
+     */
+    const valid = parsed.knowledgePoints.filter(
+      (kp): kp is KnowledgePoint =>
+        typeof kp === 'object' &&
+        kp !== null &&
+        typeof (kp as KnowledgePoint).id === 'string' &&
+        typeof (kp as KnowledgePoint).name === 'string'
+    );
+
+    if (valid.length === 0) {
+      return null;
+    }
+
+    return { version: parsed.version ?? '', knowledgePoints: valid };
   } catch {
     return null;
   }
@@ -72,15 +95,29 @@ export function saveSnapshot(version: string, knowledgePoints: KnowledgePoint[])
   }
 }
 
-/** 构造知识体系数据（含 id → KnowledgePoint 索引） */
+/**
+ * 构造知识体系数据（含 id → KnowledgePoint 索引）。
+ *
+ * 同样做一次元素过滤：即便调用方传入了畸形数据，
+ * 也不能让这里抛错（它在 React 的 useState 初始化器里调用，
+ * 抛错 = 整个应用白屏）。
+ */
 export function buildCurriculumData(
   version: string,
   knowledgePoints: KnowledgePoint[]
 ): Pick<CurriculumData, 'version' | 'knowledgePoints' | 'knowledgeMap'> {
+  const valid = (Array.isArray(knowledgePoints) ? knowledgePoints : []).filter(
+    (kp): kp is KnowledgePoint =>
+      typeof kp === 'object' &&
+      kp !== null &&
+      typeof (kp as KnowledgePoint).id === 'string' &&
+      typeof (kp as KnowledgePoint).name === 'string'
+  );
+
   return {
     version,
-    knowledgePoints,
-    knowledgeMap: Object.fromEntries(knowledgePoints.map((kp) => [kp.id, kp])),
+    knowledgePoints: valid,
+    knowledgeMap: Object.fromEntries(valid.map((kp) => [kp.id, kp])),
   };
 }
 

@@ -96,6 +96,86 @@ describe('快照读写', () => {
   });
 });
 
+describe('畸形快照的容错（回归）', () => {
+  /**
+   * 历史缺陷：快照只校验「是数组且非空」，
+   * 数组里混进 null / 缺字段的元素时，
+   * `buildCurriculumData` 的 `kp.id` 会抛 TypeError ——
+   * 而它发生在 React 的 `useState` 初始化器里，**整个应用白屏**。
+   *
+   * 快照的现实来源：写入被中断、旧版本应用、缓存被外部改过。
+   */
+  test('含 null 元素的快照被过滤，不抛错', () => {
+    storage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        version: 'v1',
+        knowledgePoints: [KP, null] as never,
+      })
+    );
+
+    assert.doesNotThrow(() => loadSnapshot());
+    const snap = loadSnapshot();
+    assert.ok(snap);
+    assert.equal(snap.knowledgePoints.length, 1, '畸形元素应被过滤');
+  });
+
+  test('元素缺少 id 的快照被过滤', () => {
+    storage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        version: 'v1',
+        knowledgePoints: [{ name: '无 id' }, KP] as never,
+      })
+    );
+
+    const snap = loadSnapshot();
+    assert.ok(snap);
+    assert.equal(snap.knowledgePoints.length, 1);
+    assert.equal(snap.knowledgePoints[0].id, 'math-alg-rational');
+  });
+
+  test('元素缺少 name 的快照被过滤', () => {
+    storage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        version: 'v1',
+        knowledgePoints: [{ id: 'kp-x' }, KP] as never,
+      })
+    );
+
+    const snap = loadSnapshot();
+    assert.ok(snap);
+    assert.equal(snap.knowledgePoints.length, 1);
+  });
+
+  test('全部元素都畸形时视为无快照', () => {
+    storage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ version: 'v1', knowledgePoints: [null, {}] as never })
+    );
+    assert.equal(loadSnapshot(), null);
+  });
+
+  test('buildCurriculumData 对畸形数据不抛错', () => {
+    assert.doesNotThrow(() =>
+      buildCurriculumData('v1', [KP, null, {}] as never)
+    );
+    const data = buildCurriculumData('v1', [KP, null, {}] as never);
+    assert.equal(data.knowledgePoints.length, 1, '畸形元素应被过滤');
+    assert.equal(Object.keys(data.knowledgeMap).length, 1);
+  });
+
+  test('buildCurriculumData 对非数组输入不抛错', () => {
+    assert.doesNotThrow(() =>
+      buildCurriculumData('v1', undefined as never)
+    );
+    const data = buildCurriculumData('v1', undefined as never);
+    assert.deepEqual(data.knowledgePoints, []);
+    assert.deepEqual(data.knowledgeMap, {});
+  });
+});
+
 describe('知识体系索引构建', () => {
   test('knowledgeMap 按 id 建立索引', () => {
     const data = buildCurriculumData('v1', [KP]);
@@ -109,7 +189,6 @@ describe('知识体系索引构建', () => {
     assert.deepEqual(data.knowledgeMap, {});
     assert.deepEqual(data.knowledgePoints, []);
   });
-
   test('多个知识点都能索引到', () => {
     const kp2 = { ...(KP as object), id: 'math-func-linear', name: '一次函数' } as never;
     const data = buildCurriculumData('v1', [KP, kp2]);
