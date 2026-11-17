@@ -42,6 +42,8 @@
 | Phase 8e | 登录态与知识体系缓存测试（25 例） | ✅ 完成 |
 | Phase 8f | 降级计划学科硬编码修复（+21 例） | ✅ 完成 |
 | Phase 8g | 中考倒计时时区修复（+17 例） | ✅ 完成 |
+| Phase 8h | 凭证存储测试（15 例）+ 演示 PIN 后门修复 | ✅ 完成 |
+| Phase 8i | AI 输出 schema 校验测试（22 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -459,7 +461,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       315/315 通过（contracts 41 + server 155 + web 119）
+测试       350/350 通过（contracts 41 + server 190 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -499,6 +501,7 @@ Phase 4 又发现 3 个：
 | 20 | 水合中「错题为空」提前 return 整个流程 | **无错题学生丢失后 4 类数据**（含刚补好的存档库） |
 | 21 | 降级计划学科硬编码「数学」（恒真三元残留） | **非数学学生看到一屏「数学」任务** |
 | 22 | 中考倒计时目标日期按 UTC 零点解析 | **倒计时一直多一天**（明天显示成 2 天，UTC+8 受害） |
+| 23 | 生产模式下演示 PIN `1234` 逐个 secret 回落 | **公开默认口令成为后门**（凭证文件存在也照样能登） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -711,6 +714,28 @@ const target = new Date(targetExamDate);                                // UTC �
 
 修复：目标日期按**本地日历日**解析（`YYYY-MM-DD` 用正则拆年月日），
 非该格式时回退原行为。前后端两处重复实现同步修复。
+
+### 生产模式的演示凭证回落（安全）
+
+`resolveCredentialStore` 原先在生产模式下**逐个 secret 回落**：
+
+```ts
+const found = await fileStore.findBySecret(secret);
+return found ?? (await fallback.findBySecret(secret));   // fallback 含 PIN 1234
+```
+
+于是**只要凭证文件存在且内容不同，内置演示 PIN `1234` 依然能登录** ——
+在生产环境留了一个公开的默认口令。
+
+注释的原意是「文件缺失时回落（便于首次部署）」，
+但实现变成了「按 secret 回落」——**范围被放大了**。
+
+修复为**整体回落**：
+
+| 情形 | 演示 PIN `1234` |
+|---|---|
+| 凭证文件存在且非空 | ❌ 不可用 |
+| 凭证文件缺失或为空 | ✅ 可用（首次部署引导） |
 
 ### 前端逻辑补测汇总
 
