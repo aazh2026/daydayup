@@ -60,6 +60,7 @@
 | Phase 8w | 前后端路由可达性测试（43 例） | ✅ 完成 |
 | Phase 8x | 畸形知识体系快照白屏修复（6 例 + 2 E2E 断言） | ✅ 完成 |
 | Phase 8y | 畸形登录会话白屏修复（5 例 + 2 E2E 断言） | ✅ 完成 |
+| Phase 8z | 备份恢复路径穿越修复（3 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -477,7 +478,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       559/559 通过（contracts 41 + server 388 + web 130）
+测试       562/562 通过（contracts 41 + server 391 + web 130）
 E2E        24/24 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -533,6 +534,7 @@ Phase 4 又发现 3 个：
 | 36 | AI 端点只校验身份不校验角色 | **家长可替孩子提交作答**（越过只读边界 + 消耗孩子配额） |
 | 37 | 知识体系快照不校验元素结构 | **畸形快照让整个应用白屏**（useState 初始化器抛错） |
 | 38 | 会话只校验 token 不校验 studentIds | **畸形会话让整个应用白屏**（渲染函数体内抛错） |
+| 39 | 备份恢复直接拼清单路径不校验 | **可把文件写到 dataDir 之外** |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -993,6 +995,34 @@ jobs on disk: 10
 与「**任务不存在**」（路由在，只是数据没有）。
 两者错误消息不同，测试据此区分；否则「资源不存在」会被误判成「路由缺失」，
 测试就得靠造数据才能通过，失去意义。
+
+### 备份恢复可把文件写到 dataDir 之外
+
+`restore()` 直接把清单里的路径拼到 dataDir 上：
+
+```ts
+const target = path.join(this.dataDir, entry.path);
+await fs.copyFile(source, target);   // ← target 可能逃出 dataDir
+```
+
+`entry.path` 来自**磁盘上的 manifest.json** ——
+清单本身是数据目录里可被篡改的内容（数据损坏、外部同步、恶意替换）。
+
+实测（清单写 `../evil-payload.txt`，且 source 真实存在）：
+
+```
+restore: {"restored":1,...}
+escaped file exists? true
+content: PWNED CONTENT      ← 写到了 dataDir/../ 下
+```
+
+修复：新增 `isSafeRelativePath()` —— 拒绝绝对路径、拒绝含 `..` 的路径段
+（含 Windows 反斜杠）；`restore()` 跳过并告警，`verify()` 标记为非法。
+
+> **测试要点**：穿越路径的 source 通常不存在，会被「缺失」分支提前跳过 ——
+> 那样就**测不出**穿越。所以必须造出真实存在的 source，
+> 这说明安全修复的测试要构造**能真正触发漏洞**的输入，
+> 而不是碰巧被别的分支挡住的输入。
 
 ### 畸形登录会话导致应用白屏
 
