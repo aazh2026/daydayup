@@ -37,6 +37,30 @@ const FILES_DIR = 'files';
 /** 需要纳入备份的目录（相对 dataDir） */
 const BACKUP_TARGETS = ['db', 'files', 'events', 'audit', 'knowledge', 'questions'];
 
+/**
+ * 校验清单里的相对路径安全（防路径穿越）。
+ *
+ * `manifest.files[].path` 来自**磁盘上的清单文件**，
+ * 而清单本身是数据目录里可被篡改的内容。
+ *
+ * 早期实现直接 `path.join(this.dataDir, entry.path)` 后 copyFile，
+ * 于是清单里写 `../evil.txt` 就会把文件写到 **dataDir 之外** ——
+ * 实测确认可写到 `dataDir/../` 下。
+ *
+ * 规则：路径必须是相对路径、不含 `..`、解析后仍在 root 之内。
+ *
+ * @returns 校验通过返回 true
+ */
+export function isSafeRelativePath(relativePath: string): boolean {
+  if (typeof relativePath !== 'string' || relativePath.length === 0) return false;
+  // 绝对路径直接拒绝
+  if (path.isAbsolute(relativePath)) return false;
+  // 含路径分隔符的 `..` 段一律拒绝
+  const segments = relativePath.split(/[\\/]/);
+  if (segments.includes('..')) return false;
+  return true;
+}
+
 export class BackupService {
   private readonly dataDir: string;
   private readonly backupDir: string;
@@ -144,6 +168,16 @@ export class BackupService {
     };
 
     for (const entry of manifest.files) {
+      // 清单里的路径可能含 `..`（清单是可被篡改的数据）——
+      // 必须在拼路径前校验，否则会把文件写到 dataDir 之外。
+      if (!isSafeRelativePath(entry.path)) {
+        result.skipped.push(entry.path);
+        logger.warn('backup.unsafe_path_skipped', {
+          path: entry.path,
+        });
+        continue;
+      }
+
       const source = path.join(backupPath, FILES_DIR, entry.path);
       const target = path.join(this.dataDir, entry.path);
 
@@ -196,6 +230,12 @@ export class BackupService {
     const corrupted: string[] = [];
 
     for (const entry of manifest.files) {
+      // 同样校验路径安全（清单是可被篡改的数据）
+      if (!isSafeRelativePath(entry.path)) {
+        corrupted.push(`${entry.path}（非法路径）`);
+        continue;
+      }
+
       const source = path.join(backupPath, FILES_DIR, entry.path);
       if (!(await this.exists(source))) {
         corrupted.push(`${entry.path}（缺失）`);

@@ -6,13 +6,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { FileDatabase } from '../src/infrastructure/persistence/file-database.ts';
 import { FileStorage } from '../src/infrastructure/storage/file-storage.ts';
 import {
   RetentionService,
   type RetentionPolicy,
 } from '../src/infrastructure/retention/retention-service.ts';
-import { BackupService } from '../src/infrastructure/backup/backup-service.ts';
+import { BackupService, isSafeRelativePath } from '../src/infrastructure/backup/backup-service.ts';
 
 let tmpDir: string;
 let dataDir: string;
@@ -294,5 +295,87 @@ describe('备份与恢复', () => {
     const list = await backup.list();
     assert.equal(list.length, 2);
     assert.ok(list[0].createdAt >= list[1].createdAt);
+  });
+
+  /**
+   * 回归：清单里的路径含 `..` 时，恢复不得写到 dataDir 之外。
+   *
+   * 历史缺陷：`restore()` 直接 `path.join(this.dataDir, entry.path)` 后 copyFile，
+   * 而 `entry.path` 来自**磁盘上的清单文件**（可被篡改的数据）。
+   * 清单里写 `../evil.txt` 就会把文件写到 `dataDir/../` 下 —— 实测确认可写出去。
+   */
+  test('恢复时拒绝清单里的穿越路径（不写到 dataDir 之外）', async () => {
+    const payload = 'PWNED CONTENT';
+    const sha = createHash('sha256').update(payload).digest('hex');
+
+    // 构造一个恶意备份：清单项的 path 含 ../
+    const malicious = path.join(backupDir, 'malicious');
+    fs.mkdirSync(path.join(malicious, 'files'), { recursive: true });
+    // source 真实存在（否则会被「缺失」分支提前跳过，测不出穿越）
+    fs.writeFileSync(path.join(malicious, 'files', '..', 'evil.txt'), payload);
+    fs.writeFileSync(
+      path.join(malicious, 'manifest.json'),
+      JSON.stringify({
+        version: '1',
+        createdAt: new Date().toISOString(),
+        dataDir,
+        fileCount: 1,
+        totalBytes: payload.length,
+        checksum: 'x',
+        files: [{ path: '../evil.txt', size: payload.length, sha256: sha }],
+      })
+    );
+
+    const backup = new BackupService(dataDir, backupDir);
+    const result = await backup.restore(malicious);
+
+    assert.equal(result.restored, 0, '穿越路径不应被恢复');
+    assert.equal(
+      result.skipped.length,
+      1,
+      '穿越路径应被跳过而不是被恢复'
+    );
+    assert.equal(
+      fs.existsSync(path.join(path.dirname(dataDir), 'evil.txt')),
+      false,
+      '绝不能写到 dataDir 之外'
+    );
+  });
+
+  test('校验时把穿越路径标记为非法', async () => {
+    const malicious = path.join(backupDir, 'malicious2');
+    fs.mkdirSync(path.join(malicious, 'files'), { recursive: true });
+    fs.writeFileSync(
+      path.join(malicious, 'manifest.json'),
+      JSON.stringify({
+        version: '1',
+        createdAt: new Date().toISOString(),
+        dataDir,
+        fileCount: 1,
+        totalBytes: 0,
+        checksum: 'x',
+        files: [{ path: '../evil.txt', size: 0, sha256: 'x' }],
+      })
+    );
+
+    const backup = new BackupService(dataDir, backupDir);
+    const result = await backup.verify(malicious);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.corrupted.some((c) => c.includes('非法路径')),
+      `应标记为非法路径，实际: ${JSON.stringify(result.corrupted)}`
+    );
+  });
+
+  test('路径安全校验函数', () => {
+    assert.equal(isSafeRelativePath('db/students/a.json'), true);
+    assert.equal(isSafeRelativePath('files/papers/x/y.jpg'), true);
+
+    assert.equal(isSafeRelativePath('../evil.txt'), false);
+    assert.equal(isSafeRelativePath('a/../../b'), false);
+    assert.equal(isSafeRelativePath('/etc/passwd'), false);
+    assert.equal(isSafeRelativePath('..\\evil.txt'), false);
+    assert.equal(isSafeRelativePath(''), false);
   });
 });
