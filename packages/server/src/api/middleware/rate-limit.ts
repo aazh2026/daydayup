@@ -19,8 +19,26 @@ export interface RateLimitOptions {
   keyGenerator?: (req: Request) => string;
   /** 限流响应消息 */
   message?: string;
-  /** 是否跳过已认证用户的限流（登录后按用户维度） */
+  /**
+   * 是否跳过已认证用户的限流（登录后按用户维度）。
+   *
+   * **注意**：限流中间件通常挂在 `requireAuth` **之前**，
+   * 此时 `req.auth` 还是 undefined。
+   * 因此这里不能只看 `req.auth` —— 否则该分支形同虚设，
+   * 所有用户（包括已登录的）都挤在同一个 IP 桶里，
+   * 同一局域网/NAT 下的不同用户会互相影响。
+   *
+   * 解决办法：额外提供 `resolvePrincipalId`，
+   * 由调用方直接从 Authorization 头解析出主体 ID（不必做完整校验，
+   * 校验由后续的 `requireAuth` 负责）。
+   */
   skipAuthenticated?: boolean;
+  /**
+   * 从请求中解析主体 ID（用于按用户维度限流）。
+   *
+   * 解析失败返回 null → 该请求按 IP 计入。
+   */
+  resolvePrincipalId?: (req: Request) => string | null;
 }
 
 interface Bucket {
@@ -48,11 +66,22 @@ export function rateLimit(options: RateLimitOptions = {}) {
   cleanupTimer.unref?.();
 
   return (req: Request, res: Response, next: NextFunction): void => {
-    // 已认证用户按用户维度限流，匿名按 IP
-    const key =
-      options.skipAuthenticated && req.auth
-        ? `user:${req.auth.principalId}`
+    /**
+     * 限流键：已认证用户按主体 ID，匿名按 IP。
+     *
+     * 优先用 `req.auth`（若限流器挂在 requireAuth 之后）；
+     * 否则用 `resolvePrincipalId`（限流器挂在 requireAuth 之前时的兜底）。
+     */
+    let key: string;
+    if (options.skipAuthenticated) {
+      const principalId =
+        req.auth?.principalId ?? options.resolvePrincipalId?.(req) ?? null;
+      key = principalId
+        ? `user:${principalId}`
         : `ip:${keyGenerator(req)}`;
+    } else {
+      key = `ip:${keyGenerator(req)}`;
+    }
 
     const now = Date.now();
     let bucket = buckets.get(key);

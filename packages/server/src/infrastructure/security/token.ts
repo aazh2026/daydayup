@@ -82,6 +82,25 @@ export class TokenService {
     };
   }
 
+  /**
+   * 从 Authorization 头解析主体 ID。
+   *
+   * 用于限流：在 `requireAuth` **之前**就要按用户维度计数，
+   * 此时 `req.auth` 还没有值。
+   *
+   * 这里做**完整校验**（签名 + 过期）——否则伪造的 token 就能
+   * 拿到独立桶，绕过限流。
+   *
+   * @returns 主体 ID；无令牌或令牌无效时返回 null（该请求按 IP 计）
+   */
+  resolvePrincipalId(authorizationHeader: string | undefined): string | null {
+    if (!authorizationHeader) return null;
+    if (!authorizationHeader.toLowerCase().startsWith('bearer ')) return null;
+    const token = authorizationHeader.slice(7).trim();
+    const payload = this.verify(token);
+    return payload ? payload.sub : null;
+  }
+
   /** 校验并解析 token，失败返回 null */
   verify(token: string): TokenPayload | null {
     const parts = token.split('.');

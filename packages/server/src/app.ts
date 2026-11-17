@@ -5,7 +5,7 @@
  * 前端由 Vite dev server（开发）或静态托管（生产）独立提供。
  */
 import express from 'express';
-import type { Express } from 'express';
+import type { Express, Request } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Container } from './bootstrap/container.ts';
@@ -62,12 +62,21 @@ export function createApp(container: Container): Express {
    * 与 AI 配额分工：
    * - 限流：单位时间请求数，防瞬时刷量
    * - 配额：每日总量，防成本失控
+   *
+   * 关键：限流器挂在 `requireAuth` **之前**（公开端点如登录不能要求认证），
+   * 此时 `req.auth` 还是 undefined —— 因此必须用 `resolvePrincipalId`
+   * 自行解析令牌，否则已登录用户也会挤在同一个 IP 桶里，
+   * 同一 NAT 下的不同用户会互相影响。
    */
+  const principalIdResolver = (req: Request): string | null =>
+    container.tokenService.resolvePrincipalId(req.header('authorization'));
+
   v1.use(
     rateLimit({
       windowMs: 60_000,
       max: Number(process.env.RATE_LIMIT_PER_MINUTE ?? 120),
       skipAuthenticated: true,
+      resolvePrincipalId: principalIdResolver,
     })
   );
 
@@ -79,6 +88,7 @@ export function createApp(container: Container): Express {
     windowMs: 60_000,
     max: Number(process.env.RATE_LIMIT_AI_PER_MINUTE ?? 10),
     skipAuthenticated: true,
+    resolvePrincipalId: principalIdResolver,
     message: 'AI 请求过于频繁',
   });
 
