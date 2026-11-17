@@ -58,6 +58,7 @@
 | Phase 8u | 上传文件归属校验修复（6 例） | ✅ 完成 |
 | Phase 8v | AI 端点角色边界修复（5 例） | ✅ 完成 |
 | Phase 8w | 前后端路由可达性测试（43 例） | ✅ 完成 |
+| Phase 8x | 畸形知识体系快照白屏修复（6 例 + 2 E2E 断言） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -475,8 +476,8 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       548/548 通过（contracts 41 + server 388 + web 119）
-E2E        19/19 断言通过（自举前后端，退出码 0）
+测试       554/554 通过（contracts 41 + server 388 + web 125）
+E2E        21/21 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
 localStorage 仅剩 7.3KB 知识体系快照（原 19.7KB 业务数据）
@@ -529,6 +530,7 @@ Phase 4 又发现 3 个：
 | 34 | 试卷归属用请求体的 studentId 校验 | **学生 A 可改学生 B 的试卷**（卷面元信息被篡改） |
 | 35 | `storage.findById` 无归属校验且被诊断接口调用 | **学生 A 可把学生 B 的试卷图片挂进自己的诊断** |
 | 36 | AI 端点只校验身份不校验角色 | **家长可替孩子提交作答**（越过只读边界 + 消耗孩子配额） |
+| 37 | 知识体系快照不校验元素结构 | **畸形快照让整个应用白屏**（useState 初始化器抛错） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -989,6 +991,43 @@ jobs on disk: 10
 与「**任务不存在**」（路由在，只是数据没有）。
 两者错误消息不同，测试据此区分；否则「资源不存在」会被误判成「路由缺失」，
 测试就得靠造数据才能通过，失去意义。
+
+### 畸形知识体系快照导致应用白屏
+
+`loadSnapshot` 只校验「是数组且非空」，元素结构完全没校验：
+
+```ts
+if (!Array.isArray(parsed.knowledgePoints) || parsed.knowledgePoints.length === 0) {
+  return null;
+}
+return parsed;      // ← 元素可能是 null
+```
+
+而 `buildCurriculumData` 里 `kp.id` 被直接访问：
+
+```
+TypeError: Cannot read properties of null (reading 'id')
+```
+
+**关键在于它发生在哪**：`buildCurriculumData` 是在 React 的
+`useState` 初始化器里调用的 —— 初始化器抛错 = **整个应用白屏**，
+连错误边界都救不了。
+
+快照的现实来源：写入被中断（超出配额 / 进程被杀）、旧版本应用写的
+不同结构、缓存被外部工具改过。
+
+修复：逐条校验元素（必须有 string 类型的 `id` 与 `name`），
+畸形元素被**过滤**而非整个丢弃；`buildCurriculumData` 同样兜底
+（它在 useState 初始化器里，抛错代价太大）。
+
+原则：**宁可当作没有快照回落到服务端，也不让一个坏缓存拖垮整个应用。**
+
+E2E 补了浏览器级验证 —— 单元测试能证明「不抛错」，
+但只有真实浏览器能证明「不白屏」：
+
+```
+✗ 畸形快照下应用仍正常渲染（不应白屏） — 页面内容长度 0
+```
 
 ### AI 端点只校验身份不校验角色
 文档「角色与权限」写着 `parent` 是**只读**角色 ——
