@@ -55,6 +55,7 @@
 | Phase 8r | 跨学生数据丢失修复（2 例） | ✅ 完成 |
 | Phase 8s | 并发作答丢失掌握度修复（6 例） | ✅ 完成 |
 | Phase 8t | 试卷归属校验修复（4 例） | ✅ 完成 |
+| Phase 8u | 上传文件归属校验修复（6 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -472,7 +473,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       494/494 通过（contracts 41 + server 334 + web 119）
+测试       500/500 通过（contracts 41 + server 340 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -524,6 +525,7 @@ Phase 4 又发现 3 个：
 | 32 | 删除学生时遍历 `listAll()` 删全部文件 | **删学生 A 连学生 B 的试卷一起删**（跨学生数据丢失） |
 | 33 | 掌握度读-改-写非原子 | **并发作答丢记录**（5 个并发只剩 1 条） |
 | 34 | 试卷归属用请求体的 studentId 校验 | **学生 A 可改学生 B 的试卷**（卷面元信息被篡改） |
+| 35 | `storage.findById` 无归属校验且被诊断接口调用 | **学生 A 可把学生 B 的试卷图片挂进自己的诊断** |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -964,6 +966,28 @@ jobs on disk: 10
 已有的幂等测试是**顺序**调用的，永远发现不了 —— 必须真的并发发起。
 
 修复：按幂等键串行化整个入队流程。
+
+### 文件取用缺归属校验
+
+试卷文件按 `files/papers/{studentId}/` 分目录存储，鉴权**依赖元数据索引**。
+但「取文件路径」有两个入口，防护程度曾不一致：
+
+| 入口 | 归属校验 |
+|---|---|
+| `GET /uploads/papers/:fileId`（下载） | ✅ `meta.studentId !== studentId` → 403 |
+| `POST /exams/:id/diagnosis`（诊断引用 fileId） | ❌ **只按 ID 查路径** |
+
+`storage.findById(fileId)` 只按 ID 查路径，**不做归属校验** ——
+任何知道 fileId 的人都能拿到别人的试卷图片路径。
+而 `storage.canAccess(fileId, studentId)` 一直存在，却**从未被调用**。
+
+后果：学生 A 把学生 B 的 fileId 填进自己的诊断请求，
+AI 就会去读 B 的卷子 —— **B 的卷面内容会进入 A 的诊断结果**。
+
+修复：新增 `FileStorage.findByIdForStudent(fileId, studentId)`
+（走索引时校验 `studentId`，回退路径匹配时校验目录前缀），
+保留 `findById` 供内部管理逻辑使用 ——
+关键是**两个方法名字明确**，不靠调用方记得传对参数。
 
 ### 归属校验用错了 studentId
 
