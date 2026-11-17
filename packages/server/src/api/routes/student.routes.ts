@@ -10,9 +10,23 @@ import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
 import { getEffectiveDailyBudget } from '../../engines/planning-engine.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
+import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
 import type { Student, StudentProfileUpdate } from '@daydayup/contracts';
 
 const STUDENTS_DIR = ['db', 'students'];
+
+/**
+ * 构造学生档案文件路径。
+ *
+ * 关键：`studentId` 来自 URL，**必须清洗**。
+ *
+ * 否则 `studentId=../credentials` 会写到 `db/credentials.json`。
+ * 老师角色不受 `assertStudentAccess` 的学生名单限制，
+ * 因此这条路径对老师同样可达 —— 实测可覆盖凭证文件。
+ */
+function studentPath(studentId: string): string[] {
+  return [...STUDENTS_DIR, `${sanitizeSegment(studentId)}.json`];
+}
 
 /**
  * 读取全部学生档案。
@@ -73,10 +87,9 @@ export function createStudentRoutes(container: Container): Router {
   router.get('/students/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       assertStudentAccess(req, req.params.id);
-      const student = await container.db.read<Student>([
-        ...STUDENTS_DIR,
-        `${req.params.id}.json`,
-      ]);
+      const student = await container.db.read<Student>(
+        studentPath(req.params.id)
+      );
       if (!student) {
         throw new ApiException('NOT_FOUND', '学生不存在');
       }
@@ -90,7 +103,7 @@ export function createStudentRoutes(container: Container): Router {
   router.put('/students/:id/profile', async (req: Request, res: Response, next: NextFunction) => {
     try {
       assertStudentWriteAccess(req, req.params.id);
-      const fileSegments = [...STUDENTS_DIR, `${req.params.id}.json`];
+      const fileSegments = studentPath(req.params.id);
       const existing = await container.db.read<Student>(fileSegments);
       if (!existing) {
         throw new ApiException('NOT_FOUND', '学生不存在');
@@ -129,10 +142,9 @@ export function createStudentRoutes(container: Container): Router {
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         assertStudentAccess(req, req.params.id);
-        const student = await container.db.read<Student>([
-          ...STUDENTS_DIR,
-          `${req.params.id}.json`,
-        ]);
+        const student = await container.db.read<Student>(
+          studentPath(req.params.id)
+        );
         if (!student) {
           throw new ApiException('NOT_FOUND', '学生不存在');
         }

@@ -10,9 +10,27 @@ import { randomUUID } from 'node:crypto';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
+import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
 import type { CoachMessage } from '@daydayup/contracts';
 
 const COACHING_DIR = ['db', 'coaching'];
+
+/**
+ * 构造会话文件路径。
+ *
+ * 关键：`knowledgeId` / `studentId` 都来自 URL，**必须清洗**。
+ *
+ * 否则 `knowledgeId=../credentials` 会把会话写到 `db/credentials.json`
+ * —— 虽然逃不出 dataDir 根，但已经离开了预期目录，
+ * 能覆盖到别的学生的数据文件。
+ */
+function sessionPath(studentId: string, knowledgeId: string): string[] {
+  return [
+    ...COACHING_DIR,
+    sanitizeSegment(studentId),
+    `${sanitizeSegment(knowledgeId)}.json`,
+  ];
+}
 
 interface CoachingSession {
   studentId: string;
@@ -35,11 +53,9 @@ export function createCoachingRoutes(container: Container): Router {
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         assertStudentAccess(req, req.params.id);
-        const session = await container.db.read<CoachingSession>([
-          ...COACHING_DIR,
-          req.params.id,
-          `${req.params.knowledgeId}.json`,
-        ]);
+        const session = await container.db.read<CoachingSession>(
+          sessionPath(req.params.id, req.params.knowledgeId)
+        );
         res.json({
           studentId: req.params.id,
           knowledgeId: req.params.knowledgeId,
@@ -75,7 +91,7 @@ export function createCoachingRoutes(container: Container): Router {
         };
 
         await container.db.write(
-          [...COACHING_DIR, req.params.id, `${req.params.knowledgeId}.json`],
+          sessionPath(req.params.id, req.params.knowledgeId),
           session
         );
 

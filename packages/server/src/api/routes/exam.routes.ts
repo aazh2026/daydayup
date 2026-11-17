@@ -14,6 +14,7 @@ import { ApiException } from '../middleware/error-handler.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
+import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
 import type {
   Exam,
   ExamPaper,
@@ -26,6 +27,16 @@ const EXAMS_DIR = ['db', 'exams'];
 const PAPERS_DIR = ['db', 'papers'];
 const ERRORS_DIR = ['db', 'error-records'];
 const EVENTS_DIR = ['events'];
+
+/**
+ * 构造考试/试卷文件路径。
+ *
+ * 关键：`:id` 来自 URL，**必须清洗** ——
+ * 否则 `id=../credentials` 会写到 `db/credentials.json`。
+ */
+function entityPath(dir: string[], id: string): string[] {
+  return [...dir, `${sanitizeSegment(id)}.json`];
+}
 
 /** 错题记录列表项（列表视图不含大字段） */
 interface ErrorRecordListItem {
@@ -78,10 +89,9 @@ export function createExamRoutes(container: Container): Router {
   /** GET /api/v1/exams/:id */
   router.get('/exams/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const exam = await container.db.read<Exam>([
-        ...EXAMS_DIR,
-        `${req.params.id}.json`,
-      ]);
+      const exam = await container.db.read<Exam>(
+        entityPath(EXAMS_DIR, req.params.id)
+      );
       if (!exam) {
         throw new ApiException('NOT_FOUND', '考试不存在');
       }
@@ -522,10 +532,9 @@ export function createExamRoutes(container: Container): Router {
         }
         assertStudentWriteAccess(req, studentId);
 
-        const existing = await container.db.read<ExamPaper>([
-          ...PAPERS_DIR,
-          `${req.params.id}.json`,
-        ]);
+        const existing = await container.db.read<ExamPaper>(
+          entityPath(PAPERS_DIR, req.params.id)
+        );
         if (!existing) {
           throw new ApiException('NOT_FOUND', '试卷不存在');
         }

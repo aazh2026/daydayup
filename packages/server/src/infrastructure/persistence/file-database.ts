@@ -15,6 +15,23 @@ import path from 'node:path';
 /** 每个文件的写锁链，保证同文件写操作串行 */
 const writeLocks = new Map<string, Promise<unknown>>();
 
+/**
+ * 清洗路径片段：防止用户输入注入路径分隔符。
+ *
+ * 为什么需要：`resolvePath` 只保证最终路径**不逃出 dataDir 根**，
+ * 但拦不住「逃出预期子目录」——
+ * 例如教练会话接口把 `knowledgeId` 拼进路径，
+ * 传 `../credentials` 就会写到 `db/credentials.json` 而不是
+ * `db/coaching/{studentId}/` 下。
+ *
+ * 规则：只保留字母、数字、下划线、连字符；其余替换为 `_`；限长 64。
+ * 与 FileStorage.sanitizeSegment 保持一致。
+ */
+export function sanitizeSegment(segment: string): string {
+  const cleaned = segment.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return cleaned.slice(0, 64) || 'unknown';
+}
+
 async function withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const previous = writeLocks.get(key) ?? Promise.resolve();
   let release: () => void = () => {};

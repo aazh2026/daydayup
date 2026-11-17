@@ -15,6 +15,7 @@ import type {
   Student,
 } from '@daydayup/contracts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
+import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
 
 const PLANS_DIR = ['db', 'plans'];
 
@@ -167,7 +168,7 @@ export function createPlanRoutes(container: Container): Router {
         assertStudentAccess(req, req.params.id);
         const mastery = await container.db.read<{
           records: Record<string, MasteryRecord>;
-        }>(['db', 'mastery', `${req.params.id}.json`]);
+        }>(['db', 'mastery', `${sanitizeSegment(req.params.id)}.json`]);
         res.json({ opportunities: computePriorityOpportunities(mastery?.records ?? {}) });
       } catch (err) {
         next(err);
