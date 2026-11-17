@@ -143,6 +143,14 @@ export function toGeminiSchema(schema: AIJsonSchema): unknown {
 
   if (schema.description) base.description = schema.description;
 
+  /**
+   * 透传 enum —— 让 Gemini 侧也遵守受控词表，
+   * 而不是只靠 prompt 文字约束 + 事后校验。
+   */
+  if (schema.enum && schema.enum.length > 0) {
+    base.enum = schema.enum;
+  }
+
   // 转换 Type 枚举为 Gemini 期望的字符串常量
   switch (schema.type) {
     case 'OBJECT':

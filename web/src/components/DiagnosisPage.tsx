@@ -156,6 +156,22 @@ const CONFIDENCE_LEVELS: ConfidenceLevel[] = ['确定', '较可能', '待验证'
 
 const EXAM_TYPES: Exam['type'][] = ['期中考试', '月考', '一模', '二模', '随堂诊断'];
 
+/**
+ * Blob → data URL。
+ *
+ * 用于把示例试卷图片转成与用户上传照片**同构**的数据，
+ * 从而复用同一条上传链路。
+ */
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(reader.error ?? new Error('读取失败'));
+    reader.readAsDataURL(blob);
+  });
+}
+
 export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   exams,
   examResults,
@@ -322,17 +338,57 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
     e.target.value = '';
   };
 
+  /**
+   * 载入示例数学试卷。
+   *
+   * 规格 TC-01：「进入「考试诊断」→ 点击载入示例数学试卷 → 点击「启动 AI 试卷诊断」
+   * → 成功识别题目与失分」。
+   *
+   * 关键：示例图必须真正进入**上传链路**。
+   * 此前这里只置 `usingSampleImage=true` 并清空 `uploadedImages`，
+   * 于是诊断时 `fileIds=[]`、`rawText=''`，服务端
+   * （upload.routes.ts 的 `VALIDATION_FAILED`）必然拒绝 ——
+   * 界面看起来「载入成功」，实际一发诊断就报错。
+   *
+   * 现在把示例图读成 data URL 放进 `uploadedImages`，
+   * 走与用户上传照片**完全相同**的路径。
+   */
   const handleLoadSamplePaper = () => {
     setUploadSubject('自动识别');
     setUploadExamMode('auto');
     setUsingSampleImage(true);
-    setUploadedImages([]);
     setParsedTextName(null);
     setRawTextInput('');
     setSampleImageFailed(false);
     setDiagnoseError(null);
     setDiagnoseSuccessMsg(null);
     setPendingDraft(null);
+
+    void (async () => {
+      try {
+        const res = await fetch(SAMPLE_EXAM_IMAGE_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const dataUrl = await blobToDataUrl(blob);
+        setUploadedImages([
+          {
+            dataUrl,
+            mimeType: blob.type || 'image/jpeg',
+            name: 'sample_math_exam_paper.jpg',
+          },
+        ]);
+      } catch (err) {
+        /**
+         * 读取失败不阻断界面 —— 用户仍可手动上传。
+         * 但必须让用户知道示例卷没能载入，
+         * 否则会重演「界面显示已载入、一发诊断就报错」。
+         */
+        console.warn('示例试卷图片载入失败:', err);
+        setSampleImageFailed(true);
+        setUploadedImages([]);
+        setDiagnoseError('示例试卷图片载入失败，请手动上传试卷照片。');
+      }
+    })();
   };
 
   const handleLoadSampleParsedText = () => {
@@ -421,6 +477,19 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
           );
           fileIds.push(uploaded.fileId);
         }
+      } else if (usingSampleImage) {
+        /**
+         * 示例卷仍在读取中（或读取失败）。
+         *
+         * 此时 fileIds 为空、rawText 也为空，服务端会以
+         * `VALIDATION_FAILED` 拒绝 —— 但那个报错对用户毫无意义。
+         * 这里给出明确提示，而不是让用户对着一个技术错误码发呆。
+         */
+        throw new Error(
+          sampleImageFailed
+            ? '示例试卷图片载入失败，请手动上传试卷照片后重试。'
+            : '示例试卷图片正在载入，请稍候再启动诊断。'
+        );
       }
 
       setDiagnoseProgress({ stage: '创建诊断任务', pct: 15 });

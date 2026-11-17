@@ -1046,7 +1046,7 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                                         <span aria-hidden="true">·</span>
                                         <span
                                           className={
-                                            err.status === '已闭环' || err.status === '已订正'
+                                            err.status === '已闭环'
                                               ? 'text-emerald-700 font-medium'
                                               : 'text-amber-700 font-medium'
                                           }
@@ -1386,7 +1386,7 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                       </div>
                       <span
                         className={`font-semibold ${
-                          err.status === '已闭环' || err.status === '已订正'
+                          err.status === '已闭环'
                             ? 'text-emerald-700'
                             : 'text-amber-700'
                         }`}
@@ -1441,7 +1441,7 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                           className="inline-flex items-center gap-1 px-3.5 py-2 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors whitespace-nowrap"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>标记已订正</span>
+                          <span>标记已订正，待复测</span>
                         </button>
                         <button
                           type="button"

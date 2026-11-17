@@ -29,6 +29,7 @@ import {
 } from '../../infrastructure/ai/prompts/registry.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
 import { toGeminiSchema } from '../../infrastructure/ai/gemini-provider.ts';
+import { validateAgainstSchema } from '../../infrastructure/ai/schema-validator.ts';
 import { requireAuth } from '../middleware/auth.ts';
 import { requireQuota } from '../middleware/quota.ts';
 import type { Role } from '../../infrastructure/security/token.ts';
@@ -217,7 +218,20 @@ export function createAiRoutes(
       // 诊断需要携带图片，走多模态直连路径
       const parsed = result.data ?? (await runMultimodalDiagnosis(ai, parts));
 
-      if (!parsed) throwAiFailure(result);
+      if (!parsed) {
+        /**
+         * 两条路径都失败了。
+         * 错误信息要能区分「文本路径的失败原因」与「多模态路径的结构不合规」，
+         * 否则用户只会看到一个含糊的「AI 调用失败」。
+         */
+        if (!result.data) {
+          throw new ApiException(
+            'AI_INVALID_OUTPUT',
+            '模型返回结构不符合诊断 schema（缺少证据/置信度/验证方式等必需字段）'
+          );
+        }
+        throwAiFailure(result);
+      }
 
       res.json({
         ...parsed,
@@ -427,27 +441,61 @@ export function createAiRoutes(
  *
  * GeminiProvider.generateJson 目前按纯文本构造 contents，
  * 诊断场景需要携带图片 inlineData，故此处单独处理。
+ *
+ * **关键：必须做 schema 校验。**
+ * 此前这里直接 `JSON.parse` 就返回，完全跳过 `validateAgainstSchema`，
+ * 而图片试卷诊断是**主路径** ——
+ * 于是规格 §7.1「证据与置信度完整率 100%」在真实使用场景里没有服务端保障：
+ * 模型少返回 `evidence` / `confidence` / `verificationMethod` 也会照单全收。
+ *
+ * 现在与纯文本路径对齐：
+ * - 校验失败 → 记录告警并重试（最多 2 次）；
+ * - 仍失败 → 返回 null，由调用方转成明确的 `AI_INVALID_OUTPUT` 错误码，
+ *   而不是把结构不完整的结果当成正常诊断落库。
  */
 async function runMultimodalDiagnosis(
   ai: NonNullable<Container['ai']>,
-  parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>
+  parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>,
+  maxRetries = 2
 ): Promise<Record<string, unknown> | null> {
   const client = (ai as unknown as { client: any }).client;
   if (!client) return null;
 
-  const response = await client.models.generateContent({
-    model: 'gemini-4-hydrogen',
-    contents: { parts },
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: toGeminiSchema(DIAGNOSIS_SCHEMA),
-    },
-  });
+  let lastError = '未知错误';
 
-  try {
-    return JSON.parse((response.text ?? '{}').trim()) as Record<string, unknown>;
-  } catch (err) {
-    logger.warn('ai.multimodal.parse_failed', { error: String(err) });
-    return null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await client.models.generateContent({
+      model: 'gemini-4-hydrogen',
+      contents: { parts },
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: toGeminiSchema(DIAGNOSIS_SCHEMA),
+      },
+    });
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse((response.text ?? '{}').trim());
+    } catch (err) {
+      lastError = '模型返回内容不是合法 JSON';
+      logger.warn('ai.multimodal.parse_failed', {
+        error: String(err),
+        attempt: attempt + 1,
+      });
+      continue;
+    }
+
+    if (!validateAgainstSchema(parsed, DIAGNOSIS_SCHEMA)) {
+      lastError = '模型返回结构不符合 schema';
+      logger.warn('ai.multimodal.schema_invalid', {
+        attempt: attempt + 1,
+      });
+      continue;
+    }
+
+    return parsed as Record<string, unknown>;
   }
+
+  logger.warn('ai.multimodal.failed', { error: lastError });
+  return null;
 }

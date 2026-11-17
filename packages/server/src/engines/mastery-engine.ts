@@ -23,6 +23,8 @@ export interface MasteryTransitionInput {
   isCorrect: boolean;
   evidenceSummary: string;
   subject?: string;
+  /** 本次作答使用了多少提示（0 = 完全独立） */
+  hintsUsed?: number;
   now?: number;
 }
 
@@ -45,6 +47,30 @@ export function evaluateMasteryTransition(
   const practiceTotal = current.practiceTotal + 1;
   const practiceCorrect = current.practiceCorrect + (input.isCorrect ? 1 : 0);
 
+  /**
+   * 置信度分级（规格 §模块01 §2：「置信度：确定 / 较可能 / 待验证」）。
+   *
+   * 此前无论对错都硬编码 `confidence: '确定'` ——
+   * 于是「微测即时提升置信度」只是把置信度**拉满**，
+   * 完全没有区分对待不同强度的证据。
+   *
+   * 现在的分级规则（按证据强度从弱到强）：
+   * - 作答错误 → 证据不足，回落到 `待验证`
+   *   （错题本身就是「待验证」假设的来源，不是确认）
+   * - 作答正确但用了提示 → `较可能`
+   *   （有提示的答对不足以独立确认掌握）
+   * - 作答正确且完全独立（无提示）→ `确定`
+   *
+   * 注意：置信度**只升不降到高于证据强度的档位**，
+   * 且不会把已有的 `确定` 降级 —— 因为已经独立验证过的知识点
+   * 不该因为一次带提示的练习就失去「确定」判定。
+   */
+  const gradedConfidence = ((): MasteryRecord['confidence'] => {
+    if (!input.isCorrect) return '待验证';
+    if ((input.hintsUsed ?? 0) > 0) return '较可能';
+    return '确定';
+  })();
+
   if (!input.isCorrect) {
     const consecutiveErrors = current.consecutiveErrors + 1;
     const nextState: MasteryState =
@@ -57,7 +83,8 @@ export function evaluateMasteryTransition(
       record: {
         ...current,
         state: nextState,
-        confidence: '确定',
+        // 作答错误 = 假设未被证实，置信度回落到「待验证」
+        confidence: gradedConfidence,
         consecutiveErrors,
         practiceCorrect,
         practiceTotal,
@@ -126,7 +153,14 @@ export function evaluateMasteryTransition(
     record: {
       ...current,
       state: nextState,
-      confidence: '确定',
+      /**
+       * 置信度按证据强度分级（见上方 gradedConfidence 说明）。
+       *
+       * 但**不会把已有的「确定」降级** ——
+       * 已经独立验证过的知识点，不该因为一次带提示的练习就失去「确定」判定。
+       */
+      confidence:
+        current.confidence === '确定' ? '确定' : gradedConfidence,
       consecutiveErrors: 0,
       practiceCorrect,
       practiceTotal,
@@ -162,6 +196,89 @@ export function buildTransitionEvent(params: {
     toState: params.toState,
     trigger: params.trigger,
     timestamp: new Date(params.now ?? Date.now()).toISOString(),
+  };
+}
+
+/**
+ * 诊断失分驱动的掌握度变更。
+ *
+ * 与 `evaluateMasteryTransition`（练习路径）的区别：
+ * 练习是一次「作答」，有对错；诊断是**考试失分证据**，
+ * 语义上等价于一次失败作答，但**不计入 practiceTotal** ——
+ * 报告页第一层的「无提示独立作答率」只应统计真实练习。
+ *
+ * 规格依据：
+ * - TC-01：「新增对应 ErrorRecord 并**更新相关知识点 MasteryRecord** 与 7 天排序」
+ * - §模块01 §2：诊断结论必须带证据与验证方式 —— 证据写入 evidenceLogs
+ * - §模块06 第二层：「已验证修复知识点数」—— 诊断失分不得计入修复
+ *
+ * 状态规则：
+ * - `掌握` / `稳定掌握` → 回退到 `学习中`（有新失分证据）
+ * - 其余状态 → 回退到 `待学习`
+ * - 连续失分累积（consecutiveErrors）用于降阶保护
+ * - lostScoreEvidence 累加失分（按 0.7 折扣，与前端历史逻辑一致）
+ */
+export interface DiagnosisMasteryInput {
+  current: MasteryRecord;
+  /** 诊断条目的失分证据 */
+  scoreLost: number;
+  /** 证据摘要（写入 evidenceLogs 与迁移事件 trigger） */
+  evidenceSummary: string;
+  /** AI 判定的置信度 —— 直接来自诊断结论，不做硬编码 */
+  confidence: MasteryRecord['confidence'];
+  now?: number;
+}
+
+export interface DiagnosisMasteryResult {
+  record: MasteryRecord;
+  changed: boolean;
+  fromState: MasteryState;
+  toState: MasteryState;
+}
+
+export function applyDiagnosisMasteryLoss(
+  input: DiagnosisMasteryInput
+): DiagnosisMasteryResult {
+  const now = new Date(input.now ?? Date.now()).toISOString();
+  const current = input.current;
+
+  /**
+   * 诊断失分 = 一次失败证据。
+   *
+   * 状态回退规则（规格 §3.2「状态回退规则」）：
+   * 若后续测试再次失败或连续失误 ≥ 2 次，状态自动回退至 `学习中` 或 `待学习`。
+   */
+  const nextState: MasteryState =
+    current.state === '稳定掌握' || current.state === '掌握'
+      ? '学习中'
+      : '待学习';
+
+  const consecutiveErrors = current.consecutiveErrors + 1;
+
+  const record: MasteryRecord = {
+    ...current,
+    state: nextState,
+    // 置信度来自诊断结论本身（AI 给出的确定/较可能/待验证），不硬编码
+    confidence: input.confidence,
+    lostScoreEvidence: Number(
+      (current.lostScoreEvidence + input.scoreLost * 0.7).toFixed(1)
+    ),
+    consecutiveErrors,
+    /**
+     * 诊断失分证明「变式/迁移/延迟复测」并未独立通过 ——
+     * 否则报告页会把「已验证修复」算到一个其实还在错的知识点上。
+     */
+    variantPassed: false,
+    delayedRetestPassed: false,
+    evidenceLogs: [input.evidenceSummary, ...current.evidenceLogs].slice(0, 8),
+    updatedAt: now,
+  };
+
+  return {
+    record,
+    changed: nextState !== current.state,
+    fromState: current.state,
+    toState: nextState,
   };
 }
 

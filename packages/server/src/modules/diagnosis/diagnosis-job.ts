@@ -9,11 +9,15 @@
 import type { JobHandler, JobContext } from '../../infrastructure/jobs/job-types.ts';
 import type { AIProvider } from '../../infrastructure/ai/provider.ts';
 import { DIAGNOSIS_SCHEMA } from '../../infrastructure/ai/schemas.ts';
+import { validateAgainstSchema } from '../../infrastructure/ai/schema-validator.ts';
 import { buildDiagnosisPrompt } from '../../infrastructure/ai/prompts/registry.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
 import type { FileStorage } from '../../infrastructure/storage/file-storage.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
 import type { DiagnoseExamResponse } from '@daydayup/contracts';
+
+/** 诊断结果结构校验失败时的重试次数 */
+const DIAGNOSIS_MAX_RETRIES = 2;
 
 export interface DiagnosisJobInput {
   studentId: string;
@@ -91,22 +95,56 @@ export function createDiagnosisJobHandler(
         '../../infrastructure/ai/gemini-provider.ts'
       );
 
-      const response = await client.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: { parts },
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: toGeminiSchema(DIAGNOSIS_SCHEMA),
-        },
-      });
-
       context.reportProgress('解析诊断结果', 75);
 
-      let parsed: Record<string, unknown>;
-      try {
-        parsed = JSON.parse((response.text ?? '{}').trim()) as Record<string, unknown>;
-      } catch {
-        throw new Error('模型返回内容不是合法 JSON');
+      /**
+       * **必须做 schema 校验。**
+       *
+       * 此前这里直接 `JSON.parse` 就当成诊断结果，
+       * 完全跳过 `validateAgainstSchema` ——
+       * 而这正是**异步诊断的主路径**（前端走 Job + SSE）。
+       *
+       * 后果：规格 §7.1「证据与置信度完整率 100%」在真实链路上没有保障，
+       * 模型少返回 `evidence` / `confidence` / `verificationMethod` 也会照单全收，
+       * 落库成缺字段的错题记录。
+       *
+       * 现在与纯文本路径对齐：校验失败 → 重试 → 仍失败则任务明确失败，
+       * 而不是把结构不完整的结果当成正常诊断落库。
+       */
+      let parsed: Record<string, unknown> | null = null;
+      let lastError = '未知错误';
+
+      for (let attempt = 0; attempt <= DIAGNOSIS_MAX_RETRIES; attempt++) {
+        const response = await client.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents: { parts },
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: toGeminiSchema(DIAGNOSIS_SCHEMA),
+          },
+        });
+
+        let candidate: unknown;
+        try {
+          candidate = JSON.parse((response.text ?? '{}').trim());
+        } catch {
+          lastError = '模型返回内容不是合法 JSON';
+          continue;
+        }
+
+        if (!validateAgainstSchema(candidate, DIAGNOSIS_SCHEMA)) {
+          lastError = '模型返回结构不符合 schema';
+          continue;
+        }
+
+        parsed = candidate as Record<string, unknown>;
+        break;
+      }
+
+      if (!parsed) {
+        throw new Error(
+          `诊断结果结构校验失败（${lastError}）：缺少证据/置信度/验证方式等必需字段`
+        );
       }
 
       context.reportProgress('生成诊断报告', 90);

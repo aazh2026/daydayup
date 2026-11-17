@@ -40,8 +40,12 @@ export function validateAgainstSchema(value: unknown, schema: AIJsonSchema): boo
       }
       return true;
     }
-    case 'STRING':
-      return typeof value === 'string';
+    case 'STRING': {
+      if (typeof value !== 'string') return false;
+      // 枚举约束：受控词表必须在允许集合内
+      if (schema.enum && !schema.enum.includes(value)) return false;
+      return true;
+    }
     case 'NUMBER':
       return typeof value === 'number' && Number.isFinite(value);
     case 'BOOLEAN':

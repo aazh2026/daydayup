@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TopBar } from './components/TopBar.tsx';
 import { StudentProfileModal } from './components/StudentProfileModal.tsx';
 import { TodayPage } from './components/TodayPage.tsx';
@@ -9,12 +9,13 @@ import { ReportPage } from './components/ReportPage.tsx';
 import { LoginPage } from './components/LoginPage.tsx';
 import { TeacherDashboard } from './components/TeacherDashboard.tsx';
 import { INITIAL_APP_STATE } from './data/initialStore.ts';
-import { submitMasteryAttempt, fetchCurrentPlan } from './engine/planner.ts';
+import { submitMasteryAttempt, fetchCurrentPlan, regeneratePlan } from './engine/planner.ts';
 import { buildLocalPlanFallback } from './engine/plan-fallback.ts';
 import { isAuthRequired } from './api/auth.ts';
 import { api } from './api/client.ts';
 import { useCurriculum } from './store/curriculum.tsx';
 import { useServerHydration } from './store/hydrate.ts';
+import { refreshMasteryFromServer } from './store/hydration-core.ts';
 import {
   loadSession,
   clearSession,
@@ -56,6 +57,13 @@ const DEV_SESSION: AuthSession = {
   studentIds: ['stu-sh-zhangwei'],
   displayName: '张伟',
 };
+
+/**
+ * 档案保存防抖时长（毫秒）。
+ *
+ * 规划页的时长滑块是连续触发的，攒到停止操作后再落库。
+ */
+const PROFILE_SAVE_DEBOUNCE_MS = 400;
 
 export default function App() {
   /**
@@ -136,6 +144,24 @@ export default function App() {
    */
   const [serverPlan, setServerPlan] = useState<LearningPlan | null>(null);
 
+  /**
+   * 档案保存防抖句柄。
+   *
+   * 规划页的滑块每 step 一次就会触发 onUpdateStudent，
+   * 不防抖的话会连发 PUT + 计划重排请求。
+   */
+  const profileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 组件卸载时清掉待执行的保存，避免卸载后还在写状态
+  useEffect(() => {
+    return () => {
+      if (profileSaveTimer.current) {
+        clearTimeout(profileSaveTimer.current);
+        profileSaveTimer.current = null;
+      }
+    };
+  }, []);
+
   // 一次性清理分离前遗留的 localStorage 业务数据
   useEffect(() => {
     if (purgeLegacyState()) {
@@ -170,11 +196,54 @@ export default function App() {
     [serverPlan, appState, KNOWLEDGE_MAP]
   );
 
+  /**
+   * 更新学生档案（预算/作业量/疲劳度等）。
+   *
+   * 规格 §六 PlanningPage：「**实时**调节每日时间/作业量/疲劳度」，
+   * TC-02：「实际每日排期预算**立即**缩减」。
+   *
+   * 此前这里只改本地 state —— 服务端完全不知道档案变了，
+   * 于是「每日排期预算」不会随滑块变化，TC-02 不成立。
+   *
+   * 现在：
+   * 1. 乐观更新本地 state（界面即时反馈）；
+   * 2. PUT /students/:id/profile 落库（服务端权威档案）；
+   * 3. POST /students/:id/plans 重新生成计划（预算变化必须重排）。
+   *
+   * **防抖**：滑块拖动会连续触发 onChange（每次 step 一次），
+   * 若每次都发 PUT + 重排计划，会打出大量无谓请求并让计划抖动。
+   * 这里等用户停止操作 400ms 后再落库，界面仍然即时反馈。
+   */
   const handleUpdateStudent = (updated: Student) => {
     setAppState((prev) => ({
       ...prev,
       student: updated,
     }));
+
+    const studentId = updated.id;
+    if (profileSaveTimer.current) {
+      clearTimeout(profileSaveTimer.current);
+    }
+    profileSaveTimer.current = setTimeout(() => {
+      void (async () => {
+        try {
+          await api.put(`/api/v1/students/${studentId}/profile`, {
+            dailyBudgetMinutes: updated.dailyBudgetMinutes,
+            homeworkLoad: updated.homeworkLoad,
+            fatigueLevel: updated.fatigueLevel,
+            targetExamDate: updated.targetExamDate,
+            targetSchool: updated.targetSchool,
+            name: updated.name,
+          });
+
+          // 档案变了 → 每日预算变了 → 计划必须重排
+          const plan = await regeneratePlan(studentId);
+          setServerPlan(plan);
+        } catch (err) {
+          console.warn('学生档案保存失败（本地状态仍保留）:', err);
+        }
+      })();
+    }, PROFILE_SAVE_DEBOUNCE_MS);
   };
 
   const handleResetDemo = () => {
@@ -330,6 +399,21 @@ export default function App() {
     });
   };
 
+  /**
+   * 录入一条成绩基线。
+   *
+   * 规格 §模块06 第三层：「全科历次考试成绩趋势对比矩阵（跨月考/期中/模考横向变化）、
+   * 距离目标分差值」。
+   *
+   * 此前这里只改本地 state —— 成绩**从不落库**，刷新即丢；
+   * 而且服务端读成绩时是「从试卷现场合成」，
+   * `targetScore` 被抄成 `score`，导致「距离目标分差值」恒为 0。
+   *
+   * 现在：
+   * 1. 乐观更新本地 state（界面即时反馈）；
+   * 2. 若新建场次，先 POST /exams 建考试实体；
+   * 3. POST /students/:id/exam-results 落库成绩（含独立的目标分）。
+   */
   const handleAddExamResult = (
     result: Omit<ExamResult, 'id' | 'examId'> & {
       existingExamId?: string;
@@ -375,6 +459,40 @@ export default function App() {
         ],
       };
     });
+
+    // ---- 落库到服务端 ----
+    const studentId = appState.student.id;
+    const examId = result.existingExamId ?? `exam-${Date.now()}`;
+    const resolvedTitle = result.examTitle;
+    const resolvedDate = result.date;
+
+    void (async () => {
+      try {
+        // 新建场次需要先有考试实体，否则成绩挂不到任何考试上
+        if (!result.existingExamId) {
+          await api.post('/api/v1/exams', {
+            id: examId,
+            studentId,
+            title: resolvedTitle,
+            type: result.examType ?? '随堂诊断',
+            date: resolvedDate,
+          });
+        }
+
+        await api.post(`/api/v1/students/${studentId}/exam-results`, {
+          studentId,
+          examId,
+          examTitle: resolvedTitle,
+          subject: result.subject,
+          score: result.score,
+          fullScore: result.fullScore,
+          targetScore: result.targetScore,
+          date: resolvedDate,
+        });
+      } catch (err) {
+        console.warn('成绩基线保存失败（本地状态仍保留）:', err);
+      }
+    })();
   };
 
   const handleDiagnosisCompleted = (payload: {
@@ -448,6 +566,57 @@ export default function App() {
         ),
         diagnosedItems: payload.items,
       })
+      .then(() => {
+        /**
+         * 诊断落库成功后，用**服务端权威**的掌握度覆盖乐观更新。
+         *
+         * 服务端在同一次请求里更新了 MasteryRecord 与迁移事件
+         * （见 packages/server/src/api/routes/exam.routes.ts 的 applyDiagnosisMastery）。
+         * 前端的乐观更新只是即时反馈，最终值以服务端为准 ——
+         * 这满足契约「状态迁移规则属服务端 MasteryEngine，前端不得本地推导」。
+         */
+        return refreshMasteryFromServer(studentId, setAppState);
+      })
+      .then(async () => {
+        /**
+         * 同步卷面分数到成绩基线。
+         *
+         * 规格 TC-08：「确认同步成绩基线」——
+         * 用户在人工校验台勾选「同步成绩基线」后，
+         * 这条成绩必须落库，否则第三层评估拿不到它。
+         */
+        if (
+          payload.syncScoreToBaseline &&
+          payload.score !== undefined &&
+          payload.fullScore !== undefined &&
+          payload.fullScore > 0
+        ) {
+          try {
+            // 新场次需要先有考试实体
+            if (!payload.existingExamId) {
+              await api.post('/api/v1/exams', {
+                id: examId,
+                studentId,
+                title: payload.examTitle,
+                type: payload.examType ?? '随堂诊断',
+                date: payload.examDate ?? now.slice(0, 10),
+              });
+            }
+            await api.post(`/api/v1/students/${studentId}/exam-results`, {
+              studentId,
+              examId,
+              examTitle: payload.examTitle,
+              subject: payload.subject,
+              score: payload.score,
+              fullScore: payload.fullScore,
+              targetScore: payload.targetScore ?? Math.round(payload.fullScore * 0.9),
+              date: payload.examDate ?? now.slice(0, 10),
+            });
+          } catch (err) {
+            console.warn('卷面分数同步到成绩基线失败:', err);
+          }
+        }
+      })
       .catch((err) => {
         console.warn('诊断结果落库失败（本地状态仍保留）:', err);
       });
@@ -494,12 +663,32 @@ export default function App() {
         createdAt: now,
       }));
 
+      /**
+       * 掌握度与掌握轨迹：**不再由前端推导**。
+       *
+       * 契约（packages/contracts/src/domain/index.ts）明文约束：
+       * 「状态迁移规则属服务端 MasteryEngine，前端不得本地推导」。
+       *
+       * 此前这里在前端算 nextState / lostScoreEvidence / 迁移事件，
+       * 而服务端 POST /exams/:examId/papers 并不写 MasteryRecord ——
+       * 结果是：
+       * - 前端推导的掌握度刷新即丢（localStorage 业务数据已清理）；
+       * - 服务端的 7 天排序看不到任何诊断失分证据。
+       *
+       * 现在服务端在落库诊断结果的同时更新 MasteryRecord 与迁移事件，
+       * 前端只负责把**服务端算好的结果**合并进本地展示状态。
+       */
       const nextMastery = { ...prev.masteryRecords };
       const newHistoryEvents: MasteryTransitionEvent[] = [];
 
       for (const item of payload.items) {
         const current = nextMastery[item.knowledgeId];
         if (!current) continue;
+        /**
+         * 乐观更新：与服务端 applyDiagnosisMasteryLoss 的规则保持一致，
+         * 让界面在服务端响应返回前就能给出即时反馈。
+         * 服务端响应到达后会用权威值覆盖（见下方 refreshMasteryFromServer）。
+         */
         const nextState =
           current.state === '稳定掌握' || current.state === '掌握'
             ? '学习中'
@@ -673,6 +862,10 @@ export default function App() {
       hintsUsed: payload.hintsUsed,
       timeSpentSeconds: payload.timeSpentSeconds,
       independent: payload.hintsUsed === 0,
+      // 题干/作答/反馈随流水落库，报告页的「评测记录」才有内容
+      questionStem: payload.questionStem,
+      userAnswer: payload.userAnswer,
+      aiFeedback: payload.aiFeedback,
     })
       .then((result) => {
         const transition = result.mastery;
@@ -777,8 +970,25 @@ export default function App() {
     }));
   };
 
+  /**
+   * 标记错题已订正。
+   *
+   * 规格 §模块05：「错题档案……学生订正心得、闭环复测状态」，
+   * §模块07 验收 TC-07：「可记录订正心得并直达变式复测」。
+   *
+   * 状态机（规格 §四 ErrorRecord.status）：
+   *   未订正 → **待复测** → 已闭环
+   *
+   * 此前这里直接置 `已订正`，而 `已订正` 不在规格定义的枚举里
+   * （规格是「未订正/已订正/待复测/已闭环」四项，但闭环语义需要
+   * 「订正完成 → 等待复测」这一中间态才有意义），
+   * 而且 `待复测` 这一项**从来没有写入路径** ——
+   * 报告页的「按订正闭环状态筛选」里「待复测」恒为空。
+   *
+   * 现在：订正后进入「待复测」，复测通过才转「已闭环」。
+   */
   const handleMarkErrorCorrected = (errorId: string, note: string) => {
-    const nextStatus = '已订正' as const;
+    const nextStatus = '待复测' as const;
 
     setAppState((prev) => ({
       ...prev,
@@ -786,6 +996,7 @@ export default function App() {
         err.id === errorId
           ? {
               ...err,
+              // 已闭环是终态，不回退
               status: err.status === '已闭环' ? '已闭环' : nextStatus,
               correctionNote: note,
             }

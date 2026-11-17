@@ -15,17 +15,21 @@ import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/aut
 import { logger } from '../../infrastructure/logging/logger.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
 import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
+import { applyDiagnosisMastery } from '../../modules/mastery/mastery-service.ts';
 import type {
   Exam,
   ExamPaper,
+  ExamResult,
   ErrorRecord,
   DiagnosedItem,
   DetectedMetadata,
+  Subject,
 } from '@daydayup/contracts';
 
 const EXAMS_DIR = ['db', 'exams'];
 const PAPERS_DIR = ['db', 'papers'];
 const ERRORS_DIR = ['db', 'error-records'];
+const RESULTS_DIR = ['db', 'exam-results'];
 const EVENTS_DIR = ['events'];
 
 /**
@@ -156,33 +160,158 @@ export function createExamRoutes(container: Container): Router {
           ? body.diagnosedItems
           : [];
 
-        const records: ErrorRecord[] = items.map((item) => ({
-          id: `err-${randomUUID()}`,
-          examId,
-          examPaperId: paperId,
-          examTitle: String(body.examTitle ?? ''),
-          questionNumber: item.questionNumber,
-          subject: paper.subject,
-          stem: item.stem,
-          studentAnswer: item.studentAnswer,
-          correctAnswer: item.correctAnswer,
-          scoreLost: item.scoreLost,
-          errorType: item.errorType as ErrorRecord['errorType'],
-          knowledgeId: item.knowledgeId,
-          knowledgeName: String(body.knowledgeNameById?.[item.knowledgeId] ?? item.knowledgeId),
-          aiAnalysis: item.aiAnalysis,
-          evidence: item.evidence,
-          confidence: item.confidence as ErrorRecord['confidence'],
-          verificationMethod: item.verificationMethod,
-          status: '未订正',
-          createdAt: now,
-        }));
+        /**
+         * 诊断条目 → 错题记录。
+         *
+         * **受控词表归一化**：五维错因与置信度是规格定义的枚举
+         * （§模块01 §2），前端可以传任意字符串，服务端必须归一化，
+         * 否则报告页的「五维错因占比统计」会出现规格外的分类。
+         *
+         * 未知取值降级为最保守的档位（错因→知识问题、置信度→待验证），
+         * 而不是直接落库。
+         */
+        const ERROR_TYPES_ALLOWED: ErrorRecord['errorType'][] = [
+          '知识问题',
+          '方法问题',
+          '计算问题',
+          '熟练度问题',
+          '审题问题',
+        ];
+        const CONFIDENCE_ALLOWED: ErrorRecord['confidence'][] = [
+          '确定',
+          '较可能',
+          '待验证',
+        ];
+
+        const records: ErrorRecord[] = items.map((item) => {
+          const rawErrorType = String(item.errorType ?? '');
+          const rawConfidence = String(item.confidence ?? '');
+          const errorType = ERROR_TYPES_ALLOWED.includes(
+            rawErrorType as ErrorRecord['errorType']
+          )
+            ? (rawErrorType as ErrorRecord['errorType'])
+            : '知识问题';
+          const confidence = CONFIDENCE_ALLOWED.includes(
+            rawConfidence as ErrorRecord['confidence']
+          )
+            ? (rawConfidence as ErrorRecord['confidence'])
+            : '待验证';
+
+          return {
+            id: `err-${randomUUID()}`,
+            examId,
+            examPaperId: paperId,
+            examTitle: String(body.examTitle ?? ''),
+            questionNumber: item.questionNumber,
+            subject: paper.subject,
+            stem: item.stem,
+            studentAnswer: item.studentAnswer,
+            correctAnswer: item.correctAnswer,
+            scoreLost: item.scoreLost,
+            errorType,
+            knowledgeId: item.knowledgeId,
+            knowledgeName: String(
+              body.knowledgeNameById?.[item.knowledgeId] ?? item.knowledgeId
+            ),
+            aiAnalysis: item.aiAnalysis,
+            evidence: item.evidence,
+            confidence,
+            verificationMethod: item.verificationMethod,
+            status: '未订正',
+            createdAt: now,
+          };
+        });
 
         for (const record of records) {
           await container.db.write(
             [...ERRORS_DIR, studentId, `${record.id}.json`],
             record
           );
+        }
+
+        /**
+         * 诊断失分 → 服务端更新 MasteryRecord（服务端权威）。
+         *
+         * 规格 TC-01：「新增对应 ErrorRecord 并**更新相关知识点 MasteryRecord**
+         * 与 7 天排序」。
+         *
+         * 此前这一步只发生在**前端**（web/src/App.tsx 本地推导 nextState），
+         * 服务端完全没写 —— 于是：
+         * - 刷新页面后失分证据全部丢失；
+         * - 服务端的 7 天排序（读 db/mastery/{studentId}.json）看不到任何诊断结果，
+         *   「诊断 → 提分规划」闭环在服务端是断的；
+         * - 违反契约明文约束「状态迁移规则属服务端 MasteryEngine，前端不得本地推导」。
+         *
+         * 现在下沉到服务端：
+         * - 同一知识点的多条失分**先聚合**再应用一次迁移，
+         *   避免同一知识点在一次诊断里被多次回退（状态跳变失真）；
+         * - 迁移事件写入同一份 mastery history，报告页「掌握轨迹」得以还原。
+         */
+        const lossByKnowledge = new Map<
+          string,
+          { scoreLost: number; evidence: string[]; confidence: ErrorRecord['confidence'] }
+        >();
+
+        for (const record of records) {
+          const existing = lossByKnowledge.get(record.knowledgeId);
+          const evidence = `${record.examTitle || paper.title} ${record.questionNumber}（-${record.scoreLost}分，${record.errorType}）`;
+          if (existing) {
+            existing.scoreLost += record.scoreLost;
+            existing.evidence.push(evidence);
+            /**
+             * 同一知识点多条失分时，置信度取**最低** ——
+             * 证据互相印证则置信度上升，但不应由前端自报覆盖。
+             */
+            if (record.confidence === '待验证') existing.confidence = '待验证';
+            else if (record.confidence === '较可能') {
+              existing.confidence =
+                existing.confidence === '确定' ? '确定' : '较可能';
+            }
+          } else {
+            lossByKnowledge.set(record.knowledgeId, {
+              scoreLost: record.scoreLost,
+              evidence: [evidence],
+              confidence: record.confidence,
+            });
+          }
+        }
+
+        const masteryUpdates: Array<{
+          knowledgeId: string;
+          fromState: string;
+          toState: string;
+        }> = [];
+
+        for (const [knowledgeId, loss] of lossByKnowledge) {
+          try {
+            const transition = await applyDiagnosisMastery(container, {
+              studentId,
+              knowledgeId,
+              scoreLost: loss.scoreLost,
+              evidenceSummary: loss.evidence.join('；'),
+              subject: paper.subject,
+              confidence: loss.confidence,
+            });
+            if (transition.changed) {
+              masteryUpdates.push({
+                knowledgeId,
+                fromState: transition.fromState,
+                toState: transition.toState,
+              });
+            }
+          } catch (err) {
+            /**
+             * 掌握度更新失败**不能阻断试卷落库** ——
+             * 试卷与错题是诊断的主产物，先落库再补掌握度。
+             * 但必须留下日志，否则这类偏差会静默存在。
+             */
+            logger.error('diagnosis.mastery_update_failed', {
+              requestId: req.requestId,
+              studentId,
+              knowledgeId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
         }
 
         // 事件日志：先落业务结果，再记事件
@@ -200,6 +329,7 @@ export function createExamRoutes(container: Container): Router {
               errorCount: records.length,
               totalLostScore: paper.totalLostScore,
               curriculumVersion: getCurriculumVersion(),
+              masteryUpdates,
             },
           })
         );
@@ -212,7 +342,7 @@ export function createExamRoutes(container: Container): Router {
           errorCount: records.length,
         });
 
-        res.json({ paper, errorRecords: records });
+        res.json({ paper, errorRecords: records, masteryUpdates });
       } catch (err) {
         next(err);
       }
@@ -369,17 +499,42 @@ export function createExamRoutes(container: Container): Router {
   /** GET /api/v1/students/:id/exam-results
    *
    * 学生的历次考试成绩（报告页的「成绩趋势对比矩阵」用）。
+   *
+   * 数据来源有两处，**都要保留**：
+   * 1. 显式录入的成绩基线（`db/exam-results/{studentId}/{id}.json`）——
+   *    这里才有独立的 `targetScore`（目标分）。
+   * 2. 从试卷（ExamPaper）派生的成绩 —— 诊断时同步了卷面分数的试卷。
+   *
+   * 此前只有第 2 条路径，且 `targetScore` 被直接抄成 `score`，
+   * 导致「距离目标分差值」恒为 0（规格 §模块06 第三层评估的核心指标失效）。
+   * 现在显式录入的记录优先，targetScore 保持独立。
    */
   router.get(
     '/students/:id/exam-results',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         assertStudentAccess(req, req.params.id);
+        const studentId = req.params.id;
 
+        const results: ExamResult[] = [];
+
+        // ---- 1. 显式录入的成绩基线（targetScore 独立）----
+        const storedIds = await container.db.list([...RESULTS_DIR, studentId]);
+        for (const fileId of storedIds) {
+          const stored = await container.db.read<ExamResult>([
+            ...RESULTS_DIR,
+            studentId,
+            fileId.replace(/\.json$/, ''),
+          ]);
+          if (stored) results.push(stored);
+        }
+
+        // ---- 2. 从试卷派生的成绩（不与显式记录重复）----
+        const recordedKeys = new Set(
+          results.map((r) => `${r.examId}::${r.subject}`)
+        );
         const examIds = await container.db.list(EXAMS_DIR);
         const paperIds = await container.db.list(PAPERS_DIR);
-        const results: Array<Record<string, unknown>> = [];
-
         for (const examFileId of examIds) {
           const exam = await container.db.read<Exam>([
             ...EXAMS_DIR,
@@ -394,6 +549,9 @@ export function createExamRoutes(container: Container): Router {
             ]);
             if (!paper || paper.examId !== exam.id) continue;
 
+            const key = `${exam.id}::${paper.subject}`;
+            if (recordedKeys.has(key)) continue;
+
             results.push({
               id: `res-${paper.id}`,
               examId: exam.id,
@@ -401,7 +559,11 @@ export function createExamRoutes(container: Container): Router {
               subject: paper.subject,
               score: paper.score ?? 0,
               fullScore: paper.fullScore ?? 100,
-              targetScore: paper.score ?? 0,
+              /**
+               * 未显式录入目标分时，用卷面满分的一个保守默认值，
+               * 而不是抄成实际分 —— 后者会让「目标分差值」恒为 0。
+               */
+              targetScore: Math.round((paper.fullScore ?? 100) * 0.9),
               date: paper.date,
             });
           }
@@ -409,6 +571,116 @@ export function createExamRoutes(container: Container): Router {
 
         results.sort((a, b) => (String(a.date) < String(b.date) ? 1 : -1));
         res.json({ results, total: results.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /** POST /api/v1/students/:id/exam-results
+   *
+   * 录入 / 更新一条成绩基线。
+   *
+   * 规格 §模块06 第三层：「全科历次考试成绩趋势对比矩阵（跨月考/期中/模考横向变化）、
+   * 距离目标分差值」—— 这要求 `targetScore` 是**独立数据**，
+   * 此前既没有写入端点也没有存储，读时只能从试卷现场合成。
+   *
+   * 同一 (examId, subject) 重复录入时**覆盖**而非追加，
+   * 避免成绩矩阵出现重复列。
+   */
+  router.post(
+    '/students/:id/exam-results',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const studentId = req.params.id;
+        assertStudentWriteAccess(req, studentId);
+        const body = req.body ?? {};
+
+        const examId = String(body.examId ?? '').trim();
+        const subject = String(body.subject ?? '').trim() as Subject;
+        if (!examId) {
+          throw new ApiException('VALIDATION_FAILED', '缺少 examId');
+        }
+        if (!subject) {
+          throw new ApiException('VALIDATION_FAILED', '缺少 subject');
+        }
+
+        const score = Number(body.score);
+        const fullScore = Number(body.fullScore ?? 100);
+        if (!Number.isFinite(score)) {
+          throw new ApiException('VALIDATION_FAILED', '成绩必须是数字');
+        }
+        if (!Number.isFinite(fullScore) || fullScore <= 0) {
+          throw new ApiException('VALIDATION_FAILED', '满分必须大于 0');
+        }
+
+        const targetScore = Number(
+          body.targetScore ?? Math.round(fullScore * 0.9)
+        );
+        if (!Number.isFinite(targetScore)) {
+          throw new ApiException('VALIDATION_FAILED', '目标分必须是数字');
+        }
+
+        // 同一 (examId, subject) 覆盖写入
+        const existingIds = await container.db.list([
+          ...RESULTS_DIR,
+          studentId,
+        ]);
+        let resultId = `res-${randomUUID()}`;
+        for (const fileId of existingIds) {
+          const stored = await container.db.read<ExamResult>([
+            ...RESULTS_DIR,
+            studentId,
+            fileId.replace(/\.json$/, ''),
+          ]);
+          if (stored && stored.examId === examId && stored.subject === subject) {
+            resultId = stored.id;
+            break;
+          }
+        }
+
+        const record: ExamResult = {
+          id: resultId,
+          examId,
+          examTitle: String(
+            body.examTitle ??
+              (await container.db.read<Exam>([
+                ...EXAMS_DIR,
+                sanitizeSegment(examId),
+              ]))?.title ??
+              examId
+          ),
+          subject,
+          score,
+          fullScore,
+          targetScore,
+          date: String(body.date ?? new Date().toISOString().slice(0, 10)),
+        };
+
+        await container.db.write(
+          [...RESULTS_DIR, studentId, `${sanitizeSegment(resultId)}.json`],
+          record
+        );
+
+        await container.audit.record('ExamResultRecorded', {
+          aggregateId: resultId,
+          actor: req.auth?.principalId,
+          actorRole: req.auth?.role,
+          ip: req.ip,
+          requestId: req.requestId,
+          payload: { studentId, examId, subject, score, targetScore },
+        });
+
+        logger.info('exam.result_recorded', {
+          requestId: req.requestId,
+          studentId,
+          examId,
+          subject,
+          score,
+          targetScore,
+        });
+
+        res.json({ result: record });
       } catch (err) {
         next(err);
       }
@@ -481,9 +753,29 @@ export function createExamRoutes(container: Container): Router {
           throw new ApiException('NOT_FOUND', '错题记录不存在');
         }
 
+        /**
+         * 状态白名单校验。
+         *
+         * 服务端必须校验状态取值 —— 否则任意字符串都能被写进
+         * ErrorRecord.status，报告页的筛选与统计随之失真。
+         */
+        const ALLOWED_ERROR_STATUSES: ErrorRecord['status'][] = [
+          '未订正',
+          '已订正',
+          '待复测',
+          '已闭环',
+        ];
+        const nextStatus = (body.status ?? existing.status) as ErrorRecord['status'];
+        if (!ALLOWED_ERROR_STATUSES.includes(nextStatus)) {
+          throw new ApiException(
+            'VALIDATION_FAILED',
+            `非法的错题状态：${String(body.status)}（允许值：${ALLOWED_ERROR_STATUSES.join(' / ')}）`
+          );
+        }
+
         const updated: ErrorRecord = {
           ...existing,
-          status: body.status ?? existing.status,
+          status: nextStatus,
           correctionNote: body.correctionNote ?? existing.correctionNote,
         };
 

@@ -9,12 +9,15 @@ import type { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'node:crypto';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
-import {
-  evaluateMasteryTransition,
-  buildTransitionEvent,
-} from '../../engines/mastery-engine.ts';
 import { getDelayedRetestStatus } from '../../engines/planning-engine.ts';
 import { computePriorityOpportunities } from '../../engines/planning-engine.ts';
+import {
+  MASTERY_DIR,
+  readMasteryAggregate,
+  writeMasteryAggregate,
+  applyMasteryTransition,
+  createEmptyMasteryRecord,
+} from '../../modules/mastery/mastery-service.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import type {
@@ -23,43 +26,23 @@ import type {
   PracticeMode,
 } from '@daydayup/contracts';
 
-const MASTERY_DIR = ['db', 'mastery'];
+const MASTERY_DIR_LOCAL = MASTERY_DIR;
 
-interface MasteryAggregate {
+type MasteryAggregate = {
   studentId: string;
   records: Record<string, MasteryRecord>;
   history: MasteryTransitionEvent[];
   lastComputedAt: string;
-}
+};
 
-async function readAggregate(
-  container: Container,
-  studentId: string
-): Promise<MasteryAggregate> {
-  const stored = await container.db.read<MasteryAggregate>([
-    ...MASTERY_DIR,
-    `${studentId}.json`,
-  ]);
-  return (
-    stored ?? {
-      studentId,
-      records: {},
-      history: [],
-      lastComputedAt: new Date().toISOString(),
-    }
-  );
-}
-
-async function writeAggregate(
-  container: Container,
-  aggregate: MasteryAggregate
-): Promise<void> {
-  aggregate.lastComputedAt = new Date().toISOString();
-  await container.db.write(
-    [...MASTERY_DIR, `${aggregate.studentId}.json`],
-    aggregate
-  );
-}
+/**
+ * 聚合读写委托给共享服务（modules/mastery/mastery-service.ts）。
+ *
+ * 保留本地别名是为了不改动本文件其余部分的调用点，
+ * 但**实现只有一份** —— 诊断路径与练习路径共用同一套读写逻辑。
+ */
+const readAggregate = readMasteryAggregate;
+const writeAggregate = writeMasteryAggregate;
 
 export function createMasteryRoutes(container: Container): Router {
   const router = Router();
@@ -186,55 +169,20 @@ export function createMasteryRoutes(container: Container): Router {
          *
          * 实测：5 个并发作答（5 个不同知识点）全部返回 200，
          * 但聚合里只剩 **1 条**记录。
+         *
+         * 实现委托给共享服务 applyMasteryTransition（内含排他锁），
+         * 与诊断路径共用同一套读写逻辑。
          */
-        const transition = await container.db.withExclusive(
-          `mastery:${studentId}`,
-          async () => {
-            const aggregate = await readAggregate(container, studentId);
-            const current: MasteryRecord = aggregate.records[knowledgeId] ?? {
-              knowledgeId,
-              state: '未诊断',
-              confidence: '待验证',
-              lostScoreEvidence: 0,
-              recoveryProbability: 0.5,
-              evidenceLogs: [],
-              consecutiveErrors: 0,
-              practiceCorrect: 0,
-              practiceTotal: 0,
-              variantPassed: false,
-              delayedRetestPassed: false,
-              updatedAt: new Date().toISOString(),
-            };
-
-            const result = evaluateMasteryTransition({
-              current,
-              mode,
-              isCorrect,
-              evidenceSummary,
-            });
-
-            aggregate.records[knowledgeId] = result.record;
-
-            let transitionEventId = '';
-            if (result.changed) {
-              const event = buildTransitionEvent({
-                id: `mte_${randomUUID()}`,
-                knowledgeId,
-                subject: String(body.subject ?? '数学'),
-                fromState: result.fromState,
-                toState: result.toState,
-                trigger: `${mode}: ${evidenceSummary}`.slice(0, 200),
-              });
-              transitionEventId = event.id;
-              aggregate.history.unshift(event);
-              // 历史上限，避免文件无限增长
-              aggregate.history = aggregate.history.slice(0, 200);
-            }
-
-            await writeAggregate(container, aggregate);
-            return { ...result, transitionEventId };
-          }
-        );
+        const transition = await applyMasteryTransition(container, {
+          studentId,
+          knowledgeId,
+          mode,
+          isCorrect,
+          evidenceSummary,
+          subject: String(body.subject ?? '数学'),
+          hintsUsed: Number(body.hintsUsed ?? 0),
+          triggerPrefix: mode,
+        });
 
         const {
           record: updatedRecord,
@@ -244,7 +192,16 @@ export function createMasteryRoutes(container: Container): Router {
           transitionEventId,
         } = transition;
 
-        // 追加作答事件（先落业务结果，再记事件）
+        /**
+         * 追加作答事件（先落业务结果，再记事件）。
+         *
+         * 字段完整性：必须写入题干、学生作答、AI 反馈与任务 ID ——
+         * 规格 §模块06 第一层要展示「评测记录」与「无提示独立作答率」，
+         * 缺了这些字段，报告页的作答明细刷新后就是空的。
+         *
+         * 此前只写 9 个字段（缺 questionStem / userAnswer / aiFeedback / taskId），
+         * 于是「刷新前看 seed 数据一切正常，真实使用后就丢失」。
+         */
         const dateKey = new Date().toISOString().slice(0, 10);
         await container.db.append(
           ['db', 'attempts', studentId, `${dateKey}.jsonl`],
@@ -257,6 +214,10 @@ export function createMasteryRoutes(container: Container): Router {
             hintsUsed: body.hintsUsed ?? 0,
             timeSpentSeconds: body.timeSpentSeconds ?? 0,
             independent: body.independent ?? false,
+            taskId: body.taskId,
+            questionStem: body.questionStem,
+            userAnswer: body.userAnswer,
+            aiFeedback: body.aiFeedback,
             timestamp: new Date().toISOString(),
           })
         );

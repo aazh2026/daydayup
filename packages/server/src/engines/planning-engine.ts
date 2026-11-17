@@ -158,8 +158,25 @@ export function computePriorityOpportunities(
 
     let blockedBy: string | undefined;
     for (const preId of kp.prerequisites) {
+      /**
+       * 先修锁定。
+       *
+       * 规格（§模块02 §3）：「若某知识点的前置先修知识处于 `未诊断` 或 `待学习`，
+       * 自动降权并引导先修基础内容」。
+       *
+       * 注意「未诊断」的判定：**没有 MasteryRecord 就等于未诊断**
+       * —— 即从未产生过任何作答/诊断证据。此前写成 `preRec && (...)`，
+       * 会在前置知识点无 record 时短路跳过，导致锁定完全不触发。
+       * 而「无 record」恰恰是诊断前的初始状态（所有前置都无 record），
+       * 于是这条防失败设计在真实初始状态下形同虚设。
+       *
+       * 这里显式区分两种「未诊断」：
+       * - 无 record —— 从未诊断
+       * - 有 record 且 state === '未诊断' —— 诊断过但未达标
+       */
       const preRec = masteryRecords[preId];
-      if (preRec && (preRec.state === '未诊断' || preRec.state === '待学习')) {
+      const preState: MasteryState = preRec?.state ?? '未诊断';
+      if (preState === '未诊断' || preState === '待学习') {
         blockedBy = knowledgeMap[preId]?.name ?? preId;
         break;
       }
@@ -359,6 +376,76 @@ export function buildSevenDayPlan(input: PlanInput): LearningPlan {
           ? [0.55, 0.45]
           : [1.0];
 
+    /**
+     * 每日时长分配。
+     *
+     * 规格（§7.1 质量指标）：「每日时间预算满足率 **100%**」——
+     * 实际任务总时长 ≤ 调节后每日预算，**任何调节档位都不得超支**。
+     *
+     * 此前的实现给每个任务设了 15 分钟硬下限、末位 10 分钟硬下限，
+     * 于是当预算 < 3 × 15 时（30/35 分钟档位，都在规格「30–120 分钟」
+     * 的可调区间内）必然超支 —— 实测 7/7 天超支，最多超 33%。
+     *
+     * 现在改为**预算感知的整体分配**：
+     * 1. 先按比例算出理想时长；
+     * 2. 若总和超出预算，整体按比例缩放（至少给每个任务 5 分钟）；
+     * 3. 若预算不足以容纳所有任务，则减少任务数 —— 而不是把预算撑破。
+     *
+     * 这样「每天 ≤ 3 项」与「总时长 ≤ 预算」两条硬约束同时成立。
+     */
+    const allocateMinutes = (
+      count: number,
+      budget: number,
+      weights: number[]
+    ): number[] => {
+      if (count <= 0) return [];
+      /**
+       * 每个任务的最小可用时长。
+       * 低于 5 分钟的任务已无学习价值（步骤拆分都放不下），
+       * 因此当预算不够时宁可少排任务。
+       */
+      const MIN_TASK_MINUTES = 5;
+
+      const ideal = weights.map((w) => (budget * w) / 5);
+      const idealSum = ideal.reduce((a, b) => a + b, 0);
+
+      // 预算充裕：按比例分配（向下取整到整分钟，避免总时长因取整而超支）
+      if (idealSum <= budget) {
+        const out = ideal.map((v) => Math.floor(v));
+        // 把取整产生的余数补给最后一个任务，仍不超过预算
+        const used = out.reduce((a, b) => a + b, 0);
+        out[out.length - 1] += budget - used;
+        return out;
+      }
+
+      // 预算不足：整体等比缩放，并保证每个任务 ≥ MIN_TASK_MINUTES
+      const scale = budget / idealSum;
+      const scaled = ideal.map((v) => Math.floor(v * scale));
+      for (let i = 0; i < scaled.length; i++) {
+        if (scaled[i] < MIN_TASK_MINUTES) scaled[i] = MIN_TASK_MINUTES;
+      }
+
+      // 缩放后仍超预算（最小任务时长之和 > 预算）——按优先级保留前 N 个任务
+      let running = 0;
+      const kept: number[] = [];
+      for (const m of scaled) {
+        if (running + m > budget) break;
+        kept.push(m);
+        running += m;
+      }
+      // 若连一个任务都放不下，用尽预算给第一个任务
+      if (kept.length === 0) return [budget];
+      // 把剩余预算补给最后一个保留的任务
+      kept[kept.length - 1] += budget - running;
+      return kept;
+    };
+
+    const allocations = allocateMinutes(
+      dayCandidates.length,
+      effectiveBudget,
+      ratios
+    );
+
     const tasks: LearningTask[] = dayCandidates.map((item, idx) => {
       const taskId = `task-d${dayIdx}-${item.knowledgeId}`;
       const isCompleted = (input.completedTaskIds ?? []).includes(taskId);
@@ -368,10 +455,7 @@ export function buildSevenDayPlan(input: PlanInput): LearningPlan {
       const progress =
         dayIdx === 0 ? input.taskProgressByKnowledge?.[item.knowledgeId] : undefined;
 
-      const mins =
-        idx === dayCandidates.length - 1
-          ? Math.max(10, remainingMinutes)
-          : Math.max(15, Math.round((effectiveBudget * ratios[idx]) / 5) * 5);
+      const mins = allocations[idx] ?? 0;
       remainingMinutes = Math.max(0, remainingMinutes - mins);
 
       const difficultyAdjusted = (rec?.consecutiveErrors ?? 0) >= 2;

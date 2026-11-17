@@ -24,6 +24,7 @@
     "test:server": "npm run test --workspace=@daydayup/server",
     "test:web": "npm run test --workspace=@daydayup/web",
     "test:e2e": "node tests/e2e/teacher-dashboard.mjs",
+    "test:e2e:gap": "node tests/e2e/gap-user-paths.mjs",
     "seed": "npm run seed --workspace=@daydayup/server",
     "backup": "npm run backup --workspace=@daydayup/server",
     "restore": "npm run restore --workspace=@daydayup/server",

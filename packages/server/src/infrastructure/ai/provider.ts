@@ -25,6 +25,17 @@ export interface AIJsonSchema {
   items?: unknown;
   required?: string[];
   description?: string;
+  /**
+   * 允许的取值集合（仅对 STRING 生效）。
+   *
+   * Gemini 的 responseSchema 支持 enum，但本项目之前没有透传，
+   * 导致「五维错因」「置信度」这类受控词表只能靠 prompt 文字约束 ——
+   * 模型返回别的值时服务端也不拦。
+   *
+   * 现在本地校验器会强制这个集合，
+   * 保证落库的是规格定义的枚举值。
+   */
+  enum?: string[];
 }
 
 export interface GenerateJsonRequest<T = unknown> {

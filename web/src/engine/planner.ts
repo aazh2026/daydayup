@@ -67,6 +67,20 @@ export async function fetchCurrentPlan(studentId: string): Promise<LearningPlan>
   return api.get<LearningPlan>(`/api/v1/students/${studentId}/plans/current`);
 }
 
+/**
+ * 重新生成 7 天计划（服务端权威）。
+ *
+ * 何时必须调用：
+ * - 学生档案变了（每日时间/作业量/疲劳度）→ 每日预算变了 → 必须重排。
+ *   规格 TC-02：「调整每日可用时间后，每日排期预算立即缩减」。
+ *
+ * 注意 `GET /plans/current` **不会**自动按新预算重算
+ * （它优先返回已持久化的计划），所以必须显式 POST。
+ */
+export async function regeneratePlan(studentId: string): Promise<LearningPlan> {
+  return api.post<LearningPlan>(`/api/v1/students/${studentId}/plans`);
+}
+
 /** 拉取服务端权威的每日有效预算 */
 export async function fetchEffectiveBudget(
   studentId: string
@@ -104,6 +118,16 @@ export async function submitMasteryAttempt(
     hintsUsed?: number;
     timeSpentSeconds?: number;
     independent?: boolean;
+    /**
+     * 以下四个字段会随作答流水一起落库。
+     *
+     * 规格 §模块06 第一层要展示「评测记录」与「无提示独立作答率」，
+     * 服务端必须拿到题干与学生作答才能完整还原评测轨迹。
+     */
+    taskId?: string;
+    questionStem?: string;
+    userAnswer?: string;
+    aiFeedback?: string;
   }
 ): Promise<{
   mastery: {

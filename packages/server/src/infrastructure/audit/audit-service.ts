@@ -30,6 +30,7 @@ export type AuditEventType =
   // 数据变更
   | 'StudentProfileUpdated'
   | 'ErrorRecordUpdated'
+  | 'ExamResultRecorded'
   | 'PaperMetadataConfirmed'
   | 'MasteryTransitionApplied'
   | 'PlanRegenerated'

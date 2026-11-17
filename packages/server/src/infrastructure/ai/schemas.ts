@@ -5,6 +5,30 @@
  */
 import type { AIJsonSchema } from './provider.ts';
 
+/**
+ * 受控词表（规格 §模块01 §2 / §三）。
+ *
+ * 这些是**规格定义的枚举**，不允许模型自由发挥：
+ * - 五维错因（§模块01 §2）
+ * - 置信度（§模块01 §2：确定 / 较可能 / 待验证）
+ * - 教学行为（§模块04）
+ *
+ * 之前它们只靠 prompt 文字约束，schema 层没有约束，
+ * 于是模型返回别的值时服务端照样落库 —— 规格 §7.1「证据与置信度完整率 100%」
+ * 与「错因五维受控」都无法保证。
+ */
+const ERROR_TYPE_VALUES = [
+  '知识问题',
+  '方法问题',
+  '计算问题',
+  '熟练度问题',
+  '审题问题',
+];
+
+const CONFIDENCE_VALUES = ['确定', '较可能', '待验证'];
+
+const TEACHING_BEHAVIOR_VALUES = ['诊断', '讲解', '示范', '引导', '评测'];
+
 export const DIAGNOSIS_SCHEMA: AIJsonSchema = {
   type: 'OBJECT',
   properties: {
@@ -17,7 +41,7 @@ export const DIAGNOSIS_SCHEMA: AIJsonSchema = {
         examDate: { type: 'STRING' },
         score: { type: 'NUMBER' },
         fullScore: { type: 'NUMBER' },
-        metadataConfidence: { type: 'STRING' },
+        metadataConfidence: { type: 'STRING', enum: CONFIDENCE_VALUES },
       },
       required: [
         'subject',
@@ -43,10 +67,10 @@ export const DIAGNOSIS_SCHEMA: AIJsonSchema = {
           correctAnswer: { type: 'STRING' },
           scoreLost: { type: 'NUMBER' },
           knowledgeId: { type: 'STRING' },
-          errorType: { type: 'STRING' },
+          errorType: { type: 'STRING', enum: ERROR_TYPE_VALUES },
           aiAnalysis: { type: 'STRING' },
           evidence: { type: 'STRING' },
-          confidence: { type: 'STRING' },
+          confidence: { type: 'STRING', enum: CONFIDENCE_VALUES },
           verificationMethod: { type: 'STRING' },
         },
         required: [
@@ -78,7 +102,7 @@ export const COACH_SCHEMA: AIJsonSchema = {
   type: 'OBJECT',
   properties: {
     reply: { type: 'STRING' },
-    teachingBehaviorUsed: { type: 'STRING' },
+    teachingBehaviorUsed: { type: 'STRING', enum: TEACHING_BEHAVIOR_VALUES },
     nextStage: { type: 'NUMBER' },
     detectedUnderstanding: { type: 'STRING' },
     suggestedQuickReplies: {
@@ -135,7 +159,7 @@ export const PRACTICE_EVALUATE_SCHEMA: AIJsonSchema = {
   type: 'OBJECT',
   properties: {
     isCorrect: { type: 'BOOLEAN' },
-    errorType: { type: 'STRING' },
+    errorType: { type: 'STRING', enum: ERROR_TYPE_VALUES },
     feedback: { type: 'STRING' },
     stepHint: { type: 'STRING' },
     nextRecommendation: { type: 'STRING' },

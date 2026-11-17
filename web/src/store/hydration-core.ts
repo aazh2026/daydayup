@@ -222,3 +222,42 @@ export async function hydrateFromServer(
 
   return { loaded, failed };
 }
+
+/**
+ * 重新拉取**服务端权威**的掌握度与掌握轨迹。
+ *
+ * 用途：诊断落库后，服务端会更新 MasteryRecord 并写入迁移事件
+ * （见 packages/server/src/api/routes/exam.routes.ts）。
+ * 前端此前的乐观更新只是「界面即时反馈」，最终值必须以服务端为准 ——
+ * 这正是契约要求的「状态迁移规则属服务端 MasteryEngine，前端不得本地推导」。
+ *
+ * @param studentId 学生 ID
+ * @param setAppState 状态更新函数
+ * @returns 是否成功刷新
+ */
+export async function refreshMasteryFromServer(
+  studentId: string,
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>
+): Promise<boolean> {
+  try {
+    const [masteryPayload, historyPayload] = await Promise.all([
+      api.get<MasteryResponse>(`/api/v1/students/${studentId}/mastery`),
+      api.get<MasteryHistoryResponse>(
+        `/api/v1/students/${studentId}/mastery/history`
+      ),
+    ]);
+
+    const records = masteryPayload?.records ?? {};
+    const history = historyPayload?.history ?? [];
+
+    setAppState((prev) => ({
+      ...prev,
+      masteryRecords: { ...prev.masteryRecords, ...records },
+      masteryHistory: history,
+    }));
+    return true;
+  } catch {
+    // 刷新失败时保留乐观更新，不阻断界面
+    return false;
+  }
+}
