@@ -106,9 +106,14 @@ export function createDefaultCredentials(): Credential[] {
 /**
  * 解析凭证存储。
  *
- * - 配置了 AUTH_SECRET：读取 db/credentials.json（文件不存在时回落到内存默认凭证，
- *   保证首次部署不会因缺文件而无法登录）
+ * - 配置了 AUTH_SECRET：读取 db/credentials.json
  * - 未配置：使用内存演示凭证（仅本地开发）
+ *
+ * 生产模式下的「文件缺失」处理：
+ * 文件不存在时**整体**回落到演示凭证（便于首次部署能登进去配好凭证），
+ * 但**绝不按 secret 逐个回落** ——
+ * 否则只要凭证文件存在且内容不同，内置的演示 PIN `1234` 依然有效，
+ * 等于在生产环境留了一个公开的默认口令。
  */
 export function resolveCredentialStore(
   dataDir: string,
@@ -124,11 +129,16 @@ export function resolveCredentialStore(
     return fallback;
   }
 
-  // 生产模式：文件凭证优先，文件缺失时回落默认凭证（便于首次部署）
+  // 生产模式：文件凭证优先；文件缺失时整体回落（首次部署引导）
   return {
     async findBySecret(secret: string) {
-      const found = await fileStore.findBySecret(secret);
-      return found ?? (await fallback.findBySecret(secret));
+      const fileList = await fileStore.list();
+      if (fileList.length > 0) {
+        // 已有真实凭证：只认文件里的，不回落演示凭证
+        return fileStore.findBySecret(secret);
+      }
+      // 凭证文件为空：整体回落到演示凭证（仅此时可用）
+      return fallback.findBySecret(secret);
     },
     async list() {
       const fileList = await fileStore.list();

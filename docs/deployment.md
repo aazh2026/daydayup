@@ -57,6 +57,17 @@ EOF
 
 > ⚠️ **`AUTH_SECRET` 必须配置**。未配置时服务进入开发模式，
 > 使用内置演示凭证（学生 PIN `1234`），任何人都能登录。
+>
+> 配置 `AUTH_SECRET` 后进入生产模式，行为如下：
+>
+> | 情形 | 演示 PIN `1234` |
+> |---|---|
+> | `data/db/credentials.json` **存在且非空** | ❌ 不可用（只认文件里的凭证） |
+> | `data/db/credentials.json` **缺失或为空** | ✅ 可用（仅作首次部署引导） |
+>
+> 也就是说：一旦你创建了真实凭证，演示 PIN 立即失效。
+> 但在创建之前，公开的默认口令是有效的 —— **请务必在部署后立刻创建凭证**，
+> 否则等于留了一个公开后门。
 
 ### 2. 启动
 
@@ -289,6 +300,7 @@ curl -X DELETE http://localhost:3000/api/v1/admin/students/stu-001/data \
 - [ ] `AUTH_SECRET` 已配置（随机 32 字节以上）
 - [ ] `GEMINI_API_KEY` 已配置，且未提交到版本库
 - [ ] `credentials.json` 中无默认/示例凭证
+- [ ] `credentials.json` **已创建且非空** —— 否则演示 PIN `1234` 仍然可用（见上文回落规则）
 - [ ] `CORS_ORIGINS` 只包含实际前端域名
 - [ ] `DAILY_TOKEN_QUOTA` 已设置（防成本失控）
 - [ ] `RATE_LIMIT_AI_PER_MINUTE` 已设置（防刷量）
