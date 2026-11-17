@@ -46,6 +46,8 @@
 | Phase 8i | AI 输出 schema 校验测试（22 例） | ✅ 完成 |
 | Phase 8j | 知识体系资产完整性测试（26 例）+ 坏文件容错 | ✅ 完成 |
 | Phase 8k | 提示词注册表测试（40 例） | ✅ 完成 |
+| Phase 8l | 配置解析测试（18 例）+ NaN/缺密钥修复 | ✅ 完成 |
+| Phase 8m | 日志保留字段保护（14 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -463,7 +465,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       416/416 通过（contracts 41 + server 256 + web 119）
+测试       448/448 通过（contracts 41 + server 288 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -505,6 +507,9 @@ Phase 4 又发现 3 个：
 | 22 | 中考倒计时目标日期按 UTC 零点解析 | **倒计时一直多一天**（明天显示成 2 天，UTC+8 受害） |
 | 23 | 生产模式下演示 PIN `1234` 逐个 secret 回落 | **公开默认口令成为后门**（凭证文件存在也照样能登） |
 | 24 | 知识体系资产损坏时 JSON.parse 直接抛 | **整个知识体系接口 500**（所有功能一起挂） |
+| 25 | 数值配置非法 → `NaN` | **配额护栏静默失效**（`used >= NaN` 恒 false） |
+| 26 | `AUTH_REQUIRED=true` 但无 `AUTH_SECRET` | **强制认证却用公开密钥签发令牌**（可伪造 teacher 身份） |
+| 27 | 日志上下文覆盖 `ts`/`level`/`message` | **事件名与级别被冲掉**（按事件名聚合日志失效） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -771,6 +776,56 @@ return found ?? (await fallback.findBySecret(secret));   // fallback 含 PIN 123
 `prompt-registry.test.ts`（40 例）覆盖版本映射、知识本体摘要、
 6 类提示词的构造（含 errorType 5 类与契约一致、苏格拉底 5 阶段、
 微测最多 3 题、原错题必须变式不得照抄等）。
+
+### 配置写错会静默失效
+
+配置是全服务的开关来源，其中两项直接决定安全性。
+
+**NaN 让护栏消失**：
+
+```ts
+dailyTokenQuota: Number(process.env.DAILY_TOKEN_QUOTA ?? 0)
+```
+
+`DAILY_TOKEN_QUOTA=abc` → `NaN`。而 `NaN <= 0` 为 false（不走「不限制」分支），
+`used >= NaN` 恒为 false → **配额检查永远放行，成本护栏直接消失**。
+`PORT=abc` 同理会让 `listen(NaN)` 行为不可预期。
+
+**强制认证缺密钥**：
+
+`AUTH_REQUIRED=true` 而 `AUTH_SECRET` 为空时，`authRequired` 仍为 true，
+但 TokenService 回落到**源码里写死的开发密钥**（`container.ts`）。
+结果是「要求登录」却用**公开的密钥**签发令牌 ——
+任何人读一下源码就能伪造 `role: teacher` 的合法令牌。
+强制认证反而比不登录更危险，因为它给人「已经受保护」的错觉。
+
+修复：
+
+| 项 | 修复前 | 修复后 |
+|---|---|---|
+| 数值配置 | 非法值 → `NaN` | 回落默认值 + 告警 |
+| 布尔配置 | 仅 `'true'` 有效 | 接受 true/1/yes/on |
+| 强制认证 | 可无密钥强制 | 无密钥时回退为不强制 + 错误日志 |
+
+### 日志保留字段不被覆盖
+
+```ts
+const entry = { ts, level, message, ...(context ?? {}) };   // ← 上下文后展开
+```
+
+调用方传入的 `message` / `level` / `ts` 会覆盖日志自身字段。
+`error-handler.ts` 就是活实例：
+
+```ts
+logger.error('api.unhandled', { requestId, message, path, stack });
+```
+
+`message`（错误正文）把事件名 `api.unhandled` 冲掉了 ——
+按事件名聚合日志彻底失效，而「这个学生上周为什么这样诊断」正是靠日志回答的。
+`level` 被覆盖还会影响 stderr/stdout 路由与告警规则。
+
+修复：上下文字段先铺开、自身字段后铺开；
+上下文中若含保留字段，改名为 `context_message` 等保留 —— 信息不丢。
 
 ### 前端逻辑补测汇总
 
