@@ -128,6 +128,99 @@ describe('Job Engine 幂等', () => {
     const b = await engine.enqueue('echo', {}, { idempotencyKey: 'k2' });
     assert.notEqual(a, b);
   });
+
+  /**
+   * 回归：并发入队时幂等性必须成立。
+   *
+   * 历史缺陷：`enqueue` 的「查已存在 → 建任务 → 记映射」三步之间有
+   * `await persist()`，并发调用同一 idempotencyKey 时，
+   * 多个调用**全部**通过存在性检查，各自建出一个任务。
+   *
+   * 实测：同一 key 并发 10 次 → 产生 **10 个任务**（磁盘上也是 10 个文件）。
+   *
+   * 后果：客户端重试会触发多次昂贵的 AI 诊断，
+   * 且前端收到多个 jobId，状态推流错乱。
+   */
+  test('并发使用同一幂等键只产生一个任务（回归）', async () => {
+    engine.register('echo', {
+      async execute() {
+        return { ok: true };
+      },
+    });
+    await engine.start();
+
+    const ids = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        engine.enqueue('echo', { v: 1 }, { idempotencyKey: 'concurrent-key' })
+      )
+    );
+
+    assert.equal(
+      new Set(ids).size,
+      1,
+      `同一幂等键的并发入队应只产生一个任务，实际 ${new Set(ids).size} 个`
+    );
+  });
+
+  test('并发入队在磁盘上也只有一个任务文件（回归）', async () => {
+    engine.register('echo', {
+      async execute() {
+        return { ok: true };
+      },
+    });
+    await engine.start();
+
+    // 用一个独有的 key，便于在共享的 tmpDir 里精确定位它的文件
+    const key = 'disk-key-unique';
+    const ids = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        engine.enqueue('echo', {}, { idempotencyKey: key })
+      )
+    );
+    assert.equal(new Set(ids).size, 1);
+
+    // 读磁盘上的任务，只数属于这个 key 的
+    const jobIds = new Set(ids);
+    const files = fs.readdirSync(path.join(tmpDir, 'db', 'jobs'));
+    const matching = files.filter((f) => jobIds.has(f.replace(/\.json$/, '')));
+    assert.equal(
+      matching.length,
+      1,
+      `磁盘上应只有一个对应任务文件，实际 ${matching.length} 个`
+    );
+  });
+
+  test('并发使用不同幂等键各自产生任务', async () => {
+    engine.register('echo', {
+      async execute() {
+        return { ok: true };
+      },
+    });
+    await engine.start();
+
+    const ids = await Promise.all(
+      Array.from({ length: 5 }, (_, i) =>
+        engine.enqueue('echo', {}, { idempotencyKey: `key-${i}` })
+      )
+    );
+
+    assert.equal(new Set(ids).size, 5, '不同幂等键应各自产生任务');
+  });
+
+  test('无幂等键的并发入队各自独立（不共享锁）', async () => {
+    engine.register('echo', {
+      async execute() {
+        return { ok: true };
+      },
+    });
+    await engine.start();
+
+    const ids = await Promise.all(
+      Array.from({ length: 5 }, () => engine.enqueue('echo', {}))
+    );
+
+    assert.equal(new Set(ids).size, 5, '无幂等键时应各自创建任务');
+  });
 });
 
 describe('Job Engine 失败重试', () => {

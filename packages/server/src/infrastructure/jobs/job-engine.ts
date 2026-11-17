@@ -64,6 +64,21 @@ export class JobEngine extends EventEmitter {
    */
   private progressChains = new Map<string, Promise<void>>();
 
+  /**
+   * 幂等键的串行锁链。
+   *
+   * 为什么需要：`enqueue` 的「查已存在 → 建任务 → 记映射」三步之间有
+   * `await persist()`，并发调用同一 idempotencyKey 时，
+   * 多个调用会**全部**通过存在性检查，各自建一个任务 ——
+   * 幂等性在并发下彻底失效。
+   *
+   * 实测：同一 key 并发入队 10 次 → 产生 **10 个任务**。
+   *
+   * 后果：客户端重试会触发多次昂贵的 AI 诊断（真金白银），
+   * 且前端会收到多个 jobId，状态推流错乱。
+   */
+  private idempotencyLocks = new Map<string, Promise<unknown>>();
+
   private readonly concurrency: number;
   private readonly leaseMs: number;
   private readonly jobTimeoutMs: number;
@@ -136,6 +151,48 @@ export class JobEngine extends EventEmitter {
       throw new Error(`未注册的任务类型: ${type}`);
     }
 
+    // 幂等键：同一 key 的并发入队必须串行化，
+    // 否则会各自建出任务（幂等性在并发下失效）。
+    if (options.idempotencyKey) {
+      return this.withIdempotencyLock(options.idempotencyKey, () =>
+        this.enqueueLocked(type, input, options)
+      );
+    }
+    return this.enqueueLocked(type, input, options);
+  }
+
+  /**
+   * 幂等键的串行锁。
+   *
+   * 同 key 的调用排队执行，保证「查-建-记」三步原子化。
+   */
+  private async withIdempotencyLock<T>(
+    key: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const previous = this.idempotencyLocks.get(key) ?? Promise.resolve();
+    let release: () => void = () => {};
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.idempotencyLocks.set(key, previous.then(() => current));
+    await previous.catch(() => undefined);
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (this.idempotencyLocks.get(key) === current) {
+        this.idempotencyLocks.delete(key);
+      }
+    }
+  }
+
+  /** enqueue 的实际逻辑（假定幂等性已由调用方保证） */
+  private async enqueueLocked<TInput>(
+    type: string,
+    input: TInput,
+    options: EnqueueOptions
+  ): Promise<string> {
     // 幂等：相同 key 直接返回既有任务 ID
     if (options.idempotencyKey) {
       const existing = this.byIdempotencyKey.get(options.idempotencyKey);
