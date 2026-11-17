@@ -170,11 +170,19 @@ sudo systemctl enable --now daydayup
 |---|---|---|
 | `GEMINI_API_KEY` | — | **必需**。AI 能力；缺失时非 AI 接口仍可用 |
 | `AUTH_SECRET` | — | **生产必需**。令牌签名密钥；未配置则进入开发模式 |
-| `AUTH_REQUIRED` | 自动 | 显式开关强制认证 |
-| `PORT` | 3000 | 监听端口 |
+| `AUTH_REQUIRED` | 自动 | 显式开关强制认证。**但没有 `AUTH_SECRET` 时不会真正强制**（见下） |
+| `PORT` | 3000 | 监听端口。**非数字会被忽略并回落 3000**（不会变成 NaN） |
 | `HOST` | 0.0.0.0 | 监听地址 |
 | `DATA_DIR` | `packages/server/data` | 数据目录 |
 | `BACKUP_DIR` | `packages/server/backups` | 备份目录 |
+
+> ⚠️ **`AUTH_REQUIRED=true` 必须同时配置 `AUTH_SECRET`**。
+> 没有密钥时服务会**回退为开发模式（不强制认证）**并记录错误日志 ——
+> 因为强制认证时令牌必须用密钥签发，若无密钥只能用源码里写死的开发密钥，
+> 那样任何人都能伪造合法令牌，「要求登录」反而比不登录更危险。
+>
+> 同理，`PORT` / `DAILY_TOKEN_QUOTA` 等数值项写错时会**回落默认值并告警**，
+> 不会变成 `NaN`（`NaN` 会让配额护栏静默失效 —— 成本保护形同虚设）。
 | `STATIC_DIR` | 空 | 设为 `web/dist` 时后端一并托管前端 |
 | `LOG_LEVEL` | info | `debug` / `info` / `warn` / `error` |
 | `CORS_ORIGINS` | `http://localhost:5173` | 允许的前端来源（逗号分隔） |
