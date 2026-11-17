@@ -51,6 +51,107 @@ const DEFAULT_ALLOWED = [
 
 const INDEX_DIR = ['db', 'files'];
 
+/**
+ * 文件魔数（magic bytes）校验。
+ *
+ * 为什么需要：客户端自报的 `mimeType` 是**不可信的** ——
+ * 传 `mimeType: 'image/jpeg'` + 任意字节就能通过白名单。
+ * 校验文件头才能确认「它真的是图片」。
+ *
+ * 规则：取文件前若干字节，与该类型对应的签名比对。
+ * 未在表中的类型（如 application/pdf）不做校验（PDF 头复杂且易误判）。
+ */
+const MAGIC_BYTES: Record<string, number[][]> = {
+  'image/jpeg': [[0xff, 0xd8, 0xff]],
+  'image/png': [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]],
+  'image/webp': [
+    // RIFF....WEBP
+    [0x52, 0x49, 0x46, 0x46],
+  ],
+  'image/heic': [
+    // ....ftypheic / ftypheix / ftypmif1
+    [0x66, 0x74, 0x79, 0x70],
+  ],
+};
+
+/**
+ * 按文件内容嗅探图片类型。
+ *
+ * 用于「客户端没给可信类型」的场合（如内联 base64 图片）——
+ * 与其相信自报值，不如直接看文件头。
+ *
+ * @returns 识别出的 MIME 类型；无法识别返回 null
+ */
+export function sniffImageMimeType(buffer: Buffer): string | null {
+  const head = buffer.subarray(0, 32);
+
+  // JPEG: FF D8 FF
+  if (head.length >= 3 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    head.length >= 8 &&
+    head[0] === 0x89 &&
+    head[1] === 0x50 &&
+    head[2] === 0x4e &&
+    head[3] === 0x47 &&
+    head[4] === 0x0d &&
+    head[5] === 0x0a &&
+    head[6] === 0x1a &&
+    head[7] === 0x0a
+  ) {
+    return 'image/png';
+  }
+  // WebP: RIFF....WEBP
+  if (
+    head.length >= 12 &&
+    head.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    head.subarray(8, 12).toString('ascii') === 'WEBP'
+  ) {
+    return 'image/webp';
+  }
+  // HEIC: ....ftypheic / heix / mif1
+  if (head.length >= 12) {
+    const brand = head.subarray(4, 12).toString('ascii');
+    if (
+      brand.startsWith('ftyp') &&
+      ['heic', 'heix', 'hevc', 'heim', 'heis', 'mif1'].includes(
+        brand.slice(4, 8)
+      )
+    ) {
+      return 'image/heic';
+    }
+  }
+  // PDF
+  if (head.length >= 4 && head.toString('ascii', 0, 4) === '%PDF') {
+    return 'application/pdf';
+  }
+
+  return null;
+}
+
+/**
+ * 校验文件内容是否与声明的 MIME 类型匹配。
+ *
+ * @returns 匹配返回 true；不匹配返回 false
+ *   （类型没有登记签名时一律视为通过，避免误杀合法文件）
+ */
+export function matchesMagicBytes(buffer: Buffer, mimeType: string): boolean {
+  const signatures = MAGIC_BYTES[mimeType];
+  if (!signatures) return true; // 该类型不做校验
+
+  const head = buffer.subarray(0, 32);
+  return signatures.some((sig) => {
+    if (head.length < sig.length) return false;
+    // WebP / HEIC 需要在文件头里搜索签名（不要求在固定偏移）
+    if (mimeType === 'image/webp' || mimeType === 'image/heic') {
+      return head.includes(Buffer.from(sig));
+    }
+    return sig.every((byte, i) => head[i] === byte);
+  });
+}
+
 export class FileStorage {
   private readonly filesDir: string;
   private readonly maxFileSize: number;
@@ -83,6 +184,15 @@ export class FileStorage {
     }
     if (!this.allowedMimeTypes.includes(meta.mimeType)) {
       throw new Error(`不支持的文件类型: ${meta.mimeType}`);
+    }
+    /**
+     * 魔数校验：确认内容真的与声明的类型匹配。
+     *
+     * 客户端自报的 mimeType 不可信 —— 传 `image/jpeg` + 任意字节就能过白名单。
+     * 不校验的话，任意内容都会被当作图片存下来（并送给 AI 模型）。
+     */
+    if (!matchesMagicBytes(buffer, meta.mimeType)) {
+      throw new Error(`文件内容与声明的类型不符: ${meta.mimeType}`);
     }
 
     const id = `file_${randomUUID()}`;

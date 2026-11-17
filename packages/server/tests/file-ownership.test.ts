@@ -27,6 +27,7 @@ import path from 'node:path';
 import type { Server } from 'node:http';
 import { createContainer, type Container } from '../src/bootstrap/container.ts';
 import { createApp } from '../src/app.ts';
+import { fakeJpeg } from './helpers/fake-images.ts';
 
 let server: Server;
 let baseUrl: string;
@@ -80,7 +81,7 @@ after(async () => {
 
 describe('文件归属校验', () => {
   test('canAccess 正确区分归属', async () => {
-    const stored = await container.storage.save(Buffer.from('B 的卷子'), {
+    const stored = await container.storage.save(fakeJpeg('B 的卷子'), {
       studentId: 'stu-B',
       paperId: 'paper-B',
       originalName: 'b.jpg',
@@ -100,7 +101,7 @@ describe('文件归属校验', () => {
   });
 
   test('下载接口拒绝跨学生访问（原本就有的防护）', async () => {
-    const stored = await container.storage.save(Buffer.from('B 的卷子'), {
+    const stored = await container.storage.save(fakeJpeg('B 的卷子'), {
       studentId: 'stu-B',
       paperId: 'paper-B',
       originalName: 'b.jpg',
@@ -116,7 +117,7 @@ describe('文件归属校验', () => {
   });
 
   test('诊断接口拒绝引用他人的 fileId（回归）', async () => {
-    const storedB = await container.storage.save(Buffer.from('B 的卷子'), {
+    const storedB = await container.storage.save(fakeJpeg('B 的卷子'), {
       studentId: 'stu-B',
       paperId: 'paper-B',
       originalName: 'b.jpg',
@@ -148,7 +149,7 @@ describe('文件归属校验', () => {
   });
 
   test('引用自己的 fileId 正常通过归属校验', async () => {
-    const storedA = await container.storage.save(Buffer.from('A 的卷子'), {
+    const storedA = await container.storage.save(fakeJpeg('A 的卷子'), {
       studentId: STUDENT_A,
       paperId: 'paper-A',
       originalName: 'a.jpg',
@@ -170,7 +171,7 @@ describe('文件归属校验', () => {
   });
 
   test('findById（无归属校验）仍可用于内部查找', async () => {
-    const storedB = await container.storage.save(Buffer.from('B'), {
+    const storedB = await container.storage.save(fakeJpeg('B'), {
       studentId: 'stu-B',
       paperId: 'paper-B',
       originalName: 'b.jpg',

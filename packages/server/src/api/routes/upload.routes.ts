@@ -14,6 +14,7 @@ import { ApiException } from '../middleware/error-handler.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
+import { matchesMagicBytes, sniffImageMimeType } from '../../infrastructure/storage/file-storage.ts';
 import type { DiagnoseExamResponse } from '@daydayup/contracts';
 
 export function createUploadRoutes(container: Container): Router {
@@ -57,6 +58,19 @@ export function createUploadRoutes(container: Container): Router {
 
         if (buffer.length === 0) {
           throw new ApiException('VALIDATION_FAILED', '文件内容为空');
+        }
+
+        /**
+         * 魔数校验：内容必须真的是所声明的图片类型。
+         *
+         * 客户端自报的 mimeType 不可信 —— 不校验的话，
+         * 任意字节都能以「图片」的名义存下来（并被送给 AI 模型）。
+         */
+        if (!matchesMagicBytes(buffer, mimeType)) {
+          throw new ApiException(
+            'VALIDATION_FAILED',
+            `文件内容与声明的类型不符（${mimeType}）`
+          );
         }
 
         const stored = await container.storage.save(buffer, {
@@ -171,11 +185,23 @@ export function createUploadRoutes(container: Container): Router {
             if (!img?.base64) continue;
             const cleaned = String(img.base64).replace(/^data:[^;]+;base64,/, '');
             const buffer = Buffer.from(cleaned, 'base64');
+            /**
+             * 这里**不信任**客户端自报的 mimeType ——
+             * 旧实现缺省一律当 image/jpeg，于是任意字节都能以「图片」名义落盘。
+             * 改为按内容嗅探类型，嗅探不出就拒绝。
+             */
+            const sniffed = sniffImageMimeType(buffer);
+            if (!sniffed) {
+              throw new ApiException(
+                'VALIDATION_FAILED',
+                '无法识别图片内容类型（仅支持 JPEG / PNG / WebP / HEIC）'
+              );
+            }
             const stored = await container.storage.save(buffer, {
               studentId,
               paperId: paperId || undefined,
               originalName: 'paper.jpg',
-              mimeType: String(img.mimeType ?? 'image/jpeg'),
+              mimeType: sniffed,
             });
             imagePaths.push(stored.relativePath);
           }

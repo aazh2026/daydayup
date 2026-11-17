@@ -14,6 +14,7 @@ import {
   type RetentionPolicy,
 } from '../src/infrastructure/retention/retention-service.ts';
 import { BackupService, isSafeRelativePath } from '../src/infrastructure/backup/backup-service.ts';
+import { fakeJpeg } from './helpers/fake-images.ts';
 
 let tmpDir: string;
 let dataDir: string;
@@ -155,13 +156,13 @@ describe('学生数据删除', () => {
     const studentA = 'stu-files-a';
     const studentB = 'stu-files-b';
 
-    const savedA = await storage.save(Buffer.from('paper-a'), {
+    const savedA = await storage.save(fakeJpeg('paper-a'), {
       studentId: studentA,
       paperId: 'paper-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
     });
-    const savedB = await storage.save(Buffer.from('paper-b'), {
+    const savedB = await storage.save(fakeJpeg('paper-b'), {
       studentId: studentB,
       paperId: 'paper-b',
       originalName: 'b.jpg',
@@ -190,13 +191,13 @@ describe('学生数据删除', () => {
     const studentA = 'stu-index-a';
     const studentB = 'stu-index-b';
 
-    await storage.save(Buffer.from('a'), {
+    await storage.save(fakeJpeg('a'), {
       studentId: studentA,
       paperId: 'p',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
     });
-    await storage.save(Buffer.from('b'), {
+    await storage.save(fakeJpeg('b'), {
       studentId: studentB,
       paperId: 'p',
       originalName: 'b.jpg',

@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { FileDatabase } from '../src/infrastructure/persistence/file-database.ts';
+import { fakeJpeg } from './helpers/fake-images.ts';
 import { FileStorage } from '../src/infrastructure/storage/file-storage.ts';
 import { AuditService } from '../src/infrastructure/audit/audit-service.ts';
 import { Scheduler } from '../src/infrastructure/scheduler/scheduler.ts';
@@ -31,12 +32,12 @@ afterEach(() => {
 
 describe('文件隔离（安全缺口修复）', () => {
   test('文件按学生分目录存储', async () => {
-    const a = await storage.save(Buffer.from('AAA'), {
+    const a = await storage.save(fakeJpeg('AAA'), {
       studentId: 'stu-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
     });
-    const b = await storage.save(Buffer.from('BBB'), {
+    const b = await storage.save(fakeJpeg('BBB'), {
       studentId: 'stu-b',
       originalName: 'b.jpg',
       mimeType: 'image/jpeg',
@@ -48,7 +49,7 @@ describe('文件隔离（安全缺口修复）', () => {
   });
 
   test('元数据索引记录归属', async () => {
-    const file = await storage.save(Buffer.from('AAA'), {
+    const file = await storage.save(fakeJpeg('AAA'), {
       studentId: 'stu-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
@@ -60,7 +61,7 @@ describe('文件隔离（安全缺口修复）', () => {
   });
 
   test('跨学生访问被拒绝', async () => {
-    const file = await storage.save(Buffer.from('AAA'), {
+    const file = await storage.save(fakeJpeg('AAA'), {
       studentId: 'stu-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
@@ -71,7 +72,7 @@ describe('文件隔离（安全缺口修复）', () => {
   });
 
   test('已知 fileId 也不足以访问他人文件', async () => {
-    const file = await storage.save(Buffer.from('AAA'), {
+    const file = await storage.save(fakeJpeg('AAA'), {
       studentId: 'stu-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
@@ -91,7 +92,7 @@ describe('文件隔离（安全缺口修复）', () => {
   });
 
   test('studentId 中的路径分隔符被清洗', async () => {
-    const file = await storage.save(Buffer.from('AAA'), {
+    const file = await storage.save(fakeJpeg('AAA'), {
       studentId: '../../etc',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
@@ -104,7 +105,7 @@ describe('文件隔离（安全缺口修复）', () => {
   test('不支持的文件类型被拒绝', async () => {
     await assert.rejects(
       () =>
-        storage.save(Buffer.from('x'), {
+        storage.save(fakeJpeg('x'), {
           studentId: 'stu-a',
           originalName: 'x.exe',
           mimeType: 'application/x-msdownload',
@@ -131,12 +132,12 @@ describe('文件隔离（安全缺口修复）', () => {
   });
 
   test('按学生列出文件', async () => {
-    await storage.save(Buffer.from('A'), {
+    await storage.save(fakeJpeg('A'), {
       studentId: 'stu-a',
       originalName: 'a.jpg',
       mimeType: 'image/jpeg',
     });
-    await storage.save(Buffer.from('B'), {
+    await storage.save(fakeJpeg('B'), {
       studentId: 'stu-b',
       originalName: 'b.jpg',
       mimeType: 'image/jpeg',
