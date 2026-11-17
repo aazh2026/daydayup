@@ -59,6 +59,7 @@
 | Phase 8v | AI 端点角色边界修复（5 例） | ✅ 完成 |
 | Phase 8w | 前后端路由可达性测试（43 例） | ✅ 完成 |
 | Phase 8x | 畸形知识体系快照白屏修复（6 例 + 2 E2E 断言） | ✅ 完成 |
+| Phase 8y | 畸形登录会话白屏修复（5 例 + 2 E2E 断言） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -476,8 +477,8 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       554/554 通过（contracts 41 + server 388 + web 125）
-E2E        21/21 断言通过（自举前后端，退出码 0）
+测试       559/559 通过（contracts 41 + server 388 + web 130）
+E2E        24/24 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
 localStorage 仅剩 7.3KB 知识体系快照（原 19.7KB 业务数据）
@@ -531,6 +532,7 @@ Phase 4 又发现 3 个：
 | 35 | `storage.findById` 无归属校验且被诊断接口调用 | **学生 A 可把学生 B 的试卷图片挂进自己的诊断** |
 | 36 | AI 端点只校验身份不校验角色 | **家长可替孩子提交作答**（越过只读边界 + 消耗孩子配额） |
 | 37 | 知识体系快照不校验元素结构 | **畸形快照让整个应用白屏**（useState 初始化器抛错） |
+| 38 | 会话只校验 token 不校验 studentIds | **畸形会话让整个应用白屏**（渲染函数体内抛错） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -991,6 +993,28 @@ jobs on disk: 10
 与「**任务不存在**」（路由在，只是数据没有）。
 两者错误消息不同，测试据此区分；否则「资源不存在」会被误判成「路由缺失」，
 测试就得靠造数据才能通过，失去意义。
+
+### 畸形登录会话导致应用白屏
+
+`loadSession` 只校验 `session.token`，而 `App.tsx` 后续直接访问
+`session.studentIds[0]`（水合目标计算）。
+
+会话缺 `studentIds` 时抛
+`Cannot read properties of undefined (reading '0')` ——
+那行在**渲染函数体内** → **整个应用白屏**。
+
+浏览器实测：
+
+```
+页面内容长度: 0 (白屏!)
+page errors: 1 Cannot read properties of undefined (reading '0')
+```
+
+修复两层：`loadSession` 逐字段校验（缺任一项当「没登录」），
+`App.tsx` 加可选链兜底。任一生效即可避免白屏。
+
+> 注意：**空 `studentIds` 数组是合法值**（老师角色可访问全部学生），
+> 不能当成非法数据拒绝。
 
 ### 畸形知识体系快照导致应用白屏
 
