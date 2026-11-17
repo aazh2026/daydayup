@@ -66,6 +66,14 @@ export interface ExamResult {
 export interface ExamPaper {
   id: string;
   examId: string;
+  /**
+   * 归属学生 ID。
+   *
+   * 分离后必须持久化：试卷是学生的数据，
+   * 修改元信息等操作要校验「这张卷属于谁」，
+   * 不能只信请求体里调用方自述的 studentId。
+   */
+  studentId?: string;
   examTitle?: string;
   examType?: Exam['type'];
   subject: Subject;

@@ -127,6 +127,8 @@ export function createExamRoutes(container: Container): Router {
         const paper: ExamPaper = {
           id: paperId,
           examId,
+          // 持久化归属 —— 修改元信息时要据此校验「这张卷属于谁」
+          studentId,
           examTitle: body.examTitle ? String(body.examTitle) : undefined,
           examType: body.examType,
           subject: body.subject ?? '数学',
@@ -538,6 +540,19 @@ export function createExamRoutes(container: Container): Router {
         if (!existing) {
           throw new ApiException('NOT_FOUND', '试卷不存在');
         }
+
+        /**
+         * 关键：必须校验**试卷的实际归属**，而不是请求体里的 studentId。
+         *
+         * 请求体的 studentId 是调用方自述的，可以随便填 ——
+         * 学生 A 填自己的 studentId、却把请求打到学生 B 的试卷上，
+         * 就能改掉 B 的卷面元信息（学科、考试名、分数）。
+         *
+         * `assertStudentWriteAccess` 只验证「调用方能否写 studentId」，
+         * 与「这张卷属于谁」是两件事，必须分别校验。
+         */
+        const ownerId = existing.studentId ?? studentId;
+        assertStudentWriteAccess(req, ownerId);
 
         const confirmed: Partial<DetectedMetadata> = body.confirmedMetadata ?? {};
         const updated: ExamPaper = {
