@@ -53,6 +53,8 @@
 | Phase 8p | AI 配额并发超发修复（8 例） | ✅ 完成 |
 | Phase 8q | Job 幂等并发失效修复（4 例） | ✅ 完成 |
 | Phase 8r | 跨学生数据丢失修复（2 例） | ✅ 完成 |
+| Phase 8s | 并发作答丢失掌握度修复（6 例） | ✅ 完成 |
+| Phase 8t | 试卷归属校验修复（4 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -470,7 +472,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       484/484 通过（contracts 41 + server 324 + web 119）
+测试       494/494 通过（contracts 41 + server 334 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -520,6 +522,8 @@ Phase 4 又发现 3 个：
 | 30 | AI 配额「读-判-写」非原子 | **并发下护栏完全失效**（限额 5 放行 20） |
 | 31 | `enqueue` 幂等检查与记录之间有 await | **同一 key 并发产生 10 个任务**（重复 AI 诊断） |
 | 32 | 删除学生时遍历 `listAll()` 删全部文件 | **删学生 A 连学生 B 的试卷一起删**（跨学生数据丢失） |
+| 33 | 掌握度读-改-写非原子 | **并发作答丢记录**（5 个并发只剩 1 条） |
+| 34 | 试卷归属用请求体的 studentId 校验 | **学生 A 可改学生 B 的试卷**（卷面元信息被篡改） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -960,6 +964,54 @@ jobs on disk: 10
 已有的幂等测试是**顺序**调用的，永远发现不了 —— 必须真的并发发起。
 
 修复：按幂等键串行化整个入队流程。
+
+### 归属校验用错了 studentId
+
+`PATCH /papers/:id/confirm-metadata` 的授权用的是**请求体里的** studentId：
+
+```ts
+const studentId = String(body.studentId ?? '');
+assertStudentWriteAccess(req, studentId);   // ← 调用方自述，随便填
+const existing = await db.read(entityPath(PAPERS_DIR, req.params.id));
+await db.write([...PAPERS_DIR, `${existing.id}.json`], updated);  // ← 归属从未校验
+```
+
+`assertStudentWriteAccess` 只回答「调用方能否写 studentId」，
+与「这张卷属于谁」是两个问题。
+
+攻击：学生 A 填自己的 studentId、却打到学生 B 的试卷上：
+
+```
+status: 200
+confirmedMetadata: {"subject":"英语","examTitle":"被篡改",...}
+```
+
+可改掉他人试卷的学科、考试名、分数、日期 —— 影响诊断结论与提分分析。
+
+**根因**：`ExamPaper` 契约里**没有 studentId 字段**，
+新建试卷时根本没记录归属 —— 想校验也无从校验起。
+
+修复：契约新增可选 `studentId` → 新建时持久化 →
+修改时按**试卷的实际归属**校验（老数据回落到请求体的 studentId）。
+
+### 并发作答丢失掌握度记录
+
+掌握度作答的「读聚合 → 改记录 → 写回」三步之间有 `await`，
+并发请求各自读到**同一个旧聚合**，各自写回自己的版本。
+
+实测（5 个并发作答，5 个不同知识点）：
+
+```
+statuses: [200,200,200,200,200]      ← 全部「成功」
+records in mastery: 1                 ← 只剩 kp-4
+```
+
+4 个知识点的学习记录被**静默丢弃**。
+掌握度是提分优先级与学习计划的基础 ——
+记录丢了，优先级排序就基于错误的证据做决策。
+
+修复：`FileDatabase.withExclusive(key, fn)` 按**逻辑键**串行化整段临界区
+（与文件锁不同：文件锁只保证单次写不交错，组合操作整体仍会互相覆盖）。
 
 ### 前端逻辑补测汇总
 
