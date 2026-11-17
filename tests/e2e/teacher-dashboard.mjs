@@ -290,6 +290,40 @@ async function main() {
   );
   check(legacyGone, '遗留业务数据 key 在加载后被清理');
 
+  // ---- 5b. 畸形知识体系快照不应让应用白屏 ----
+  console.log('\n▶ 畸形知识体系快照容错');
+  const errorsBefore = pageErrors.length;
+  await page.evaluate(() => {
+    // 快照里混入 null / 缺字段的元素 —— 写入被中断或旧版本应用可能造成
+    localStorage.setItem(
+      'daydayup.curriculum.snapshot',
+      JSON.stringify({
+        version: 'v1',
+        knowledgePoints: [null, {}, { id: 'kp-x' }],
+      })
+    );
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2000);
+
+  const stillAlive = await page.evaluate(() => document.body.innerText.length);
+  check(
+    stillAlive > 100,
+    '畸形快照下应用仍正常渲染（不应白屏）',
+    `页面内容长度 ${stillAlive}`
+  );
+  const newErrors = pageErrors.slice(errorsBefore);
+  checkEqual(
+    newErrors.length,
+    0,
+    '畸形快照不产生未捕获异常',
+    newErrors.join(' | ')
+  );
+
+  // 恢复正常的快照（由服务端重新拉取）
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+
   // ---- 6. 无致命错误 ----
   console.log('\n▶ 运行时错误');
   const fatalConsole = consoleErrors.filter(
