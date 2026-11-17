@@ -36,7 +36,8 @@ beforeEach(() => {
   fs.mkdirSync(backupDir, { recursive: true });
 
   db = new FileDatabase(dataDir);
-  storage = new FileStorage({ dataDir });
+  // FileStorage 需要 db 做元数据索引（与 container.ts 的接线一致）
+  storage = new FileStorage({ dataDir, db });
 });
 
 afterEach(() => {
@@ -139,6 +140,75 @@ describe('学生数据删除', () => {
     ]);
     assert.equal(auditEntries.length, 1);
     assert.equal(auditEntries[0].event_type, 'StudentDataDeleted');
+  });
+
+  /**
+   * 回归：删除学生 A 的数据**不得**删掉学生 B 的文件。
+   *
+   * 历史缺陷：`deleteStudentData` 遍历 `storage.listAll()`
+   * （全部学生的文件）并逐个删除 ——
+   * 于是「删除学生 A」把**学生 B 的试卷也删了**，
+   * 跨越学生的数据丢失，且没有任何报错。
+   */
+  test('删除一个学生不影响另一个学生的试卷文件', async () => {
+    const studentA = 'stu-files-a';
+    const studentB = 'stu-files-b';
+
+    const savedA = await storage.save(Buffer.from('paper-a'), {
+      studentId: studentA,
+      paperId: 'paper-a',
+      originalName: 'a.jpg',
+      mimeType: 'image/jpeg',
+    });
+    const savedB = await storage.save(Buffer.from('paper-b'), {
+      studentId: studentB,
+      paperId: 'paper-b',
+      originalName: 'b.jpg',
+      mimeType: 'image/jpeg',
+    });
+
+    assert.ok(fs.existsSync(path.join(dataDir, savedA.relativePath)));
+    assert.ok(fs.existsSync(path.join(dataDir, savedB.relativePath)));
+
+    const retention = new RetentionService(db, storage, FAST_RETENTION);
+    await retention.deleteStudentData(studentA);
+
+    assert.equal(
+      fs.existsSync(path.join(dataDir, savedA.relativePath)),
+      false,
+      '目标学生的文件应被删除'
+    );
+    assert.equal(
+      fs.existsSync(path.join(dataDir, savedB.relativePath)),
+      true,
+      '其它学生的文件必须保留'
+    );
+  });
+
+  test('删除学生后元数据索引中也不再有该学生的文件', async () => {
+    const studentA = 'stu-index-a';
+    const studentB = 'stu-index-b';
+
+    await storage.save(Buffer.from('a'), {
+      studentId: studentA,
+      paperId: 'p',
+      originalName: 'a.jpg',
+      mimeType: 'image/jpeg',
+    });
+    await storage.save(Buffer.from('b'), {
+      studentId: studentB,
+      paperId: 'p',
+      originalName: 'b.jpg',
+      mimeType: 'image/jpeg',
+    });
+
+    const retention = new RetentionService(db, storage, FAST_RETENTION);
+    await retention.deleteStudentData(studentA);
+
+    const remainingForA = await storage.listForStudent(studentA);
+    const remainingForB = await storage.listForStudent(studentB);
+    assert.equal(remainingForA.length, 0, '目标学生的索引应清空');
+    assert.equal(remainingForB.length, 1, '其它学生的索引应保留');
   });
 });
 

@@ -123,11 +123,19 @@ export class RetentionService {
     await this.db.remove(['db', 'plans', studentId]);
     await this.db.remove(['db', 'error-records', studentId]);
 
-    // 删除试卷文件
-    const allFiles = await this.storage.listAll();
-    for (const relativePath of allFiles) {
-      await this.storage.remove(relativePath);
-    }
+    /**
+     * 删除该学生的试卷文件。
+     *
+     * 关键：**只删目标学生的文件**。
+     *
+     * 早期实现遍历 `storage.listAll()`（全部学生的文件）并逐个删除，
+     * 于是「删除学生 A 的数据」把**学生 B 的试卷也删了** ——
+     * 跨越学生的数据丢失，且没有任何报错。
+     *
+     * 现在按学生过滤：优先用元数据索引（记录了 studentId），
+     * 索引缺失时回退到路径前缀（files/papers/{studentId}/）。
+     */
+    await this.deleteStudentFiles(studentId);
 
     // 删除错题记录（分散在 error-records/{studentId}/ 下）
     const errorIds = await this.db.list(['db', 'error-records', studentId]);
@@ -173,6 +181,39 @@ export class RetentionService {
     logger.info('retention.student_deleted', { studentId, deletedAt });
 
     return { deletedAt, studentId };
+  }
+
+  /**
+   * 删除某个学生的试卷文件（**仅该学生**）。
+   *
+   * 两级过滤：
+   * 1. 元数据索引（`listForStudent`）—— 索引里记了 studentId，最准确
+   * 2. 路径前缀（`files/papers/{studentId}/`）—— 索引缺失时的兜底
+   *
+   * 两级都按 studentId 过滤，绝不碰其它学生的文件。
+   *
+   * 索引清理：走 `removeByFileId`（同时删文件与索引条目）。
+   * 直接调 `remove(relativePath)` 只删文件、留下孤儿索引 ——
+   * 索引里仍记着该学生拥有那个文件，`listForStudent` 还会返回它。
+   */
+  private async deleteStudentFiles(studentId: string): Promise<void> {
+    // 1) 走索引的
+    const indexed = await this.storage.listForStudent(studentId);
+    for (const meta of indexed) {
+      // 注意字段名是 `id`（不是 fileId）
+      await this.storage.removeByFileId(meta.id);
+    }
+
+    // 2) 兜底：按路径前缀扫一遍（索引缺失的老数据）
+    //    路径形如 files/papers/{studentId}/{paperId}/{fileId}.jpg
+    const prefix = `files/papers/${studentId}/`;
+    const all = await this.storage.listAll();
+    for (const relativePath of all) {
+      if (!relativePath.startsWith(prefix)) continue;
+      // 已通过索引删掉的跳过
+      if (indexed.some((m) => m.relativePath === relativePath)) continue;
+      await this.storage.remove(relativePath);
+    }
   }
 
   /** 清理按日期命名的文件（events/） */
