@@ -9,7 +9,8 @@ daydayup/
 │   └── server/        后端服务（Express + 领域引擎 + 文件持久化）
 ├── web/               前端 SPA（React + Vite）
 ├── docs/              设计文档
-└── scripts/           一次性迁移脚本
+├── scripts/start.mjs  一键启动脚本
+└── tests/e2e/         端到端测试
 ```
 
 ---
@@ -100,12 +101,14 @@ node --experimental-strip-types packages/server/src/main.ts
 | `npm run build` | 构建前端产物到 `web/dist` |
 | `npm run typecheck` | 全包类型检查 |
 | `npm run lint` | 全包 lint |
-| `npm test --workspace=@daydayup/server` | 领域引擎测试（node:test） |
+| `npm test` | 全部测试（三个包，315 例） |
+| `npm run test:server` | 仅服务端测试（155 例） |
+| `npm run test:web` | 仅前端测试（119 例） |
 | `npm run seed --workspace=@daydayup/server` | 播种演示数据 |
 | `npm run backup --workspace=@daydayup/server` | 创建备份（自动验证） |
 | `npm run restore --workspace=@daydayup/server -- --name <名>` | 从备份恢复 |
 | `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
-| `npm run test:e2e` | 教师工作台 E2E（需 `npx playwright install chromium`） |
+| `npm run test:e2e` | 端到端测试（需 `npx playwright install chromium`） |
 
 ---
 
@@ -149,20 +152,27 @@ node --experimental-strip-types packages/server/src/main.ts
 | PlanningEngine | `packages/server/src/engines/planning-engine.ts` | 7 天计划、时间预算、提分优先级 |
 | MasteryEngine | `packages/server/src/engines/mastery-engine.ts` | 掌握度状态机迁移 |
 
-两者均为**纯函数**（无 IO、时钟由参数显式传入）。测试共 **43 个用例**：
+两者均为**纯函数**（无 IO、时钟由参数显式传入）。
+
+测试共 **315 个用例**（contracts 41 + server 155 + web 119）：
 
 ```
-单元测试（18）  TC08 每日学习时长硬约束 / TC07 优先级可复现
-                TC11 掌握度状态机（含 3 天延迟复测锁定）/ TC06 失分不重复
-鉴权测试（10）  Token 签发校验 / payload 篡改防护 / 过期失效
+引擎单元（18）  TC08 每日时长硬约束 / TC07 优先级可复现
+                TC11 掌握度状态机（3 天延迟复测锁定）/ TC06 失分不重复
+鉴权与配额（17） Token 签发校验 / payload 篡改防护 / 过期失效
                 配额上限 / 账号隔离 / 用量持久化
-集成测试（15）  真实 HTTP + 真实文件存储：
-                认证 / 资源级隔离（403）/ 知识体系前置引用完整性
-                服务端权威计划与掌握度迁移 / 错题落库 / 事件日志
+集成（22）      真实 HTTP + 真实文件存储：
+                认证 / 资源级隔离 / 服务端权威计划与掌握度迁移 / 错题落库
+                事件日志 / 角色权限 / 任务鉴权 / SSE 帧解析
+产品验收（13）  逐条对齐 PRODUCT_DESIGN_SPEC 的 TC-01~TC-09
+契约包（41）     12 个运行时校验器的合法/非法输入矩阵
+前端（119）      API 客户端 / 登录态 / 知识体系缓存 / SSE 帧解析 / 水合
 ```
 
-> 集成测试发现并修复了一个真实缺陷：`FileDatabase.read()` 未兼容
-> `list()` 返回的带 `.json` 后缀文件名，导致**所有列表接口静默返回空**。
+> 这些测试不是摆设——它们在开发过程中抓出了 **19 个真实缺陷**，
+> 包括「所有列表接口静默返回空」「任务端点完全没挂认证中间件」
+> 「每日备份会每 6 小时执行一次」等。完整清单见
+> [`docs/separation-implementation-status.md`](docs/separation-implementation-status.md)。
 
 ---
 
@@ -198,7 +208,7 @@ SSE 用 `node:http` 原生实现，保持零第三方依赖。
 | 命令 | 说明 |
 |---|---|
 | `npm run cleanup --workspace=@daydayup/server` | 清理过期数据 |
-| `npm run test:e2e` | 教师工作台 E2E（需 `npx playwright install chromium`） |
+| `npm run test:e2e` | 端到端测试（需 `npx playwright install chromium`） |
 | `DELETE /api/v1/admin/students/:id/data` | 删除某学生全部数据（数据主体删除权） |
 
 保留期可通过环境变量配置（事件日志 180 天、作答流水 365 天、
@@ -270,9 +280,15 @@ SSE 用 `node:http` 原生实现，保持零第三方依赖。
 | POST | `/practice/generate` | 练习题生成 + **双轮独立验算** |
 | POST | `/practice/evaluate` | 作答评测 |
 | POST | `/diagnose-microquiz` | 诊断微测 |
+| GET | `/jobs/:id` | 任务状态（归属校验） |
+| GET | `/jobs/:id/events` | SSE 进度（需认证） |
+| POST | `/jobs/:id/cancel` | 取消任务 |
+| GET | `/students` | 学生列表（老师角色用） |
+| POST | `/admin/backup` | 创建备份（仅 teacher） |
+| POST | `/admin/cleanup` | 清理过期数据（仅 teacher） |
+| GET | `/admin/audit` | 审计日志（仅 teacher） |
 
-旧路径（`/api/diagnose-paper` 等）保留一个发布周期作为兼容层，
-前端全量切换后可删除。
+> 迁移期的旧路径兼容层（`/api/*`）已在前端全量切换后移除。
 
 ---
 
@@ -363,6 +379,23 @@ POST /api/v1/auth/login  { "secret": "1234" }
 
 ---
 
+## 运维与安全
+
+| 能力 | 实现 |
+|---|---|
+| 请求限流 | 全局 120 次/分钟；AI 端点 10 次/分钟（防瞬时刷量） |
+| 成本护栏 | AI 调用按账号每日计数，超额返回 429 |
+| 审计日志 | `data/audit/`，只追加；关键操作与越权尝试均留痕 |
+| 数据保留 | 事件日志 180 天 / 作答流水 365 天 / 上传文件 180 天 / 审计 730 天 |
+| 删除权 | `DELETE /admin/students/:id/data`（家长可代为行使） |
+| 定时任务 | 每日自动备份 + 自动清理（重启不重复执行） |
+| 备份验证 | 每份备份含 SHA-256 校验和，`--verify` 检查可恢复性 |
+
+运维接口（备份/清理/审计）**仅 teacher 角色**可调用——
+它们影响全部学生数据，不能只靠「已登录」放行。
+
+---
+
 ## 数据存储
 
 服务端文件型持久化（`packages/server/data/`）：
@@ -408,18 +441,12 @@ files/papers/{studentId}/{paperId}/{fileId}.jpg
 
 | 文档 | 定位 |
 |---|---|
-| `docs/backend-design.md` | 原始理想设计 |
+| `docs/backend-design.md` | 原始理想设计（系统应该长什么样） |
 | `docs/backend-design-optimized.md` | 结合代码现状的优化分析（为什么这么改） |
 | `docs/frontend-backend-separation.md` | 前后端分离架构方案（怎么落地） |
-
----
-
-## 迁移脚本（一次性，迁移完成后可删）
-
-```bash
-npx tsx scripts/extract-knowledge.mjs   # 知识本体 + 题库 → JSON 资产
-npx tsx scripts/extract-seed.mjs        # 演示数据 → seed JSON
-```
+| `docs/PRODUCT_DESIGN_SPEC.md` | 产品设计规格（MVP 9 条验收用例） |
+| `docs/separation-implementation-status.md` | **实施状态与缺陷清单**（做了什么、踩了哪些坑） |
+| `docs/deployment.md` | 部署指南（环境变量、安全清单、扩容路径） |
 
 ---
 
