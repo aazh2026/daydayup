@@ -48,6 +48,7 @@
 | Phase 8k | 提示词注册表测试（40 例） | ✅ 完成 |
 | Phase 8l | 配置解析测试（18 例）+ NaN/缺密钥修复 | ✅ 完成 |
 | Phase 8m | 日志保留字段保护（14 例） | ✅ 完成 |
+| Phase 8n | 路径穿越修复 + 回归测试（12 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -465,7 +466,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       448/448 通过（contracts 41 + server 288 + web 119）
+测试       460/460 通过（contracts 41 + server 300 + web 119）
 E2E        19/19 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -510,6 +511,7 @@ Phase 4 又发现 3 个：
 | 25 | 数值配置非法 → `NaN` | **配额护栏静默失效**（`used >= NaN` 恒 false） |
 | 26 | `AUTH_REQUIRED=true` 但无 `AUTH_SECRET` | **强制认证却用公开密钥签发令牌**（可伪造 teacher 身份） |
 | 27 | 日志上下文覆盖 `ts`/`level`/`message` | **事件名与级别被冲掉**（按事件名聚合日志失效） |
+| 28 | URL 参数直接拼进文件路径（未清洗） | **老师可覆盖 `credentials.json`**（凭证被改写） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -826,6 +828,34 @@ logger.error('api.unhandled', { requestId, message, path, stack });
 
 修复：上下文字段先铺开、自身字段后铺开；
 上下文中若含保留字段，改名为 `context_message` 等保留 —— 信息不丢。
+
+### 路径穿越：老师可覆盖凭证文件
+
+`FileDatabase.resolvePath` 只保证最终路径**不逃出 dataDir 根**，
+但拦不住「逃出预期子目录」—— 而 dataDir 内部就放着
+`db/credentials.json` 与其它学生的数据文件。
+
+多处路由把 URL 参数直接拼进文件路径。实测（修复前）：
+
+| 攻击 | 结果 |
+|---|---|
+| 老师 `PUT /students/../credentials/profile` | **200，`db/credentials.json` 被覆盖** |
+| 学生 `PUT /coaching/sessions/../../evil` | **200，在 `db/` 根下创建了文件** |
+
+老师角色尤其危险：`assertStudentAccess` 对 teacher 直接放行，
+所以穿越串**不需要**在任何人的授权名单里就能生效 ——
+「老师可访问全部学生」被当成了「老师可写任意路径」。
+
+修复：在 `FileDatabase` 增加 `sanitizeSegment()`
+（只保留 `[a-zA-Z0-9_-]`，其余替换为 `_`，限长 64），
+应用到所有拼接用户输入的路径：
+
+| 路由 | 清洗对象 |
+|---|---|
+| `coaching.routes.ts` | studentId + knowledgeId |
+| `student.routes.ts` | studentId |
+| `exam.routes.ts` | exams / papers 的 id |
+| `plan.routes.ts` | mastery 的 studentId |
 
 ### 前端逻辑补测汇总
 
