@@ -178,46 +178,71 @@ export function createMasteryRoutes(container: Container): Router {
         const mode = (body.mode ?? '基础练习') as PracticeMode;
         const evidenceSummary = String(body.evidenceSummary ?? '');
 
-        const aggregate = await readAggregate(container, studentId);
-        const current: MasteryRecord = aggregate.records[knowledgeId] ?? {
-          knowledgeId,
-          state: '未诊断',
-          confidence: '待验证',
-          lostScoreEvidence: 0,
-          recoveryProbability: 0.5,
-          evidenceLogs: [],
-          consecutiveErrors: 0,
-          practiceCorrect: 0,
-          practiceTotal: 0,
-          variantPassed: false,
-          delayedRetestPassed: false,
-          updatedAt: new Date().toISOString(),
-        };
+        /**
+         * 读-判-写必须整体串行化（按学生维度）。
+         *
+         * 否则并发作答会各自读到同一个旧聚合、各自写回自己的版本，
+         * 后写者覆盖先写者 —— 知识点记录被静默丢弃。
+         *
+         * 实测：5 个并发作答（5 个不同知识点）全部返回 200，
+         * 但聚合里只剩 **1 条**记录。
+         */
+        const transition = await container.db.withExclusive(
+          `mastery:${studentId}`,
+          async () => {
+            const aggregate = await readAggregate(container, studentId);
+            const current: MasteryRecord = aggregate.records[knowledgeId] ?? {
+              knowledgeId,
+              state: '未诊断',
+              confidence: '待验证',
+              lostScoreEvidence: 0,
+              recoveryProbability: 0.5,
+              evidenceLogs: [],
+              consecutiveErrors: 0,
+              practiceCorrect: 0,
+              practiceTotal: 0,
+              variantPassed: false,
+              delayedRetestPassed: false,
+              updatedAt: new Date().toISOString(),
+            };
 
-        const transition = evaluateMasteryTransition({
-          current,
-          mode,
-          isCorrect,
-          evidenceSummary,
-        });
+            const result = evaluateMasteryTransition({
+              current,
+              mode,
+              isCorrect,
+              evidenceSummary,
+            });
 
-        aggregate.records[knowledgeId] = transition.record;
+            aggregate.records[knowledgeId] = result.record;
 
-        if (transition.changed) {
-          const event = buildTransitionEvent({
-            id: `mte_${randomUUID()}`,
-            knowledgeId,
-            subject: String(body.subject ?? '数学'),
-            fromState: transition.fromState,
-            toState: transition.toState,
-            trigger: `${mode}: ${evidenceSummary}`.slice(0, 200),
-          });
-          aggregate.history.unshift(event);
-          // 历史上限，避免文件无限增长
-          aggregate.history = aggregate.history.slice(0, 200);
-        }
+            let transitionEventId = '';
+            if (result.changed) {
+              const event = buildTransitionEvent({
+                id: `mte_${randomUUID()}`,
+                knowledgeId,
+                subject: String(body.subject ?? '数学'),
+                fromState: result.fromState,
+                toState: result.toState,
+                trigger: `${mode}: ${evidenceSummary}`.slice(0, 200),
+              });
+              transitionEventId = event.id;
+              aggregate.history.unshift(event);
+              // 历史上限，避免文件无限增长
+              aggregate.history = aggregate.history.slice(0, 200);
+            }
 
-        await writeAggregate(container, aggregate);
+            await writeAggregate(container, aggregate);
+            return { ...result, transitionEventId };
+          }
+        );
+
+        const {
+          record: updatedRecord,
+          fromState: previousState,
+          toState: newState,
+          changed,
+          transitionEventId,
+        } = transition;
 
         // 追加作答事件（先落业务结果，再记事件）
         const dateKey = new Date().toISOString().slice(0, 10);
@@ -236,7 +261,20 @@ export function createMasteryRoutes(container: Container): Router {
           })
         );
 
-        const opportunities = computePriorityOpportunities(aggregate.records);
+        /**
+         * 提分机会基于**最新的**聚合重算。
+         *
+         * 注意必须在锁内拿到聚合快照 —— 锁外重新读取可能拿到
+         * 已被其它并发请求更新过的版本，导致返回的提分机会与落库不一致。
+         */
+        const opportunities = computePriorityOpportunities(
+          (
+            await container.db.read<MasteryAggregate>([
+              ...MASTERY_DIR,
+              `${studentId}.json`,
+            ])
+          )?.records ?? { [knowledgeId]: updatedRecord }
+        );
         const updatedOpportunity = opportunities.find(
           (o) => o.knowledgeId === knowledgeId
         );
@@ -249,8 +287,8 @@ export function createMasteryRoutes(container: Container): Router {
           requestId: req.requestId,
           payload: {
             studentId,
-            from: transition.fromState,
-            to: transition.toState,
+            from: previousState,
+            to: newState,
             mode,
             isCorrect,
           },
@@ -260,20 +298,19 @@ export function createMasteryRoutes(container: Container): Router {
           requestId: req.requestId,
           studentId,
           knowledgeId,
-          from: transition.fromState,
-          to: transition.toState,
+          from: previousState,
+          to: newState,
         });
 
         res.json({
           mastery: {
             knowledgeId,
-            previousState: transition.fromState,
-            newState: transition.toState,
-            transitionEventId:
-              transition.changed ? aggregate.history[0]?.id ?? '' : '',
+            previousState,
+            newState,
+            transitionEventId: changed ? transitionEventId : '',
           },
           updatedOpportunity,
-          record: transition.record,
+          record: updatedRecord,
         });
       } catch (err) {
         next(err);

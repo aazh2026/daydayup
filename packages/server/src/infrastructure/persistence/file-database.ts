@@ -16,6 +16,14 @@ import path from 'node:path';
 const writeLocks = new Map<string, Promise<unknown>>();
 
 /**
+ * 逻辑键的排他锁链（用于「读-判-写」这类组合操作）。
+ *
+ * 与 writeLocks 分开：writeLocks 按**文件路径**串行化单次写，
+ * 这里按**业务键**（如 `mastery:{studentId}`）串行化一整段临界区。
+ */
+const exclusiveLocks = new Map<string, Promise<unknown>>();
+
+/**
  * 清洗路径片段：防止用户输入注入路径分隔符。
  *
  * 为什么需要：`resolvePath` 只保证最终路径**不逃出 dataDir 根**，
@@ -175,6 +183,42 @@ export class FileDatabase {
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
+    }
+  }
+
+  /**
+   * 以「逻辑键」为单位串行化一段临界区。
+   *
+   * 与 `write()` 内部的文件锁不同：那个只保证**单次写**不交错，
+   * 而「读 → 判断 → 写」这类组合操作整体仍会互相覆盖
+   * （每个请求都读到同一个旧值，各自写回自己的版本）。
+   *
+   * 实测：5 个并发作答（5 个不同知识点）全部返回 200，
+   * 但掌握度聚合里只剩 **1 条**记录 —— 后写者覆盖了先写者，
+   * 4 个知识点的学习记录被静默丢弃。
+   *
+   * 用法：
+   * ```ts
+   * await db.withExclusive(`mastery:${studentId}`, async () => {
+   *   const agg = await readAggregate(...);
+   *   agg.records[kid] = ...;
+   *   await writeAggregate(...);
+   * });
+   * ```
+   */
+  async withExclusive<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const previous = exclusiveLocks.get(key) ?? Promise.resolve();
+    let release: () => void = () => {};
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    exclusiveLocks.set(key, previous.then(() => current));
+    await previous.catch(() => undefined);
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (exclusiveLocks.get(key) === current) exclusiveLocks.delete(key);
     }
   }
 }
