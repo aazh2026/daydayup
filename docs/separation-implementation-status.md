@@ -61,6 +61,7 @@
 | Phase 8x | 畸形知识体系快照白屏修复（6 例 + 2 E2E 断言） | ✅ 完成 |
 | Phase 8y | 畸形登录会话白屏修复（5 例 + 2 E2E 断言） | ✅ 完成 |
 | Phase 8z | 备份恢复路径穿越修复（3 例） | ✅ 完成 |
+| Phase 9a | 上传文件魔数校验（17 例） | ✅ 完成 |
 | Phase 6a | 自动化回归任务（定时 test/typecheck/build） | ✅ 完成 |
 | Phase 6b | Job Engine 进度事件乱序修复 | ✅ 完成 |
 | Phase 6c | 数据删除审计重复条目修复 | ✅ 完成 |
@@ -478,7 +479,7 @@ node --experimental-strip-types packages/server/src/main.ts
 
 ```
 类型检查   contracts ✓ server ✓  web ✓
-测试       562/562 通过（contracts 41 + server 391 + web 130）
+测试       579/579 通过（contracts 41 + server 408 + web 130）
 E2E        24/24 断言通过（自举前后端，退出码 0）
 前端构建   ✓
 浏览器     5 个页面渲染，零 page error / console error
@@ -535,6 +536,7 @@ Phase 4 又发现 3 个：
 | 37 | 知识体系快照不校验元素结构 | **畸形快照让整个应用白屏**（useState 初始化器抛错） |
 | 38 | 会话只校验 token 不校验 studentIds | **畸形会话让整个应用白屏**（渲染函数体内抛错） |
 | 39 | 备份恢复直接拼清单路径不校验 | **可把文件写到 dataDir 之外** |
+| 40 | 上传只校验客户端自报的 mimeType | **任意内容可冒充图片落盘**（并被送给 AI 模型） |
 
 其中 #8、#9 都是**架构正确但实现有洞**的典型——
 安全检查与调度语义都写在代码里，但被一行 catch 或一次调用绕过了。
@@ -995,6 +997,29 @@ jobs on disk: 10
 与「**任务不存在**」（路由在，只是数据没有）。
 两者错误消息不同，测试据此区分；否则「资源不存在」会被误判成「路由缺失」，
 测试就得靠造数据才能通过，失去意义。
+
+### 上传只校验自报的 mimeType
+
+`FileStorage.save()` 只检查 mimeType 是否在白名单里，而 mimeType 是
+**客户端自报的** —— 传 `image/jpeg` 加任意字节就能通过，
+于是任意内容都以「图片」的名义落盘并被送给 AI 模型。
+
+诊断接口的内联 base64 路径更糟：mimeType 缺省**一律**当 image/jpeg。
+
+修复：
+
+| 措施 | 说明 |
+|---|---|
+| `matchesMagicBytes(buffer, mimeType)` | 取文件头与类型签名比对；未登记签名的类型放行（避免误杀） |
+| `sniffImageMimeType(buffer)` | 按内容嗅探类型 |
+| `save()` | 内容不符直接拒绝，**不落盘** |
+| 上传接口 | 声明类型不符 → 400 VALIDATION_FAILED |
+| 诊断内联 base64 | **不信任自报类型**，改为嗅探，嗅不出就拒绝 |
+
+> 顺带暴露了一个测试问题：既有测试用 `Buffer.from('任意文本')` 冒充图片，
+> 新校验让它们失败 —— 这正是校验生效的证据。
+> 新增 `tests/helpers/fake-images.ts` 提供合法的最小图片字节。
+> 这些测试此前实际上没在测「文件能不能存」，而是在测「归属/隔离」。
 
 ### 备份恢复可把文件写到 dataDir 之外
 
