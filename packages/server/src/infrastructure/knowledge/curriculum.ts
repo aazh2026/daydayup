@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { KnowledgePoint, Subject } from '@daydayup/contracts';
+import { logger } from '../logging/logger.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -52,6 +53,38 @@ let curriculumCache: CurriculumAsset | null = null;
 let bankCache: QuestionBankAsset | null = null;
 let knowledgeMapCache: Record<string, KnowledgePoint> | null = null;
 
+/**
+ * 从候选资产中选出应生效的那一个。
+ *
+ * 纯函数，便于单测（资产选择逻辑关系到「加载的是不是对的版本」）。
+ *
+ * @param candidates 文件名 → 解析结果（解析失败的不会出现在其中）
+ * @returns 生效的文件名
+ */
+export function selectCurriculumFile(
+  candidates: Array<{ file: string; parsed: CurriculumAsset }>
+): string {
+  if (candidates.length === 0) {
+    throw new Error('No readable curriculum asset');
+  }
+  // 优先选 ACTIVE 版本
+  const active = candidates.find((c) => c.parsed.status === 'ACTIVE');
+  if (active) return active.file;
+  // 没有 ACTIVE：取排序最后的（版本号字典序即版本序）
+  return candidates[candidates.length - 1].file;
+}
+
+/**
+ * 找出应当生效的知识体系资产文件。
+ *
+ * 优先选 status=ACTIVE 的版本；没有 ACTIVE 时取文件名排序最后的一个
+ * （版本号形如 `shanghai-junior-2026.1`，字典序即版本序）。
+ *
+ * 容错：某个资产文件损坏（JSON 非法）时**跳过**它，而不是让整个
+ * 知识体系接口 500 —— 知识体系是服务端唯一事实源，
+ * 一个坏文件不该让所有功能一起挂掉。但如果**所有**文件都不可用，
+ * 必须明确报错（静默返回空会让前端展示空白却毫无线索）。
+ */
 function readActiveCurriculumFile(): string {
   const files = fs
     .readdirSync(KNOWLEDGE_DIR)
@@ -60,14 +93,29 @@ function readActiveCurriculumFile(): string {
   if (files.length === 0) {
     throw new Error(`No curriculum asset found in ${KNOWLEDGE_DIR}`);
   }
-  // 优先选 ACTIVE 版本
+
+  const readable: Array<{ file: string; parsed: CurriculumAsset }> = [];
   for (const file of files) {
-    const parsed = JSON.parse(
-      fs.readFileSync(path.join(KNOWLEDGE_DIR, file), 'utf8')
-    ) as CurriculumAsset;
-    if (parsed.status === 'ACTIVE') return file;
+    try {
+      const parsed = JSON.parse(
+        fs.readFileSync(path.join(KNOWLEDGE_DIR, file), 'utf8')
+      ) as CurriculumAsset;
+      readable.push({ file, parsed });
+    } catch (err) {
+      logger.error('curriculum.asset_unreadable', {
+        file,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
-  return files[files.length - 1];
+
+  if (readable.length === 0) {
+    throw new Error(
+      `No readable curriculum asset in ${KNOWLEDGE_DIR} (${files.length} file(s) found)`
+    );
+  }
+
+  return selectCurriculumFile(readable);
 }
 
 export function getCurriculum(): CurriculumAsset {
