@@ -305,6 +305,8 @@ export interface MasteryTransitionEvent {
 export type AppPage =
   | 'today'
   | 'diagnosis'
+  | 'errors'
+  | 'knowledge'
   | 'planning'
   | 'coach'
   | 'report'

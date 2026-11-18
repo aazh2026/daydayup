@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowRight, Calculator, Calendar, Lock } from 'lucide-react';
 import { ALL_SUBJECTS } from '../types.ts';
+import { Pagination } from './Pagination.tsx';
+import { paginateList } from '../utils/pagination.ts';
 import type {
   FatigueLevel,
   HomeworkLoad,
@@ -27,11 +29,19 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
 }) => {
   const [subjectFilter, setSubjectFilter] = useState<'全部' | Subject>('全部');
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+  const [priorityPage, setPriorityPage] = useState(1);
+  const [priorityPageSize, setPriorityPageSize] = useState(10);
 
   const filteredPriorities =
     subjectFilter === '全部'
       ? plan.priorities
       : plan.priorities.filter((p) => p.subject === subjectFilter);
+
+  const { pageItems: paginatedPriorities, pagination: priorityPagination } = paginateList(
+    filteredPriorities,
+    priorityPage,
+    priorityPageSize
+  );
 
   const activeDay = plan.days[selectedDayIdx] ?? plan.days[0];
 
@@ -142,7 +152,10 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
               <button
                 key={sub}
                 type="button"
-                onClick={() => setSubjectFilter(sub)}
+                onClick={() => {
+                  setSubjectFilter(sub);
+                  setPriorityPage(1);
+                }}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                   subjectFilter === sub
                     ? 'bg-white text-slate-900 shadow-sm'
@@ -170,7 +183,8 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
-              {filteredPriorities.map((item, idx) => {
+              {paginatedPriorities.map((item, idx) => {
+                const globalIndex = priorityPagination.startIndex + idx;
                 const tierColor =
                   item.priorityTier === '高'
                     ? 'text-blue-700 font-semibold'
@@ -181,7 +195,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
                 return (
                   <tr key={item.knowledgeId} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 pl-6 pr-3 font-mono tabular-nums text-slate-500">
-                      #{idx + 1}
+                      #{globalIndex + 1}
                     </td>
                     <td className="py-3.5 px-3">
                       <div className="font-semibold text-slate-900">
@@ -225,6 +239,22 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
               })}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50">
+          <Pagination
+            currentPage={priorityPagination.currentPage}
+            totalPages={priorityPagination.totalPages}
+            totalItems={priorityPagination.totalItems}
+            pageSize={priorityPagination.pageSize}
+            onPageChange={setPriorityPage}
+            onPageSizeChange={(newSize) => {
+              setPriorityPageSize(newSize);
+              setPriorityPage(1);
+            }}
+            pageSizeOptions={[5, 10, 20, 50]}
+            itemName="项考点"
+          />
         </div>
       </section>
 

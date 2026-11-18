@@ -69,6 +69,16 @@ function startProcess(label, cmd, args, opts = {}) {
     cwd: opts.cwd ?? root,
     env: { ...process.env, ...opts.env },
     stdio: ['ignore', 'pipe', 'pipe'],
+    /**
+     * `detached: true` 让子进程成为**进程组组长**。
+     *
+     * 为什么必须：这里启动的是 `npx tsx src/main.ts` / `npx vite`，
+     * 真正监听端口的进程是 npx 派生的孙子进程。
+     * 若不建新进程组，`cleanup()` 里的 `process.kill(-pid)` 会失败，
+     * 退化成 `child.kill()` 只杀 npx —— 孙子进程继续占着端口，
+     * 下一轮 E2E 就会连到**旧服务**（其 DATA_DIR 已被删除）→ 莫名 404。
+     */
+    detached: process.platform !== 'win32',
     shell: process.platform === 'win32',
   });
   const log = [];
@@ -97,8 +107,39 @@ async function waitForPort(port, timeoutMs = 60_000) {
   return false;
 }
 
-function cleanup() {
-  for (const child of children) {
+/**
+ * 端口预检：启动前必须确认端口空闲。
+ *
+ * 为什么需要：若上次运行崩溃留下残留进程，`waitForPort()` 会把
+ * **上一个**服务当成自己的服务 —— 而那个服务的 DATA_DIR 已被上次
+ * `cleanup()` 删掉，于是 `/students/:id` 一律 404，表现为
+ * P0-4 / P0-2 的断言莫名失败（请求根本没打到新起的服务）。
+ *
+ * 这类失败极难排查：日志干净、端口"就绪"、只有两条断言挂掉。
+ * 宁可**启动前直接报错**，也不要静默复用陈旧进程。
+ */
+async function assertPortFree(port, label) {
+  const net = await import('node:net');
+  await new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        reject(
+          new Error(
+            `端口 ${port}（${label}）已被占用 —— 很可能是上次 E2E 崩溃残留。\n` +
+              `请先执行：lsof -ti:${port} | xargs kill -9`
+          )
+        );
+      } else {
+        reject(err);
+      }
+    });
+    srv.once('listening', () => srv.close(() => resolve()));
+    srv.listen(port, '127.0.0.1');
+  });
+}
+
+function cleanup() {  for (const child of children) {
     try {
       if (process.platform === 'win32') {
         child.kill('SIGKILL');
@@ -149,6 +190,10 @@ async function main() {
       },
     ])
   );
+
+  console.log('端口预检…');
+  await assertPortFree(SERVER_PORT, '后端');
+  await assertPortFree(WEB_PORT, '前端');
 
   console.log('启动后端…');
   startProcess('server', 'npx', ['tsx', 'src/main.ts'], {
@@ -315,6 +360,133 @@ async function main() {
     console.log(`  ! 打开诊断页失败: ${e.message.split('\n')[0]}`);
   }
   check(diagnosisOpened, '可打开「考试诊断」页');
+
+  // TC-09：思维导图可操作性（拖拽平移 / 全部与逐项收起展开）
+  if (diagnosisOpened) {
+    console.log('  · 验证思维导图可拖拽、可收起展开');
+
+    const mindMapSection = page
+      .locator('section')
+      .filter({ has: page.locator('h3', { hasText: '学科知识思维导图' }) })
+      .last();
+    const mindMapNodes = () => page.locator('[data-mindmap-node]').count();
+
+    await mindMapSection.scrollIntoViewIfNeeded();
+    await mindMapSection
+      .locator('div.touch-none')
+      .first()
+      .evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(800);
+
+    const collapsedNodeCount = await mindMapNodes();
+    check(collapsedNodeCount > 0, '思维导图渲染出节点');
+
+    // 拖拽空白处平移画布：以根节点的屏幕位移为判据
+    const rootNode = page.locator('button[data-mindmap-node="root"]');
+    const rootBoxBefore = await rootNode.boundingBox();
+    const canvasBox = await mindMapSection
+      .locator('div.touch-none')
+      .first()
+      .boundingBox();
+    if (rootBoxBefore && canvasBox) {
+      await page.mouse.move(canvasBox.x + canvasBox.width - 40, canvasBox.y + 24);
+      await page.mouse.down();
+      await page.mouse.move(
+        canvasBox.x + canvasBox.width - 160,
+        canvasBox.y + 120,
+        { steps: 8 }
+      );
+      await page.mouse.up();
+      await page.waitForTimeout(400);
+      const rootBoxAfter = await rootNode.boundingBox();
+      check(
+        rootBoxAfter !== null &&
+          Math.abs(rootBoxAfter.x - rootBoxBefore.x) > 40,
+        '拖拽空白处可平移思维导图画布',
+        `根节点位移 ${
+          rootBoxAfter ? Math.round(rootBoxAfter.x - rootBoxBefore.x) : 'null'
+        }px`
+      );
+    } else {
+      check(false, '思维导图根节点与画布可见');
+    }
+
+    // 全部展开 / 全部收起（渲染上千节点需要时间，用轮询而非固定等待）
+    await mindMapSection.getByRole('button', { name: /全部展开/ }).click();
+    await page.waitForFunction(
+      (min) =>
+        document.querySelectorAll('[data-mindmap-node]').length > min,
+      collapsedNodeCount * 10,
+      { timeout: 20_000 }
+    );
+    const expandedNodeCount = await mindMapNodes();
+    check(
+      expandedNodeCount > collapsedNodeCount * 10,
+      '「全部展开」展开整棵知识树',
+      `${collapsedNodeCount} → ${expandedNodeCount}`
+    );
+
+    await mindMapSection.getByRole('button', { name: /全部收起/ }).click();
+    await page.waitForFunction(
+      (max) =>
+        document.querySelectorAll('[data-mindmap-node]').length <= max,
+      collapsedNodeCount + 2,
+      { timeout: 10_000 }
+    );
+    const reCollapsedNodeCount = await mindMapNodes();
+    check(
+      reCollapsedNodeCount <= collapsedNodeCount + 2,
+      '「全部收起」回到板块级总览',
+      `实际 ${reCollapsedNodeCount}`
+    );
+
+    // 逐项展开：板块 → 考点
+    await page.locator('button[data-mindmap-toggle]').first().click();
+    await page.waitForFunction(
+      (min) =>
+        document.querySelectorAll('[data-mindmap-node]').length > min,
+      reCollapsedNodeCount,
+      { timeout: 10_000 }
+    );
+    const domainExpandedNodeCount = await mindMapNodes();
+    check(
+      domainExpandedNodeCount > reCollapsedNodeCount,
+      '逐项展开单个板块后出现其考点节点',
+      `${reCollapsedNodeCount} → ${domainExpandedNodeCount}`
+    );
+
+    const kpToggle = page
+      .locator('button[data-mindmap-toggle][aria-label*="四级子技能"]')
+      .first();
+    check((await kpToggle.count()) > 0, '考点提供四级子技能收起/展开箭头');
+    if ((await kpToggle.count()) > 0) {
+      // 用 DOM click 触发：该箭头可能位于画布可视区右侧之外，
+      // 几何拖拽已由上一条平移断言覆盖。
+      await kpToggle.dispatchEvent('click');
+      await page.waitForFunction(
+        (min) =>
+          document.querySelectorAll('[data-mindmap-node]').length > min,
+        domainExpandedNodeCount,
+        { timeout: 10_000 }
+      );
+      const subSkillNodeCount = await mindMapNodes();
+      check(
+        subSkillNodeCount > domainExpandedNodeCount,
+        '逐项展开考点后出现四级子技能节点'
+      );
+      await kpToggle.dispatchEvent('click');
+      await page.waitForFunction(
+        (max) =>
+          document.querySelectorAll('[data-mindmap-node]').length < max,
+        subSkillNodeCount,
+        { timeout: 10_000 }
+      );
+      check(
+        (await mindMapNodes()) < subSkillNodeCount,
+        '逐项收起考点后子技能节点消失'
+      );
+    }
+  }
 
   if (diagnosisOpened) {
     // 「载入数学图片示例卷」按钮

@@ -3,6 +3,8 @@ import { TopBar } from './components/TopBar.tsx';
 import { StudentProfileModal } from './components/StudentProfileModal.tsx';
 import { TodayPage } from './components/TodayPage.tsx';
 import { DiagnosisPage } from './components/DiagnosisPage.tsx';
+import { ErrorsPage } from './components/ErrorsPage.tsx';
+import { KnowledgePage } from './components/KnowledgePage.tsx';
 import { PlanningPage } from './components/PlanningPage.tsx';
 import { CoachPage } from './components/CoachPage.tsx';
 import { ReportPage } from './components/ReportPage.tsx';
@@ -76,7 +78,7 @@ export default function App() {
     createLocalSkeleton(INITIAL_APP_STATE)
   );
   const [activePage, setActivePage] = useState<AppPage>('today');
-  const [activeKnowledgeId, setActiveKnowledgeId] = useState<string>('math-alg-rational');
+  const [activeKnowledgeId, setActiveKnowledgeId] = useState<string>('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   /**
@@ -89,7 +91,28 @@ export default function App() {
   const [authRequired, setAuthRequired] = useState<boolean | null>(null);
 
   /** 知识体系（服务端资产） */
-  const { knowledgeMap: KNOWLEDGE_MAP } = useCurriculum();
+  const {
+    knowledgeMap: KNOWLEDGE_MAP,
+    knowledgePoints: KNOWLEDGE_POINTS,
+  } = useCurriculum();
+
+  /**
+   * 默认训练知识点。
+   *
+   * 不能硬编码 id：知识体系是可换版的**服务端资产**
+   * （2026.02 版从 18 个粗粒度点变成 2760 个教材小节，
+   * 旧 id 如 `math-alg-rational` 已不存在）。
+   * 硬编码会让换版后默认选中一个不存在的知识点，
+   * 页面只能退化成资产里的第一个点（可能是一年级内容）。
+   *
+   * 这里改为：当前选中项仍有效就保留；否则挑数学的第一个点兜底。
+   */
+  useEffect(() => {
+    if (activeKnowledgeId && KNOWLEDGE_MAP[activeKnowledgeId]) return;
+    const fallback =
+      KNOWLEDGE_POINTS.find((k) => k.subject === '数学') ?? KNOWLEDGE_POINTS[0];
+    if (fallback) setActiveKnowledgeId(fallback.id);
+  }, [activeKnowledgeId, KNOWLEDGE_MAP, KNOWLEDGE_POINTS]);
 
   /**
    * 从服务端水合业务状态（服务端是唯一真相源）。
@@ -249,7 +272,7 @@ export default function App() {
   const handleResetDemo = () => {
     // 重置演示数据：恢复本地骨架（业务数据由服务端水合）
     setAppState(createLocalSkeleton(INITIAL_APP_STATE));
-    setActiveKnowledgeId('math-alg-rational');
+    setActiveKnowledgeId('');
     setServerPlan(null);
   };
 
@@ -1100,6 +1123,32 @@ export default function App() {
             examId={appState.exams[0]?.id ?? `exam-${appState.student.id}`}
             onVerifyKnowledge={handleVerifyKnowledge}
             onLaunchCoach={handleLaunchCoach}
+            onNavigate={setActivePage}
+          />
+        )}
+
+        {activePage === 'errors' && (
+          <ErrorsPage
+            exams={appState.exams}
+            examPapers={appState.examPapers}
+            errorRecords={appState.errorRecords}
+            masteryRecords={appState.masteryRecords}
+            variantQuestions={appState.variantQuestions}
+            onMarkErrorCorrected={handleMarkErrorCorrected}
+            onLaunchCoach={handleLaunchCoach}
+            onNavigate={setActivePage}
+          />
+        )}
+
+        {activePage === 'knowledge' && (
+          <KnowledgePage
+            studentId={appState.student.id}
+            exams={appState.exams}
+            examPapers={appState.examPapers}
+            errorRecords={appState.errorRecords}
+            masteryRecords={appState.masteryRecords}
+            onLaunchCoach={handleLaunchCoach}
+            initialKnowledgeId={activeKnowledgeId}
           />
         )}
 
@@ -1153,6 +1202,7 @@ export default function App() {
             plan={plan}
             onMarkErrorCorrected={handleMarkErrorCorrected}
             onLaunchCoach={handleLaunchCoach}
+            onNavigate={setActivePage}
           />
         )}
       </main>

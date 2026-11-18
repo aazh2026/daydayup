@@ -1,14 +1,26 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
+  ArrowRight,
+  Check,
   CheckCircle2,
+  Edit3,
+  Eye,
+  EyeOff,
   FileImage,
   FileText,
   Loader2,
+  Minus,
   Plus,
   RefreshCw,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
   Sparkles,
   Upload,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { useCurriculum } from '../store/curriculum.tsx';
 import { SAMPLE_EXAM_IMAGE_URL } from '../data/initialStore.ts';
@@ -18,6 +30,8 @@ import {
   type EnqueueDiagnosisResponse,
 } from '../api/jobs.ts';
 import { ALL_SUBJECTS } from '../types.ts';
+import { Pagination } from './Pagination.tsx';
+import { paginateList } from '../utils/pagination.ts';
 import type {
   DetectedMetadata,
   DiagnosedItem,
@@ -25,8 +39,8 @@ import type {
   MicroQuizItem as ContractMicroQuizItem,
   MicroQuizResponse,
 } from '@daydayup/contracts';
-import { SubjectKnowledgeMindMap } from './SubjectKnowledgeMindMap.tsx';
 import type {
+  AppPage,
   ConfidenceLevel,
   ErrorRecord,
   ErrorType,
@@ -36,6 +50,8 @@ import type {
   MasteryRecord,
   Subject,
 } from '../types.ts';
+
+export type DraftReviewAction = 'pending' | 'accepted' | 'fixed' | 'ignored';
 
 interface DiagnosedDraftItem {
   questionNumber: string;
@@ -49,6 +65,7 @@ interface DiagnosedDraftItem {
   evidence: string;
   confidence: ConfidenceLevel;
   verificationMethod: string;
+  reviewAction?: DraftReviewAction;
 }
 
 interface PendingDiagnosisDraft {
@@ -81,7 +98,8 @@ interface MicroQuizItem {
   explanation: string;
 }
 
-interface DiagnosisPageProps {  /** 当前学生 ID（用于服务端鉴权与数据隔离） */
+interface DiagnosisPageProps {
+  /** 当前学生 ID（用于服务端鉴权与数据隔离） */
   studentId: string;
   /** 当前考试 ID（诊断归属的考试） */
   examId: string;
@@ -104,6 +122,7 @@ interface DiagnosisPageProps {  /** 当前学生 ID（用于服务端鉴权与�
     evidenceNote: string
   ) => void;
   onLaunchCoach: (knowledgeId: string) => void;
+  onNavigate?: (page: AppPage) => void;
 }
 
 type InputTab = 'paper' | 'wrong' | 'score' | 'quiz';
@@ -111,7 +130,7 @@ type InputTab = 'paper' | 'wrong' | 'score' | 'quiz';
 const FALLBACK_MICRO_QUIZ: MicroQuizItem[] = [
   {
     id: 'mq-1',
-    knowledgeId: 'math-func-linear',
+    knowledgeId: 'cnm_204',
     subject: '数学',
     question: '将一次函数 y = 3x + 2 的图像向下平移 5 个单位长度，得到的新函数解析式是？',
     options: ['y = 3x + 7', 'y = 3x - 3', 'y = 3(x - 5) + 2', 'y = 3(x + 5) + 2'],
@@ -120,7 +139,7 @@ const FALLBACK_MICRO_QUIZ: MicroQuizItem[] = [
   },
   {
     id: 'mq-2',
-    knowledgeId: 'math-func-quadratic',
+    knowledgeId: 'cnm_236',
     subject: '数学',
     question: '抛物线 y = (x - 2)² + 1 的顶点坐标与对称轴分别是？',
     options: [
@@ -134,7 +153,7 @@ const FALLBACK_MICRO_QUIZ: MicroQuizItem[] = [
   },
   {
     id: 'mq-3',
-    knowledgeId: 'eng-read-cloze',
+    knowledgeId: 'cne_j240',
     subject: '英语',
     question:
       'In Shanghai, many students choose to ride shared bikes; h______, they still need to follow traffic rules carefully.',
@@ -184,6 +203,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   examId,
   onVerifyKnowledge,
   onLaunchCoach,
+  onNavigate,
 }) => {
   /** 知识体系（服务端资产） */
   const {
@@ -193,10 +213,8 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
 
   const [selectedSubject, setSelectedSubject] = useState<Subject>('数学');
   const [selectedExamFilter, setSelectedExamFilter] = useState<string>('all');
-  const [mindMapPaperId, setMindMapPaperId] = useState<string>('all');
   const [expandedPaperId, setExpandedPaperId] = useState<string | null>(null);
   const [inputTab, setInputTab] = useState<InputTab>('paper');
-  const mindMapSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Multi-image & Paper OCR / Parsed Text State
   const [uploadSubject, setUploadSubject] = useState<'自动识别' | Subject>('自动识别');
@@ -241,6 +259,37 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState<Record<string, boolean>>({});
 
+  // Pagination states
+  const [errorPage, setErrorPage] = useState(1);
+  const [errorPageSize, setErrorPageSize] = useState(5);
+
+  const [paperPage, setPaperPage] = useState(1);
+  const [paperPageSize, setPaperPageSize] = useState(5);
+
+  const [draftItemPage, setDraftItemPage] = useState(1);
+  const [draftItemPageSize, setDraftItemPageSize] = useState(5);
+
+  // 智能核对工作台状态（双栏对照、置信度分级、内联编辑、可操作工作流）
+  const [selectedDraftItemIdx, setSelectedDraftItemIdx] = useState<number>(0);
+  const [draftFilter, setDraftFilter] = useState<'all' | 'unverified' | 'accepted' | 'ignored'>('all');
+  const [editingDraftItemIdx, setEditingDraftItemIdx] = useState<number | null>(null);
+  const [imageZoom, setImageZoom] = useState<number>(100);
+  const [currentImagePageIdx, setCurrentImagePageIdx] = useState<number>(0);
+
+  useEffect(() => {
+    setErrorPage(1);
+    setPaperPage(1);
+  }, [selectedSubject]);
+
+  useEffect(() => {
+    setErrorPage(1);
+    setPaperPage(1);
+  }, [selectedExamFilter]);
+
+  useEffect(() => {
+    setDraftItemPage(1);
+  }, [pendingDraft?.items.length]);
+
   const sortedExams = [...exams].sort((a, b) => b.date.localeCompare(a.date));
   const activeExamObj =
     selectedExamFilter === 'all'
@@ -271,7 +320,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   const targetScore = displayedResult?.targetScore ?? subjectResults[0]?.targetScore ?? 90;
   const scoreGap = displayedResult ? Math.max(0, targetScore - currentScore) : 0;
 
-  const subjectKps = SHANGHAI_CURRICULUM.filter((k) => k.subject === selectedSubject);
   const subjectErrors = errorRecords.filter((e) => {
     if (e.subject !== selectedSubject) return false;
     if (selectedExamFilter === 'all') return true;
@@ -285,6 +333,56 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
     if (selectedExamFilter === 'all') return true;
     return p.examId === selectedExamFilter;
   });
+
+  const { pageItems: paginatedSubjectErrors, pagination: errorPagination } = paginateList(
+    subjectErrors,
+    errorPage,
+    errorPageSize
+  );
+
+  const { pageItems: paginatedSubjectPapers, pagination: paperPagination } = paginateList(
+    subjectPapersForView,
+    paperPage,
+    paperPageSize
+  );
+
+  const pendingItems = pendingDraft?.items ?? [];
+  const pendingItemsWithIndex = pendingItems.map((item, originalIndex) => ({
+    item,
+    originalIndex,
+  }));
+
+  const filteredDraftItems = pendingItemsWithIndex.filter(({ item }) => {
+    if (draftFilter === 'unverified') {
+      return item.confidence === '待验证' || (!item.reviewAction || item.reviewAction === 'pending');
+    }
+    if (draftFilter === 'accepted') {
+      return item.reviewAction === 'accepted' || item.reviewAction === 'fixed';
+    }
+    if (draftFilter === 'ignored') {
+      return item.reviewAction === 'ignored';
+    }
+    return true;
+  });
+
+  const { pageItems: paginatedDraftItems, pagination: draftPagination } = paginateList(
+    filteredDraftItems,
+    draftItemPage,
+    draftItemPageSize
+  );
+
+  const draftAcceptedCount = pendingItems.filter(
+    (it) => it.reviewAction === 'accepted' || it.reviewAction === 'fixed'
+  ).length;
+  const draftUnverifiedCount = pendingItems.filter(
+    (it) => it.confidence === '待验证' || !it.reviewAction || it.reviewAction === 'pending'
+  ).length;
+  const draftIgnoredCount = pendingItems.filter(
+    (it) => it.reviewAction === 'ignored'
+  ).length;
+  const draftActiveLostScore = pendingItems
+    .filter((it) => it.reviewAction !== 'ignored')
+    .reduce((sum, it) => sum + Number(it.scoreLost || 0), 0);
 
   // Unverified or low-confidence knowledge points across all subjects
   const unverifiedKps = SHANGHAI_CURRICULUM.filter((kp) => {
@@ -600,7 +698,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
           const kpId = String(item.knowledgeId ?? '');
           const validKp = KNOWLEDGE_MAP[kpId]
             ? kpId
-            : SHANGHAI_CURRICULUM.find((k) => k.subject === finalSubject)?.id ?? 'math-alg-rational';
+            : SHANGHAI_CURRICULUM.find((k) => k.subject === finalSubject)?.id ?? SHANGHAI_CURRICULUM[0]?.id ?? '';
           const rawErr = String(item.errorType ?? '知识问题') as ErrorType;
           const rawConf = String(item.confidence ?? '较可能') as ConfidenceLevel;
 
@@ -663,33 +761,66 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
       return {
         ...prev,
         items: nextItems,
-        totalLostScore: nextItems.reduce((s, it) => s + Number(it.scoreLost || 0), 0),
+        totalLostScore: nextItems
+          .filter((it) => it.reviewAction !== 'ignored')
+          .reduce((s, it) => s + Number(it.scoreLost || 0), 0),
+      };
+    });
+  };
+
+  const handleSetItemAction = (idx: number, action: DraftReviewAction) => {
+    handleUpdateDraftItem(idx, { reviewAction: action });
+    if (action === 'fixed') {
+      setEditingDraftItemIdx(null);
+    }
+  };
+
+  const handleAcceptAllVerified = () => {
+    setPendingDraft((prev) => {
+      if (!prev) return prev;
+      const nextItems = prev.items.map((it) =>
+        it.reviewAction === 'ignored' ? it : { ...it, reviewAction: 'accepted' as DraftReviewAction }
+      );
+      return {
+        ...prev,
+        items: nextItems,
       };
     });
   };
 
   const handleConfirmDraft = () => {
     if (!pendingDraft) return;
-    onDiagnosisCompleted(pendingDraft);
+    const activeItems = pendingDraft.items.filter((it) => it.reviewAction !== 'ignored');
+    const finalDraft: PendingDiagnosisDraft = {
+      ...pendingDraft,
+      items: activeItems,
+      questionsCount: activeItems.length,
+      totalLostScore: activeItems.reduce((s, it) => s + Number(it.scoreLost || 0), 0),
+    };
+    onDiagnosisCompleted(finalDraft);
     setSelectedSubject(pendingDraft.subject);
     if (pendingDraft.existingExamId) {
       setSelectedExamFilter(pendingDraft.existingExamId);
     } else {
       setSelectedExamFilter('all');
     }
-    setMindMapPaperId('all');
     const scoreNotice =
       pendingDraft.syncScoreToBaseline &&
       pendingDraft.score !== undefined &&
       pendingDraft.fullScore !== undefined
         ? `并同步写入成绩基线（${pendingDraft.score}/${pendingDraft.fullScore}）`
         : '';
+    const ignoredNotice =
+      pendingDraft.items.length > activeItems.length
+        ? `（已排除 ${pendingDraft.items.length - activeItems.length} 道无需干预题目）`
+        : '';
     setDiagnoseSuccessMsg(
-      `已存档「${pendingDraft.examTitle}（${pendingDraft.subject}试卷）」分析记录${scoreNotice}，写入 ${pendingDraft.items.length} 条错题归因并重排未来7天计划。`
+      `已存档「${pendingDraft.examTitle}（${pendingDraft.subject}试卷）」分析记录${scoreNotice}，写入 ${activeItems.length} 条错题归因${ignoredNotice}并重排未来7天计划。`
     );
     setPendingDraft(null);
     setRawTextInput('');
     setParsedTextName(null);
+    setEditingDraftItemIdx(null);
   };
 
   const handleScoreSubmit = (e: React.FormEvent) => {
@@ -745,7 +876,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
             id: `dyn-mq-${Date.now()}-${i}`,
             knowledgeId: KNOWLEDGE_MAP[String(item.knowledgeId)]
               ? String(item.knowledgeId)
-              : targets[i]?.id ?? 'math-func-linear',
+              : targets[i]?.id ?? SHANGHAI_CURRICULUM[0]?.id ?? '',
             subject: (ALL_SUBJECTS.includes(String(item.subject) as Subject)
               ? String(item.subject)
               : targets[i]?.subject ?? '数学') as Subject,
@@ -1173,381 +1304,781 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
               </div>
             </div>
 
-            {/* Human-in-the-loop Verification Drawer */}
-            {pendingDraft && (
-              <div className="p-5 border border-blue-200 bg-blue-50/30 rounded-xl space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-semibold text-slate-900">
-                      识别结果人工校验台（共识别 {pendingDraft.items.length} 道待关注错题）
-                    </h2>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      请核对自动识别的学科、场次、门类、分数与错题归因（标黄项表示识别置信度待核实），确认无误后将完整存档并同步更新学习计划
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setPendingDraft(null)}
-                      className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded-lg"
-                    >
-                      丢弃草稿
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleConfirmDraft}
-                      className="px-4 py-1.5 text-xs font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-colors"
-                    >
-                      确认无误，存档试卷分析并重排计划
-                    </button>
-                  </div>
-                </div>
+            {/* Human-in-the-loop Verification Workbench */}
+            {pendingDraft && (() => {
+              const previewImages =
+                uploadedImages.length > 0
+                  ? uploadedImages
+                  : pendingDraft.imageUrl
+                  ? [{ dataUrl: pendingDraft.imageUrl, mimeType: 'image/jpeg', name: 'exam_paper.jpg' }]
+                  : [];
+              const safeImagePageIdx =
+                currentImagePageIdx >= previewImages.length ? 0 : currentImagePageIdx;
+              const safeSelectedIdx =
+                selectedDraftItemIdx >= pendingDraft.items.length ? 0 : selectedDraftItemIdx;
+              const selectedItem = pendingDraft.items[safeSelectedIdx];
 
-                {/* Detected Exam Metadata & Score Verification Panel */}
-                <div
-                  className={`p-4 rounded-lg border bg-white space-y-3 text-xs ${
-                    pendingDraft.metadataConfidence === '待验证'
-                      ? 'border-amber-300'
-                      : 'border-slate-200'
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-slate-900">
-                      自动识别考试元信息与卷面分数核对
-                    </span>
-                    <span className="text-slate-500">
-                      识别置信度：{pendingDraft.metadataConfidence} · 来源格式：{pendingDraft.sourceFormat ?? '试卷拍照'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                    <div>
-                      <label className="block text-slate-500 mb-1">识别学科</label>
-                      <select
-                        value={pendingDraft.subject}
-                        onChange={(e) => {
-                          const nextSub = e.target.value as Subject;
-                          const fallbackKp =
-                            SHANGHAI_CURRICULUM.find((k) => k.subject === nextSub)?.id ??
-                            'math-alg-rational';
-                          setPendingDraft((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  subject: nextSub,
-                                  items: prev.items.map((it) =>
-                                    KNOWLEDGE_MAP[it.knowledgeId]?.subject === nextSub
-                                      ? it
-                                      : { ...it, knowledgeId: fallbackKp }
-                                  ),
-                                }
-                              : prev
-                          );
-                        }}
-                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
-                      >
-                        {ALL_SUBJECTS.map((sub) => (
-                          <option key={sub} value={sub}>
-                            {sub}
-                          </option>
-                        ))}
-                      </select>
+              return (
+                <div className="p-5 border-2 border-blue-400 bg-slate-50/70 rounded-2xl space-y-5 shadow-sm">
+                  {/* Workbench Header */}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 text-[11px] font-bold tracking-wider text-blue-700 bg-blue-100 rounded">
+                          HUMAN-IN-THE-LOOP
+                        </span>
+                        <h2 className="text-base font-bold text-slate-900">
+                          试卷诊断智能核对工作台
+                        </h2>
+                        <span className="text-xs text-slate-500 font-mono">
+                          （共识别 {pendingDraft.items.length} 题 · 有效应扣 {draftActiveLostScore} 分）
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        双栏对照原卷与归因：左侧支持多页与缩放查证，右侧支持就地内联修改、风险条目筛选与一键接受/忽略
+                      </p>
                     </div>
 
-                    <div className="lg:col-span-2">
-                      <label className="block text-slate-500 mb-1">考试场次归属（新建或关联已有）</label>
-                      <select
-                        value={pendingDraft.existingExamId ?? '__new__'}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '__new__') {
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingDraft(null);
+                          setEditingDraftItemIdx(null);
+                        }}
+                        className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white rounded-lg transition-colors"
+                      >
+                        丢弃草稿
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAcceptAllVerified}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>核准全部有效项</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleConfirmDraft}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg shadow-sm transition-colors"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>确认无误，存档并重排提分日程</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Detected Exam Metadata & Score Verification Panel */}
+                  <div
+                    className={`p-4 rounded-xl border bg-white space-y-3 text-xs ${
+                      pendingDraft.metadataConfidence === '待验证'
+                        ? 'border-amber-300'
+                        : 'border-slate-200'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-semibold text-slate-900">
+                        自动识别考试元信息与卷面分数核对
+                      </span>
+                      <span className="text-slate-500">
+                        识别置信度：{pendingDraft.metadataConfidence} · 来源格式：{pendingDraft.sourceFormat ?? '试卷拍照'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                      <div>
+                        <label className="block text-slate-500 mb-1">识别学科</label>
+                        <select
+                          value={pendingDraft.subject}
+                          onChange={(e) => {
+                            const nextSub = e.target.value as Subject;
+                            const fallbackKp =
+                              SHANGHAI_CURRICULUM.find((k) => k.subject === nextSub)?.id ??
+                              SHANGHAI_CURRICULUM[0]?.id ??
+                              '';
                             setPendingDraft((prev) =>
-                              prev ? { ...prev, existingExamId: undefined } : prev
+                              prev
+                               ? {
+                                    ...prev,
+                                    subject: nextSub,
+                                    items: prev.items.map((it) =>
+                                      KNOWLEDGE_MAP[it.knowledgeId]?.subject === nextSub
+                                        ? it
+                                        : { ...it, knowledgeId: fallbackKp }
+                                    ),
+                                  }
+                                : prev
                             );
-                          } else {
-                            const matched = exams.find((ex) => ex.id === val);
-                            if (matched) {
+                          }}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                        >
+                          {ALL_SUBJECTS.map((sub) => (
+                            <option key={sub} value={sub}>
+                              {sub}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="block text-slate-500 mb-1">考试场次归属（新建或关联已有）</label>
+                        <select
+                          value={pendingDraft.existingExamId ?? '__new__'}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '__new__') {
                               setPendingDraft((prev) =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      existingExamId: matched.id,
-                                      examTitle: matched.title,
-                                      examType: matched.type,
-                                      examDate: matched.date,
-                                    }
-                                  : prev
+                                prev ? { ...prev, existingExamId: undefined } : prev
                               );
+                            } else {
+                              const matched = exams.find((ex) => ex.id === val);
+                              if (matched) {
+                                setPendingDraft((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        existingExamId: matched.id,
+                                        examTitle: matched.title,
+                                        examType: matched.type,
+                                        examDate: matched.date,
+                                      }
+                                    : prev
+                                );
+                              }
                             }
+                          }}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                        >
+                          <option value="__new__">新建考试场次：{pendingDraft.examTitle}</option>
+                          {sortedExams.map((ex) => (
+                            <option key={ex.id} value={ex.id}>
+                              关联已有：{ex.date} · {ex.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {!pendingDraft.existingExamId && (
+                        <>
+                          <div>
+                            <label className="block text-slate-500 mb-1">考试名称</label>
+                            <input
+                              type="text"
+                              value={pendingDraft.examTitle}
+                              onChange={(e) =>
+                                setPendingDraft((prev) =>
+                                  prev ? { ...prev, examTitle: e.target.value } : prev
+                                )
+                              }
+                              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 mb-1">考试门类</label>
+                            <select
+                              value={pendingDraft.examType}
+                              onChange={(e) =>
+                                setPendingDraft((prev) =>
+                                  prev
+                                    ? { ...prev, examType: e.target.value as Exam['type'] }
+                                    : prev
+                                )
+                              }
+                              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                            >
+                              {EXAM_TYPES.map((t) => (
+                                <option key={t} value={t}>
+                                  {t}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 mb-1">考试日期</label>
+                            <input
+                              type="date"
+                              value={pendingDraft.examDate}
+                              onChange={(e) =>
+                                setPendingDraft((prev) =>
+                                  prev ? { ...prev, examDate: e.target.value } : prev
+                                )
+                              }
+                              className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end pt-1">
+                      <div>
+                        <label className="block text-slate-500 mb-1">卷面实得分（留空不录分）</label>
+                        <input
+                          type="number"
+                          value={pendingDraft.score ?? ''}
+                          placeholder="未识别"
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? undefined : Number(e.target.value);
+                            setPendingDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    score: v,
+                                    syncScoreToBaseline:
+                                      v !== undefined && prev.fullScore !== undefined,
+                                  }
+                                : prev
+                            );
+                          }}
+                          className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-500 mb-1">卷面满分</label>
+                        <input
+                          type="number"
+                          value={pendingDraft.fullScore ?? ''}
+                          placeholder="例如 100 / 70"
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? undefined : Number(e.target.value);
+                            setPendingDraft((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    fullScore: v,
+                                    targetScore:
+                                      v !== undefined ? Math.round(v * 0.9) : prev.targetScore,
+                                    syncScoreToBaseline:
+                                      prev.score !== undefined && v !== undefined,
+                                  }
+                                : prev
+                            );
+                          }}
+                          className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-500 mb-1">阶段目标分</label>
+                        <input
+                          type="number"
+                          value={pendingDraft.targetScore ?? ''}
+                          placeholder="默认90%"
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? undefined : Number(e.target.value);
+                            setPendingDraft((prev) =>
+                              prev ? { ...prev, targetScore: v } : prev
+                            );
+                          }}
+                          className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
+                        />
+                      </div>
+                      <div className="lg:col-span-2 flex items-center gap-2 py-1.5">
+                        <input
+                          id="sync-score-checkbox"
+                          type="checkbox"
+                          checked={pendingDraft.syncScoreToBaseline}
+                          disabled={
+                            pendingDraft.score === undefined ||
+                            pendingDraft.fullScore === undefined
                           }
-                        }}
-                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
-                      >
-                        <option value="__new__">新建考试场次：{pendingDraft.examTitle}</option>
-                        {sortedExams.map((ex) => (
-                          <option key={ex.id} value={ex.id}>
-                            关联已有：{ex.date} · {ex.title}
-                          </option>
-                        ))}
-                      </select>
+                          onChange={(e) =>
+                            setPendingDraft((prev) =>
+                              prev
+                                ? { ...prev, syncScoreToBaseline: e.target.checked }
+                                : prev
+                            )
+                          }
+                          className="rounded border-slate-300 text-blue-700"
+                        />
+                        <label
+                          htmlFor="sync-score-checkbox"
+                          className="text-slate-700 cursor-pointer"
+                        >
+                          同步写入「{pendingDraft.subject}」成绩基线与历次趋势矩阵
+                        </label>
+                      </div>
                     </div>
 
-                    {!pendingDraft.existingExamId && (
-                      <>
-                        <div>
-                          <label className="block text-slate-500 mb-1">考试名称</label>
-                          <input
-                            type="text"
-                            value={pendingDraft.examTitle}
-                            onChange={(e) =>
-                              setPendingDraft((prev) =>
-                                prev ? { ...prev, examTitle: e.target.value } : prev
-                              )
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">考试门类</label>
-                          <select
-                            value={pendingDraft.examType}
-                            onChange={(e) =>
-                              setPendingDraft((prev) =>
-                                prev
-                                  ? { ...prev, examType: e.target.value as Exam['type'] }
-                                  : prev
-                              )
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
-                          >
-                            {EXAM_TYPES.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">考试日期</label>
-                          <input
-                            type="date"
-                            value={pendingDraft.examDate}
-                            onChange={(e) =>
-                              setPendingDraft((prev) =>
-                                prev ? { ...prev, examDate: e.target.value } : prev
-                              )
-                            }
-                            className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end pt-1">
                     <div>
-                      <label className="block text-slate-500 mb-1">卷面实得分（留空不录分）</label>
+                      <label className="block text-slate-500 mb-1">整卷分析摘要（将随试卷一同存档）</label>
                       <input
-                        type="number"
-                        value={pendingDraft.score ?? ''}
-                        placeholder="未识别"
-                        onChange={(e) => {
-                          const v = e.target.value === '' ? undefined : Number(e.target.value);
-                          setPendingDraft((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  score: v,
-                                  syncScoreToBaseline:
-                                    v !== undefined && prev.fullScore !== undefined,
-                                }
-                              : prev
-                          );
-                        }}
-                        className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 mb-1">卷面满分</label>
-                      <input
-                        type="number"
-                        value={pendingDraft.fullScore ?? ''}
-                        placeholder="例如 100 / 70"
-                        onChange={(e) => {
-                          const v = e.target.value === '' ? undefined : Number(e.target.value);
-                          setPendingDraft((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  fullScore: v,
-                                  targetScore:
-                                    v !== undefined ? Math.round(v * 0.9) : prev.targetScore,
-                                  syncScoreToBaseline:
-                                    prev.score !== undefined && v !== undefined,
-                                }
-                              : prev
-                          );
-                        }}
-                        className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 mb-1">阶段目标分</label>
-                      <input
-                        type="number"
-                        value={pendingDraft.targetScore ?? ''}
-                        placeholder="默认90%"
-                        onChange={(e) => {
-                          const v = e.target.value === '' ? undefined : Number(e.target.value);
-                          setPendingDraft((prev) =>
-                            prev ? { ...prev, targetScore: v } : prev
-                          );
-                        }}
-                        className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
-                      />
-                    </div>
-                    <div className="lg:col-span-2 flex items-center gap-2 py-1.5">
-                      <input
-                        id="sync-score-checkbox"
-                        type="checkbox"
-                        checked={pendingDraft.syncScoreToBaseline}
-                        disabled={
-                          pendingDraft.score === undefined ||
-                          pendingDraft.fullScore === undefined
-                        }
+                        type="text"
+                        value={pendingDraft.paperSummary}
                         onChange={(e) =>
                           setPendingDraft((prev) =>
-                            prev
-                              ? { ...prev, syncScoreToBaseline: e.target.checked }
-                              : prev
+                            prev ? { ...prev, paperSummary: e.target.value } : prev
                           )
                         }
-                        className="rounded border-slate-300 text-blue-700"
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
                       />
-                      <label
-                        htmlFor="sync-score-checkbox"
-                        className="text-slate-700 cursor-pointer"
-                      >
-                        同步写入「{pendingDraft.subject}」成绩基线与历次趋势矩阵
-                      </label>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-500 mb-1">整卷分析摘要（将随试卷一同存档）</label>
-                    <input
-                      type="text"
-                      value={pendingDraft.paperSummary}
-                      onChange={(e) =>
-                        setPendingDraft((prev) =>
-                          prev ? { ...prev, paperSummary: e.target.value } : prev
-                        )
-                      }
-                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
-                    />
-                  </div>
-                </div>
+                  {/* Split Pane: High-Fidelity Preview & Evidence Traceability (Left) vs Structured Extraction & Risk Workflows (Right) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    {/* Left Pane: High-Fidelity Document & Evidence Preview */}
+                    <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-4 space-y-3 flex flex-col">
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <FileImage className="w-4 h-4 text-blue-600" />
+                          <span className="text-xs font-semibold text-slate-800">
+                            {previewImages.length > 0 ? '原卷高清证据视图' : '试卷文本/解析源文件'}
+                          </span>
+                          {previewImages.length > 1 && (
+                            <span className="text-[11px] text-slate-500">
+                              ({safeImagePageIdx + 1}/{previewImages.length} 页)
+                            </span>
+                          )}
+                        </div>
 
-                <div className="space-y-3">
-                  {pendingDraft.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-4 rounded-lg border bg-white space-y-3 ${
-                        item.confidence === '待验证'
-                          ? 'border-amber-300'
-                          : 'border-slate-200'
-                      }`}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-                        <div>
-                          <label className="block text-slate-500 mb-1">题号</label>
-                          <input
-                            type="text"
-                            value={item.questionNumber}
-                            onChange={(e) =>
-                              handleUpdateDraftItem(idx, { questionNumber: e.target.value })
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">扣分</label>
-                          <input
-                            type="number"
-                            value={item.scoreLost}
-                            onChange={(e) =>
-                              handleUpdateDraftItem(idx, {
-                                scoreLost: Number(e.target.value),
-                              })
-                            }
-                            className="w-full px-2.5 py-1.5 font-mono tabular-nums border border-slate-200 rounded-md"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">映射知识点</label>
-                          <select
-                            value={item.knowledgeId}
-                            onChange={(e) =>
-                              handleUpdateDraftItem(idx, { knowledgeId: e.target.value })
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                        {/* Zoom controls */}
+                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-slate-700">
+                          <button
+                            type="button"
+                            title="缩小"
+                            onClick={() => setImageZoom((z) => Math.max(50, z - 20))}
+                            className="p-1 hover:bg-white rounded transition-colors"
                           >
-                            {subjectKpsForUpload.map((kp) => (
-                              <option key={kp.id} value={kp.id}>
-                                {kp.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">五维错因</label>
-                          <select
-                            value={item.errorType}
-                            onChange={(e) =>
-                              handleUpdateDraftItem(idx, {
-                                errorType: e.target.value as ErrorType,
-                              })
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                            <ZoomOut className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-[11px] font-mono px-1 min-w-[36px] text-center select-none">
+                            {imageZoom}%
+                          </span>
+                          <button
+                            type="button"
+                            title="放大"
+                            onClick={() => setImageZoom((z) => Math.min(250, z + 20))}
+                            className="p-1 hover:bg-white rounded transition-colors"
                           >
-                            {ERROR_TYPES.map((et) => (
-                              <option key={et} value={et}>
-                                {et}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-slate-500 mb-1">诊断置信度</label>
-                          <select
-                            value={item.confidence}
-                            onChange={(e) =>
-                              handleUpdateDraftItem(idx, {
-                                confidence: e.target.value as ConfidenceLevel,
-                              })
-                            }
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md bg-white"
+                            <ZoomIn className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            title="重置缩放"
+                            onClick={() => setImageZoom(100)}
+                            className="p-1 hover:bg-white rounded transition-colors"
                           >
-                            {CONFIDENCE_LEVELS.map((cl) => (
-                              <option key={cl} value={cl}>
-                                {cl}
-                              </option>
-                            ))}
-                          </select>
+                            <RotateCcw className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="text-xs text-slate-700 space-y-1">
-                        <div className="font-medium text-slate-900">题干识别：{item.stem}</div>
-                        <div>
-                          学生作答：{item.studentAnswer} · AI 分析：{item.aiAnalysis}
+                      {/* Multi-page switcher */}
+                      {previewImages.length > 1 && (
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                          {previewImages.map((_, pIdx) => (
+                            <button
+                              key={pIdx}
+                              type="button"
+                              onClick={() => setCurrentImagePageIdx(pIdx)}
+                              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                                safeImagePageIdx === pIdx
+                                  ? 'bg-blue-600 text-white shadow-sm'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              第 {pIdx + 1} 页
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Visual Traceability Ribbon */}
+                      {selectedItem && (
+                        <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900">
+                          <span className="font-medium flex items-center gap-1.5 truncate">
+                            <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span>
+                              原卷定位：第 {selectedItem.questionNumber} 题 · {KNOWLEDGE_MAP[selectedItem.knowledgeId]?.name ?? selectedItem.knowledgeId}
+                            </span>
+                          </span>
+                          <span className="font-mono text-rose-600 font-semibold shrink-0 ml-2">
+                            扣 {selectedItem.scoreLost} 分
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Canvas or Document Content */}
+                      <div className="overflow-auto max-h-[580px] bg-slate-900/5 rounded-lg border border-slate-200 relative p-3 flex justify-center">
+                        {previewImages.length > 0 ? (
+                          <div
+                            className="transition-transform duration-150 origin-top shadow bg-white rounded flex justify-center"
+                            style={{ transform: `scale(${imageZoom / 100})` }}
+                          >
+                            <img
+                              src={previewImages[safeImagePageIdx]?.dataUrl}
+                              alt="原卷证据"
+                              className="max-w-none block select-none pointer-events-none"
+                              style={{ maxHeight: '780px', width: 'auto' }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full font-mono text-xs text-slate-800 bg-white p-4 rounded shadow-sm whitespace-pre-wrap leading-relaxed select-text">
+                            {pendingDraft.rawText || '暂无原卷图片或文本源'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Pane: Structured Extraction, Risk Grading & Inline Workflows */}
+                    <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-4 space-y-4">
+                      {/* Risk & Workflow Filter Tabs */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {[
+                            { key: 'all' as const, label: `全部 (${pendingDraft.items.length})` },
+                            {
+                              key: 'unverified' as const,
+                              label: `待核实风险 (${draftUnverifiedCount})`,
+                              alert: draftUnverifiedCount > 0,
+                            },
+                            { key: 'accepted' as const, label: `已核准 (${draftAcceptedCount})` },
+                            { key: 'ignored' as const, label: `已排除 (${draftIgnoredCount})` },
+                          ].map((tab) => (
+                            <button
+                              key={tab.key}
+                              type="button"
+                              onClick={() => {
+                                setDraftFilter(tab.key);
+                                setDraftItemPage(1);
+                              }}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+                                draftFilter === tab.key
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                                  : 'text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {tab.alert && <AlertCircle className="w-3.5 h-3.5 text-amber-500" />}
+                              <span>{tab.label}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        <span className="text-xs text-slate-500 font-mono">
+                          核对进度: {draftAcceptedCount}/{pendingDraft.items.length} 题
+                        </span>
+                      </div>
+
+                      {/* Items List */}
+                      <div className="space-y-3">
+                        {filteredDraftItems.length === 0 ? (
+                          <div className="py-12 text-center text-xs text-slate-500 space-y-1">
+                            <CheckCircle2 className="w-8 h-8 text-slate-300 mx-auto" />
+                            <p>当前筛选条件下暂无题目</p>
+                          </div>
+                        ) : (
+                          paginatedDraftItems.map(({ item, originalIndex }) => {
+                            const isSelected = safeSelectedIdx === originalIndex;
+                            const isEditing = editingDraftItemIdx === originalIndex;
+                            const isIgnored = item.reviewAction === 'ignored';
+                            const isAccepted =
+                              item.reviewAction === 'accepted' || item.reviewAction === 'fixed';
+                            const isUnverifiedRisk =
+                              item.confidence === '待验证' && !isAccepted && !isIgnored;
+
+                            return (
+                              <div
+                                key={originalIndex}
+                                onClick={() => setSelectedDraftItemIdx(originalIndex)}
+                                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                                  isSelected ? 'ring-2 ring-blue-500' : ''
+                                } ${
+                                  isIgnored
+                                    ? 'bg-slate-50/80 border-slate-200 opacity-60'
+                                    : isAccepted
+                                    ? 'bg-emerald-50/20 border-emerald-300'
+                                    : isUnverifiedRisk
+                                    ? 'bg-amber-50/30 border-amber-300'
+                                    : 'bg-white border-slate-200'
+                                }`}
+                              >
+                                {/* Card Header */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-bold text-sm text-slate-900">
+                                      第 {item.questionNumber} 题
+                                    </span>
+                                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                                      扣 {item.scoreLost} 分
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium border border-blue-100">
+                                      {KNOWLEDGE_MAP[item.knowledgeId]?.name ?? item.knowledgeId}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-medium border border-purple-100">
+                                      {item.errorType}
+                                    </span>
+
+                                    {/* Confidence Grade Badge */}
+                                    {item.confidence === '确定' && (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                        高置信度
+                                      </span>
+                                    )}
+                                    {item.confidence === '较可能' && (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                        中置信度
+                                      </span>
+                                    )}
+                                    {item.confidence === '待验证' && (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded animate-pulse">
+                                        <AlertCircle className="w-3 h-3 text-amber-600" />
+                                        待核实风险
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Action Buttons: Accept / Fix / Ignore */}
+                                  <div
+                                    className="flex items-center gap-1.5"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {/* Accept Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSetItemAction(originalIndex, 'accepted')}
+                                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                                        isAccepted
+                                          ? 'bg-emerald-600 text-white border-emerald-600'
+                                          : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+                                      }`}
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>{isAccepted ? '已核准' : '核准通过'}</span>
+                                    </button>
+
+                                    {/* Fix / Edit Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setEditingDraftItemIdx(isEditing ? null : originalIndex)
+                                      }
+                                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                                        isEditing
+                                          ? 'bg-blue-600 text-white border-blue-600'
+                                          : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
+                                      }`}
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                      <span>{isEditing ? '收起编辑' : '修正'}</span>
+                                    </button>
+
+                                    {/* Ignore Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleSetItemAction(
+                                          originalIndex,
+                                          isIgnored ? 'pending' : 'ignored'
+                                        )
+                                      }
+                                      className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                                        isIgnored
+                                          ? 'bg-slate-700 text-white border-slate-700'
+                                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      <EyeOff className="w-3.5 h-3.5" />
+                                      <span>{isIgnored ? '已排除' : '忽略'}</span>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Card Body: Normal view vs Inline Editing View */}
+                                {isEditing ? (
+                                  <div
+                                    className="pt-3 space-y-3 text-xs"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">题号</label>
+                                        <input
+                                          type="text"
+                                          value={item.questionNumber}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { questionNumber: e.target.value })
+                                          }
+                                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">扣分</label>
+                                        <input
+                                          type="number"
+                                          value={item.scoreLost}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { scoreLost: Number(e.target.value) })
+                                          }
+                                          className="w-full px-2 py-1.5 font-mono border border-slate-200 rounded-md"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">考点归属</label>
+                                        <select
+                                          value={item.knowledgeId}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { knowledgeId: e.target.value })
+                                          }
+                                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md bg-white"
+                                        >
+                                          {subjectKpsForUpload.map((kp) => (
+                                            <option key={kp.id} value={kp.id}>
+                                              {kp.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">五维错因</label>
+                                        <select
+                                          value={item.errorType}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { errorType: e.target.value as ErrorType })
+                                          }
+                                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md bg-white"
+                                        >
+                                          {ERROR_TYPES.map((et) => (
+                                            <option key={et} value={et}>
+                                              {et}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">置信度评级</label>
+                                        <select
+                                          value={item.confidence}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { confidence: e.target.value as ConfidenceLevel })
+                                          }
+                                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md bg-white"
+                                        >
+                                          {CONFIDENCE_LEVELS.map((cl) => (
+                                            <option key={cl} value={cl}>
+                                              {cl}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    <div>
+                                      <label className="block text-slate-500 mb-1">题干识别文本</label>
+                                      <input
+                                        type="text"
+                                        value={item.stem}
+                                        onChange={(e) =>
+                                          handleUpdateDraftItem(originalIndex, { stem: e.target.value })
+                                        }
+                                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
+                                      />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">学生作答</label>
+                                        <input
+                                          type="text"
+                                          value={item.studentAnswer}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { studentAnswer: e.target.value })
+                                          }
+                                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-slate-500 mb-1">AI 诊断归因</label>
+                                        <input
+                                          type="text"
+                                          value={item.aiAnalysis}
+                                          onChange={(e) =>
+                                            handleUpdateDraftItem(originalIndex, { aiAnalysis: e.target.value })
+                                          }
+                                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-2 pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingDraftItemIdx(null)}
+                                        className="px-3 py-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded-md"
+                                      >
+                                        取消
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetItemAction(originalIndex, 'fixed')}
+                                        className="px-3 py-1 text-xs font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-md"
+                                      >
+                                        保存修改并标记已修正
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="pt-2.5 text-xs text-slate-700 space-y-1.5">
+                                    <div className="font-medium text-slate-900 flex items-start gap-1.5">
+                                      <span className="text-slate-500 shrink-0">题干：</span>
+                                      <span>{item.stem || '（未识别题干）'}</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-600">
+                                      <div>
+                                        <span className="text-slate-500">学生作答：</span>
+                                        <span className="text-rose-600 font-medium">
+                                          {item.studentAnswer || '未作答/空白'}
+                                        </span>
+                                      </div>
+                                      {item.correctAnswer && (
+                                        <div>
+                                          <span className="text-slate-500">标准答案：</span>
+                                          <span className="text-emerald-700 font-medium">
+                                            {item.correctAnswer}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-slate-600">
+                                      <span className="text-blue-700 font-semibold">AI 根因分析：</span>
+                                      <span>{item.aiAnalysis || '知识点掌握不牢固，做题时缺乏清晰解题逻辑。'}</span>
+                                      {item.verificationMethod && (
+                                        <div className="mt-1 text-[11px] text-slate-500">
+                                          💡 建议验证方式：{item.verificationMethod}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+
+                        {/* Pagination */}
+                        <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                          <Pagination
+                            currentPage={draftPagination.currentPage}
+                            totalPages={draftPagination.totalPages}
+                            totalItems={draftPagination.totalItems}
+                            pageSize={draftPagination.pageSize}
+                            onPageChange={setDraftItemPage}
+                            onPageSizeChange={(newSize) => {
+                              setDraftItemPageSize(newSize);
+                              setDraftItemPage(1);
+                            }}
+                            pageSizeOptions={[3, 5, 10, 20]}
+                            itemName="道题目"
+                            compact
+                          />
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
@@ -1809,7 +2340,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                 type="button"
                 onClick={() => {
                   setSelectedSubject(sub);
-                  setMindMapPaperId('all');
                 }}
                 className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   selectedSubject === sub
@@ -1839,7 +2369,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
               type="button"
               onClick={() => {
                 setSelectedExamFilter('all');
-                setMindMapPaperId('all');
               }}
               className={`text-left p-3.5 rounded-lg border transition-colors ${
                 selectedExamFilter === 'all'
@@ -1875,7 +2404,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                   type="button"
                   onClick={() => {
                     setSelectedExamFilter(ex.id);
-                    setMindMapPaperId(matchedPapers[0]?.id ?? 'all');
                   }}
                   className={`text-left p-3.5 rounded-lg border transition-colors ${
                     isSelected
@@ -1950,7 +2478,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
               </h3>
             </div>
             <div className="space-y-3">
-              {subjectPapersForView.map((paper) => {
+              {paginatedSubjectPapers.map((paper) => {
                 const isExpanded = expandedPaperId === paper.id;
                 const linkedPaperErrors = errorRecords.filter(
                   (err) =>
@@ -1984,19 +2512,15 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMindMapPaperId(paper.id);
-                            mindMapSectionRef.current?.scrollIntoView({
-                              behavior: 'smooth',
-                              block: 'start',
-                            });
-                          }}
-                          className="px-3 py-1.5 text-xs font-medium text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap"
-                        >
-                          在思维导图定位问题
-                        </button>
+                        {onNavigate && (
+                          <button
+                            type="button"
+                            onClick={() => onNavigate('knowledge')}
+                            className="px-3 py-1.5 text-xs font-medium text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap"
+                          >
+                            在知识图谱定位问题
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() =>
@@ -2093,98 +2617,52 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                 );
               })}
             </div>
+
+            <div className="pt-2">
+              <Pagination
+                currentPage={paperPagination.currentPage}
+                totalPages={paperPagination.totalPages}
+                totalItems={paperPagination.totalItems}
+                pageSize={paperPagination.pageSize}
+                onPageChange={setPaperPage}
+                onPageSizeChange={(newSize) => {
+                  setPaperPageSize(newSize);
+                  setPaperPage(1);
+                }}
+                pageSizeOptions={[3, 5, 10]}
+                itemName="份试卷"
+                compact
+              />
+            </div>
           </div>
         )}
 
-        {/* Interactive Subject Knowledge Mind Map + Problem Point Marking */}
-        <div ref={mindMapSectionRef}>
-          <SubjectKnowledgeMindMap
-            subject={selectedSubject}
-            examPapers={examPapers}
-            exams={exams}
-            errorRecords={errorRecords}
-            masteryRecords={masteryRecords}
-            selectedPaperId={mindMapPaperId}
-            onSelectPaperId={setMindMapPaperId}
-            onLaunchCoach={onLaunchCoach}
-          />
-        </div>
-
-        {/* Knowledge Point State Matrix */}
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">
-              知识点诊断与掌握状态机
-            </h3>
-            <span className="text-xs text-slate-500">
-              状态路径：未诊断 → 待学习 → 学习中 → 初步掌握 → 掌握 → 稳定掌握
-            </span>
+        {/* Knowledge Graph & Matrix Link Banner */}
+        {onNavigate && (
+          <div className="bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white border border-blue-200/80 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </span>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  知识点与学科知识图谱已作为独立页面运行
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  已将考点脉络、知识图谱思维导图、全量掌握度状态机及先修链阻断溯源从试卷诊断中独立分离，支持全屏沉浸式探索。
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('knowledge')}
+              className="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 shadow-xs"
+            >
+              前往知识图谱
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="divide-y divide-slate-100">
-            {subjectKps.map((kp) => {
-              const rec = masteryRecords[kp.id];
-              const stateLabel = rec?.state ?? '未诊断';
-              const acc =
-                rec && rec.practiceTotal > 0
-                  ? Math.round((rec.practiceCorrect / rec.practiceTotal) * 100)
-                  : null;
-
-              const stateColor =
-                stateLabel === '稳定掌握' || stateLabel === '掌握'
-                  ? 'text-emerald-700'
-                  : stateLabel === '初步掌握' || stateLabel === '学习中'
-                  ? 'text-blue-700'
-                  : 'text-red-700';
-
-              return (
-                <div
-                  key={kp.id}
-                  className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-slate-50/60 transition-colors"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span>{kp.domain}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>置信度：{rec?.confidence ?? '待验证'}</span>
-                      {acc !== null && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <span className="font-mono tabular-nums">
-                            独立练习 {rec.practiceCorrect}/{rec.practiceTotal} ({acc}%)
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">
-                      {kp.name}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {rec?.evidenceLogs[0] ?? '暂无近期试卷证据'}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <div className={`text-xs font-semibold ${stateColor}`}>
-                        {stateLabel}
-                      </div>
-                      <div className="text-xs text-slate-400 font-mono tabular-nums">
-                        失分空间 {rec?.lostScoreEvidence ?? 0} 分
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => onLaunchCoach(kp.id)}
-                      className="px-3.5 py-1.5 text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      去训练
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Structured Error Attribution List */}
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -2209,76 +2687,105 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
               当前学科暂无错题诊断记录，可在上方上传试卷或录入错题。
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
-              {subjectErrors.map((err) => (
-                <div key={err.id} className="p-6 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-900">
-                        {err.examTitle} · {err.questionNumber}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span>归属知识点：{err.knowledgeName}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="font-semibold text-red-700">
-                        错因类型：{err.errorType}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 font-mono tabular-nums">
-                      <span>失分 -{err.scoreLost} 分</span>
-                      <span aria-hidden="true">|</span>
-                      <span
-                        className={
-                          err.confidence === '确定'
-                            ? 'text-slate-900 font-medium'
-                            : 'text-amber-700 font-medium'
-                        }
-                      >
-                        置信度：{err.confidence}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-slate-900 bg-slate-50 border border-slate-100 rounded-lg p-3.5 leading-relaxed">
-                    {err.stem}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 border border-slate-100 rounded-lg">
-                      <span className="text-slate-500">学生作答：</span>
-                      <span className="text-slate-800">{err.studentAnswer}</span>
-                    </div>
-                    <div className="p-3 border border-slate-100 rounded-lg">
-                      <span className="text-slate-500">规范参考：</span>
-                      <span className="text-emerald-800 font-medium">{err.correctAnswer}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-slate-700 space-y-1 leading-relaxed">
-                    <div>
-                      <span className="font-semibold text-slate-900">证据：</span>
-                      {err.evidence}
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-900">判断：</span>
-                      {err.aiAnalysis}
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
-                      <div>
-                        <span className="font-semibold text-slate-900">建议验证方式：</span>
-                        {err.verificationMethod}
+            <div>
+              <div className="divide-y divide-slate-100">
+                {paginatedSubjectErrors.map((err) => (
+                  <div key={err.id} className="p-6 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-900">
+                          {err.examTitle} · {err.questionNumber}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>归属知识点：{err.knowledgeName}</span>
+                        <span aria-hidden="true">·</span>
+                        <span className="font-semibold text-red-700">
+                          错因类型：{err.errorType}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => onLaunchCoach(err.knowledgeId)}
-                        className="px-3.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto"
-                      >
-                        进入 AI 教练针对性攻克
-                      </button>
+                      <div className="flex items-center gap-3 font-mono tabular-nums">
+                        <span>失分 -{err.scoreLost} 分</span>
+                        <span aria-hidden="true">|</span>
+                        <span
+                          className={
+                            err.confidence === '确定'
+                              ? 'text-slate-900 font-medium'
+                              : 'text-amber-700 font-medium'
+                          }
+                        >
+                          置信度：{err.confidence}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-slate-900 bg-slate-50 border border-slate-100 rounded-lg p-3.5 leading-relaxed">
+                      {err.stem}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 border border-slate-100 rounded-lg">
+                        <span className="text-slate-500">学生作答：</span>
+                        <span className="text-slate-800">{err.studentAnswer}</span>
+                      </div>
+                      <div className="p-3 border border-slate-100 rounded-lg">
+                        <span className="text-slate-500">规范参考：</span>
+                        <span className="text-emerald-800 font-medium">{err.correctAnswer}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-slate-700 space-y-1 leading-relaxed">
+                      <div>
+                        <span className="font-semibold text-slate-900">证据：</span>
+                        {err.evidence}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-slate-900">判断：</span>
+                        {err.aiAnalysis}
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
+                        <div>
+                          <span className="font-semibold text-slate-900">建议验证方式：</span>
+                          {err.verificationMethod}
+                        </div>
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                          {onNavigate && (
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('knowledge')}
+                              className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              在知识图谱查看
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onLaunchCoach(err.knowledgeId)}
+                            className="px-3.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors whitespace-nowrap"
+                          >
+                            进入 AI 教练针对性攻克
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50">
+                <Pagination
+                  currentPage={errorPagination.currentPage}
+                  totalPages={errorPagination.totalPages}
+                  totalItems={errorPagination.totalItems}
+                  pageSize={errorPagination.pageSize}
+                  onPageChange={setErrorPage}
+                  onPageSizeChange={(newSize) => {
+                    setErrorPageSize(newSize);
+                    setErrorPage(1);
+                  }}
+                  pageSizeOptions={[5, 10, 20]}
+                  itemName="道错题"
+                />
+              </div>
             </div>
           )}
         </div>

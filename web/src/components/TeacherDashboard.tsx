@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Users, Loader2, AlertTriangle, ShieldCheck, TrendingUp } from 'lucide-react';
 import { api } from '../api/client.ts';
 import type { MasteryRecord, PriorityOpportunity, Student } from '@daydayup/contracts';
+import { Pagination } from './Pagination.tsx';
+import { paginateList } from '../utils/pagination.ts';
 
 interface StudentSummary {
   studentId: string;
@@ -34,6 +36,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   const [summaries, setSummaries] = useState<StudentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [studentPage, setStudentPage] = useState(1);
+  const [studentPageSize, setStudentPageSize] = useState(9);
+
+  const { pageItems: paginatedSummaries, pagination: studentPagination } = paginateList(
+    summaries,
+    studentPage,
+    studentPageSize
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -147,59 +157,77 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           暂无可管理的学生
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {summaries.map((s) => {
-            const ratio =
-              s.masteryCount > 0
-                ? Math.round((s.masteredCount / s.masteryCount) * 100)
-                : 0;
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedSummaries.map((s) => {
+              const ratio =
+                s.masteryCount > 0
+                  ? Math.round((s.masteredCount / s.masteryCount) * 100)
+                  : 0;
 
-            return (
-              <button
-                key={s.studentId}
-                type="button"
-                onClick={() => onSelectStudent(s.studentId)}
-                className="text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Users size={15} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-slate-900 truncate">
-                    {s.displayName}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-2xl font-bold text-slate-900">
-                    {ratio}
-                  </span>
-                  <span className="text-xs text-slate-400">% 已掌握</span>
-                  <span className="ml-auto text-xs text-slate-400">
-                    {s.masteredCount}/{s.masteryCount} 知识点
-                  </span>
-                </div>
-
-                {s.topOpportunity ? (
-                  <div className="flex items-start gap-1.5 text-xs text-slate-500">
-                    <TrendingUp
-                      size={13}
-                      className="mt-0.5 shrink-0 text-blue-500"
-                    />
-                    <span className="leading-relaxed">
-                      优先提升「{s.topOpportunity.knowledgeName}」
-                      <span className="text-slate-400">
-                        （优先级 {s.topOpportunity.priorityScore}，预计+
-                        {s.topOpportunity.expectedGain}分）
-                      </span>
+              return (
+                <button
+                  key={s.studentId}
+                  type="button"
+                  onClick={() => onSelectStudent(s.studentId)}
+                  className="text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users size={15} className="text-slate-400" />
+                    <span className="text-sm font-semibold text-slate-900 truncate">
+                      {s.displayName}
                     </span>
                   </div>
-                ) : (
-                  <div className="text-xs text-slate-400">
-                    暂无提分机会数据
+
+                  <div className="flex items-baseline gap-1 mb-3">
+                    <span className="text-2xl font-bold text-slate-900">
+                      {ratio}
+                    </span>
+                    <span className="text-xs text-slate-400">% 已掌握</span>
+                    <span className="ml-auto text-xs text-slate-400">
+                      {s.masteredCount}/{s.masteryCount} 知识点
+                    </span>
                   </div>
-                )}
-              </button>
-            );
-          })}
+
+                  {s.topOpportunity ? (
+                    <div className="flex items-start gap-1.5 text-xs text-slate-500">
+                      <TrendingUp
+                        size={13}
+                        className="mt-0.5 shrink-0 text-blue-500"
+                      />
+                      <span className="leading-relaxed">
+                        优先提升「{s.topOpportunity.knowledgeName}」
+                        <span className="text-slate-400">
+                          （优先级 {s.topOpportunity.priorityScore}，预计+
+                          {s.topOpportunity.expectedGain}分）
+                        </span>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-400">
+                      暂无提分机会数据
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-4">
+            <Pagination
+              currentPage={studentPagination.currentPage}
+              totalPages={studentPagination.totalPages}
+              totalItems={studentPagination.totalItems}
+              pageSize={studentPagination.pageSize}
+              onPageChange={setStudentPage}
+              onPageSizeChange={(newSize) => {
+                setStudentPageSize(newSize);
+                setStudentPage(1);
+              }}
+              pageSizeOptions={[6, 9, 12, 24]}
+              itemName="名学生"
+            />
+          </div>
         </div>
       )}
     </div>

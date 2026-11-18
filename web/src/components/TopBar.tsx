@@ -17,6 +17,8 @@ interface TopBarProps {
 const NAV_ITEMS: { id: AppPage; label: string }[] = [
   { id: 'today', label: '今日学习' },
   { id: 'diagnosis', label: '考试诊断' },
+  { id: 'errors', label: '错题档案' },
+  { id: 'knowledge', label: '知识图谱' },
   { id: 'planning', label: '提分规划' },
   { id: 'coach', label: 'AI教练' },
   { id: 'report', label: '提分报告' },
