@@ -63,6 +63,16 @@ const FRONTEND_PATHS: Array<{ method: string; path: string; note: string }> = [
   { method: 'POST', path: `/api/v1/students/${STUDENT_ID}/plans`, note: '重算计划' },
   {
     method: 'GET',
+    path: `/api/v1/students/${STUDENT_ID}/prerequisite-chain?knowledgeId=math-alg-rational`,
+    note: '先修链与阻断根因',
+  },
+  {
+    method: 'GET',
+    path: `/api/v1/students/${STUDENT_ID}/blocking-summary`,
+    note: '全量阻断概况',
+  },
+  {
+    method: 'GET',
     path: `/api/v1/students/${STUDENT_ID}/mastery/math-alg-rational/retest-status`,
     note: '延迟复测状态',
   },

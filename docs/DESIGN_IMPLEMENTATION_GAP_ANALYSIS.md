@@ -7,6 +7,37 @@
 
 ---
 
+## 修复状态总览（2026-11-17 更新）
+
+本报告为**分析快照**，正文保留原始发现（便于追溯「当时是什么样」）。
+下表是后续修复的落地状态，详见
+[`docs/separation-implementation-status.md` 的 Phase 10](separation-implementation-status.md)。
+
+| # | 缺陷 | 状态 | 验证方式 |
+|---|---|---|---|
+| P0-1 | 诊断失分不写服务端 MasteryRecord | ✅ 已修复 | `gap-fixes.test.ts` 3 例 + E2E |
+| P0-2 | ExamResult 无持久化、targetScore 恒等 score | ✅ 已修复 | `gap-fixes.test.ts` 1 例 + E2E |
+| P0-3 | 示例卷未进入上传链路（TC-01 断链） | ✅ 已修复 | E2E「不得出现请提供试卷图片」 |
+| P0-4 | 调节预算不重排计划（TC-02 断链） | ✅ 已修复 | E2E「实际排期立即缩减」 |
+| P0-5 | 30/35 分钟档位排期超支 | ✅ 已修复 | `gap-fixes.test.ts` 全档位 30–120 |
+| P1-1 | 先修锁定漏判「未诊断」 | ✅ 已修复 | `gap-fixes.test.ts` 3 例 |
+| P1-2 | 多模态路径绕过 schema 校验 | ✅ 已修复 | `gap-fixes.test.ts` 4 例 |
+| P1-3 | LearningAttempt 丢 4 字段 | ✅ 已修复 | `gap-fixes.test.ts` 1 例 |
+| P1-4 | `QuestionKnowledge` 零使用方空壳 | ⏳ 未修 | 保留为技术债（见实施状态文档） |
+| P1-5 | 思维导图子技能归因靠关键词硬匹配 | ⏳ 未修 | 保留为技术债（见实施状态文档） |
+| P1-6 | 微测置信度硬编码「确定」 | ✅ 已修复 | `gap-fixes.test.ts` 3 例 |
+| P1-7 | 错题「待复测」无写入路径 | ✅ 已修复 | `gap-fixes.test.ts` 1 例 |
+
+**新增强制验收准则**（针对本报告 §四 指出的方法论问题）：
+
+> 每个 TC 用例必须有一条**从 UI 操作出发**的浏览器级断言，
+> 且断言「用户可见的结果」而非「API 返回值」。
+> 服务端单元测试通过**不构成**该用例通过。
+
+已由 `tests/e2e/gap-user-paths.mjs` 落实（22 条断言）。
+
+---
+
 ## 零、结论摘要
 
 **架构分层是真的，测试通过数是真的，但「完成」这个判断不成立。**

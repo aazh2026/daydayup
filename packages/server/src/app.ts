@@ -20,6 +20,7 @@ import { createKnowledgeRoutes } from './api/routes/knowledge.routes.ts';
 import { createStudentRoutes } from './api/routes/student.routes.ts';
 import { createMasteryRoutes } from './api/routes/mastery.routes.ts';
 import { createPlanRoutes } from './api/routes/plan.routes.ts';
+import { createPrerequisiteRoutes } from './api/routes/prerequisite.routes.ts';
 import { createPracticeRoutes } from './api/routes/practice.routes.ts';
 import { createExamRoutes } from './api/routes/exam.routes.ts';
 import { createCoachingRoutes } from './api/routes/coaching.routes.ts';
@@ -108,6 +109,8 @@ export function createApp(container: Container): Express {
   studentDataRouter.use(createStudentRoutes(container));
   studentDataRouter.use(createMasteryRoutes(container));
   studentDataRouter.use(createPlanRoutes(container));
+  // 先修链分析读学生掌握度记录 —— 必须与其它学生数据同受认证保护
+  studentDataRouter.use(createPrerequisiteRoutes(container));
   studentDataRouter.use(createPracticeRoutes(container));
   studentDataRouter.use(createExamRoutes(container));
   studentDataRouter.use(createCoachingRoutes(container));

@@ -2,6 +2,11 @@
  * 知识体系路由。
  *
  * 分离后知识体系成为服务端资产——前端不再硬编码 589 行本体。
+ *
+ * 注意：本路由挂在 `v1` 上、**不经** `requireAuth` ——
+ * 知识本体是公开只读资产（不含学生数据），无需认证。
+ * 学生维度的先修分析（需要读个人掌握度）在 `prerequisite.routes.ts`，
+ * 挂载于受认证保护的 `studentDataRouter` 下。
  */
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';

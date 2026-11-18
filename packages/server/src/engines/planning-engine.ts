@@ -176,6 +176,26 @@ export function computePriorityOpportunities(
        */
       const preRec = masteryRecords[preId];
       const preState: MasteryState = preRec?.state ?? '未诊断';
+
+      // 针对真实初三中考备考：目标为初中考点时，跨学段的小学先修点若无负面失分证据，默认基线通过，不虚假阻断
+      const isPrimaryKp =
+        kp.id.includes('_p') ||
+        /cn._p/.test(kp.id) ||
+        /一年级|二年级|三年级|四年级|五年级|六年级/.test(kp.chapter ?? '');
+
+      const isPrimaryPre =
+        preId.includes('_p') ||
+        /cn._p/.test(preId) ||
+        /一年级|二年级|三年级|四年级|五年级|六年级/.test(knowledgeMap[preId]?.chapter ?? '');
+
+      if (
+        !isPrimaryKp &&
+        isPrimaryPre &&
+        (!preRec || (preRec.state === '未诊断' && (preRec.lostScoreEvidence ?? 0) === 0))
+      ) {
+        continue;
+      }
+
       if (preState === '未诊断' || preState === '待学习') {
         blockedBy = knowledgeMap[preId]?.name ?? preId;
         break;
@@ -234,6 +254,40 @@ export function computePriorityOpportunities(
       blockedByPrerequisite: blockedBy,
       rationale: rationaleParts.join('，'),
     });
+  }
+
+  // 解除先修死锁：如果一个高优考点被某个前置先修点阻断，但该先修点自身没有在 opportunities 中，
+  // 自动将其作为“先修解锁”任务纳入 opportunities，让排期算法能优先排入，打破“因未诊断被锁死、又永远不排”的困境
+  const presentIds = new Set(opportunities.map((o) => o.knowledgeId));
+  for (const opp of [...opportunities]) {
+    if (!opp.blockedByPrerequisite) continue;
+    const kp = knowledgeMap[opp.knowledgeId];
+    if (!kp) continue;
+    for (const preId of kp.prerequisites) {
+      if (!presentIds.has(preId) && knowledgeMap[preId]) {
+        const preKp = knowledgeMap[preId];
+        const preRec = masteryRecords[preId];
+        if (preRec?.state === '稳定掌握') continue;
+        presentIds.add(preId);
+        opportunities.push({
+          knowledgeId: preKp.id,
+          subject: preKp.subject,
+          knowledgeName: preKp.name,
+          domain: preKp.domain,
+          lostScore: Math.max(2, Math.round(opp.lostScore * 0.8)),
+          recoveryProbability: 0.85,
+          expectedGain: Math.max(1.5, Math.round(opp.lostScore * 0.8 * 0.85 * 10) / 10),
+          learningCostHours: preKp.learningCostHours || 1.5,
+          confidenceScore: 0.8,
+          confidenceLabel: '较可能',
+          examWeight: preKp.examWeight || 1.0,
+          priorityScore: Number((opp.priorityScore * 1.35).toFixed(2)),
+          priorityTier: '高',
+          blockedByPrerequisite: undefined,
+          rationale: `为攻克「${opp.knowledgeName}」需优先筑牢此先修基石`,
+        });
+      }
+    }
   }
 
   return opportunities.sort((a, b) => b.priorityScore - a.priorityScore);
