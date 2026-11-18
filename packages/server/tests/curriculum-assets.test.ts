@@ -40,12 +40,40 @@ describe('知识体系资产', () => {
     assert.ok(curriculum.publishedAt.length > 0);
   });
 
-  test('版本号与资产文件名一致', () => {
+  test('生效版本对应资产文件名', () => {
+    /**
+     * 断言意图：对外暴露的版本号必须能对应到磁盘上的**生效**资产文件。
+     *
+     * 此前这里写成 `files.length === 1`（只允许一个资产文件），
+     * 那是在多版本机制出现之前的代理断言 ——
+     * 一旦引入第二个版本文件（如同批导入的 DRAFT 版本），
+     * 断言就会误报，而实际上版本选择逻辑是对的。
+     *
+     * 正确断言：生效资产文件存在，且它的版本号 == getCurriculumVersion()。
+     */
     const files = fs
       .readdirSync(KNOWLEDGE_DIR)
       .filter((f) => f.endsWith('.json'));
-    assert.equal(files.length, 1, '应只有一个知识体系资产文件');
-    assert.equal(getCurriculumVersion(), files[0].replace(/\.json$/, ''));
+    assert.ok(files.length > 0, '应至少有一个知识体系资产文件');
+
+    // 找到被选中的那个文件（文件名去掉 .json 后与版本号一致）
+    const activeFile = files.find(
+      (f) => f.replace(/\.json$/, '') === getCurriculumVersion()
+    );
+    assert.ok(
+      activeFile,
+      `生效版本 ${getCurriculumVersion()} 应对应磁盘上的资产文件（现有：${files.join(', ')}）`
+    );
+
+    // 生效的必须是 ACTIVE 状态
+    const parsed = JSON.parse(
+      fs.readFileSync(path.join(KNOWLEDGE_DIR, activeFile!), 'utf8')
+    ) as { status?: string };
+    assert.equal(
+      parsed.status,
+      'ACTIVE',
+      '被选中的资产必须是 ACTIVE 状态（DRAFT/DEPRECATED 不应生效）'
+    );
   });
 
   test('知识点非空且 id 唯一', () => {
@@ -248,43 +276,59 @@ describe('题库资产', () => {
   });
 });
 
+/**
+ * 从题库里挑一个「确实有某个难度题目」的知识点。
+ *
+ * 为什么不写死知识点 id：题库是可换版的服务端资产。
+ * 2026.02 版把 18 个粗粒度点换成 2760 个教材小节，
+ * 写死 `math-alg-rational` 的断言会在换版后**只因数据变了**就失败，
+ * 而它要验证的其实是「取题逻辑」，不是「资产里有没有这个点」。
+ */
+function pickKnowledgeWithLevel(level: string): string {
+  const hit = getQuestionBank().questions.find(
+    (q) => q.level === level && q.knowledgeIds.length > 0
+  );
+  assert.ok(hit, `题库里应至少有一道 ${level} 题目`);
+  return hit.knowledgeIds[0];
+}
+
 describe('题库取题', () => {
   test('按知识点 + 难度命中', () => {
-    const found = findBankQuestions('math-alg-rational', '基础题');
+    const knowledgeId = pickKnowledgeWithLevel('基础题');
+    const found = findBankQuestions(knowledgeId, '基础题');
     assert.ok(found.length > 0);
     for (const q of found) {
-      assert.ok(q.knowledgeIds.includes('math-alg-rational'));
+      assert.ok(q.knowledgeIds.includes(knowledgeId));
       assert.equal(q.level, '基础题');
     }
   });
 
   test('难度无命中时按知识点兜底', () => {
-    const found = findBankQuestions('math-alg-rational', '不存在的难度');
+    const knowledgeId = pickKnowledgeWithLevel('基础题');
+    const found = findBankQuestions(knowledgeId, '不存在的难度');
     assert.ok(found.length > 0, '应回落到同知识点的题');
     for (const q of found) {
-      assert.ok(q.knowledgeIds.includes('math-alg-rational'));
+      assert.ok(q.knowledgeIds.includes(knowledgeId));
     }
   });
 
   test('已出过的题被排除', () => {
-    const first = findBankQuestions('math-alg-rational', '基础题');
+    const knowledgeId = pickKnowledgeWithLevel('基础题');
+    const first = findBankQuestions(knowledgeId, '基础题');
     assert.ok(first.length > 0);
     const stems = first.map((q) => q.stem);
 
-    const second = findBankQuestions('math-alg-rational', '基础题', stems);
+    const second = findBankQuestions(knowledgeId, '基础题', stems);
     for (const q of second) {
       assert.ok(!stems.includes(q.stem), '已排除的题不应再次返回');
     }
   });
 
   test('排除后无题可取时返回空数组', () => {
-    const first = findBankQuestions('math-alg-rational', '基础题');
+    const knowledgeId = pickKnowledgeWithLevel('基础题');
+    const first = findBankQuestions(knowledgeId, '基础题');
     const stems = first.map((q) => q.stem);
-    const second = findBankQuestions(
-      'math-alg-rational',
-      '基础题',
-      stems
-    );
+    const second = findBankQuestions(knowledgeId, '基础题', stems);
     // 该知识点只有 2 道题，排除后可能还有变式题，也可能为空 —— 都合法
     assert.ok(Array.isArray(second));
   });

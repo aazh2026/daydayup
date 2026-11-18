@@ -15,6 +15,7 @@ import {
   getDelayedRetestStatus,
   computeDaysToZhongkao,
 } from '../src/engines/planning-engine.ts';
+import { pickPrerequisitePair, pickUnblockedKnowledge } from './helpers/curriculum.ts';
 import { evaluateMasteryTransition } from '../src/engines/mastery-engine.ts';
 import type {
   MasteryRecord,
@@ -33,11 +34,19 @@ const BASE_STUDENT: Student = {
   fatigueLevel: '低',
 };
 
+/**
+ * 默认知识点：从当前资产里取一个**无先修**的真实点。
+ *
+ * 原先写死 `math-alg-rational`，2026.02 版资产里已没有这个 id，
+ * 引擎查不到它就会直接跳过 → 各用例"通过"但一条任务都没排出来。
+ */
+const SAMPLE_KPS = pickUnblockedKnowledge(5, '数学');
+
 function makeMastery(
   overrides: Partial<MasteryRecord> = {}
 ): MasteryRecord {
   return {
-    knowledgeId: 'math-alg-rational',
+    knowledgeId: SAMPLE_KPS[0].id,
     state: '学习中',
     confidence: '确定',
     lostScoreEvidence: 4,
@@ -57,7 +66,7 @@ describe('TC08 — 每日学习时长硬约束', () => {
   test('daily learning time must not exceed 60 minutes', () => {
     const result = buildSevenDayPlan({
       student: BASE_STUDENT,
-      masteryRecords: { 'math-alg-rational': makeMastery() },
+      masteryRecords: { [SAMPLE_KPS[0].id]: makeMastery() },
       now: Date.parse('2026-11-17T00:00:00.000Z'),
     });
 
@@ -78,16 +87,19 @@ describe('TC08 — 每日学习时长硬约束', () => {
   test('每日任务数不超过 3 个', () => {
     const result = buildSevenDayPlan({
       student: BASE_STUDENT,
-      masteryRecords: {
-        'math-alg-rational': makeMastery(),
-        'math-eq-ineq': makeMastery({ knowledgeId: 'math-eq-ineq' }),
-        'math-func-linear': makeMastery({ knowledgeId: 'math-func-linear' }),
-        'math-func-quadratic': makeMastery({ knowledgeId: 'math-func-quadratic' }),
-        'math-geo-triangle': makeMastery({ knowledgeId: 'math-geo-triangle' }),
-      },
+      masteryRecords: Object.fromEntries(
+        SAMPLE_KPS.map((kp) => [
+          kp.id,
+          makeMastery({ knowledgeId: kp.id }),
+        ])
+      ),
       now: Date.parse('2026-11-17T00:00:00.000Z'),
     });
 
+    assert.ok(
+      result.days.some((d) => d.tasks.length > 0),
+      '样本点必须真的排出任务，否则「≤3」在空排期上恒真'
+    );
     for (const day of result.days) {
       assert.ok(day.tasks.length <= 3, `${day.dayLabel} 任务数 ${day.tasks.length} > 3`);
     }
@@ -125,16 +137,21 @@ describe('TC08 — 每日学习时长硬约束', () => {
 
 describe('TC07 — 提分优先级可复现', () => {
   test('相同输入产生完全相同的优先级排序', () => {
-    const records = {
-      'math-alg-rational': makeMastery(),
-      'math-eq-ineq': makeMastery({ knowledgeId: 'math-eq-ineq' }),
-      'math-func-linear': makeMastery({ knowledgeId: 'math-func-linear' }),
-    };
+    const records = Object.fromEntries(
+      SAMPLE_KPS.slice(0, 3).map((kp) => [
+        kp.id,
+        makeMastery({ knowledgeId: kp.id }),
+      ])
+    );
     const now = Date.parse('2026-11-17T00:00:00.000Z');
 
     const a = computePriorityOpportunities(records, now);
     const b = computePriorityOpportunities(records, now);
 
+    assert.ok(
+      a.length > 0,
+      '样本点必须真的产出提分机会，否则下面的相等断言在空数组上恒真'
+    );
     assert.deepEqual(
       a.map((o) => o.knowledgeId),
       b.map((o) => o.knowledgeId),
@@ -149,14 +166,16 @@ describe('TC07 — 提分优先级可复现', () => {
 
   test('优先级按分数降序排列', () => {
     const result = computePriorityOpportunities(
-      {
-        'math-alg-rational': makeMastery(),
-        'math-eq-ineq': makeMastery({ knowledgeId: 'math-eq-ineq' }),
-        'math-func-linear': makeMastery({ knowledgeId: 'math-func-linear' }),
-      },
+      Object.fromEntries(
+        SAMPLE_KPS.slice(0, 3).map((kp) => [
+          kp.id,
+          makeMastery({ knowledgeId: kp.id }),
+        ])
+      ),
       Date.parse('2026-11-17T00:00:00.000Z')
     );
 
+    assert.ok(result.length > 1, '至少要有两条机会才能验证排序');
     for (let i = 1; i < result.length; i++) {
       assert.ok(
         result[i - 1].priorityScore >= result[i].priorityScore,
@@ -168,7 +187,7 @@ describe('TC07 — 提分优先级可复现', () => {
   test('已稳定掌握的知识点不进入提分机会', () => {
     const result = computePriorityOpportunities(
       {
-        'math-alg-rational': makeMastery({ state: '稳定掌握' }),
+        [SAMPLE_KPS[0].id]: makeMastery({ state: '稳定掌握' }),
       },
       Date.parse('2026-11-17T00:00:00.000Z')
     );
@@ -176,17 +195,18 @@ describe('TC07 — 提分优先级可复现', () => {
   });
 
   test('被前置知识阻塞的知识点标记 blockedByPrerequisite', () => {
-    // math-eq-ineq 的前置是 math-alg-rational
+    // 先修关系取自当前资产，避免写死旧版本的 id
+    const { target, prereq } = pickPrerequisitePair();
     const result = computePriorityOpportunities(
       {
-        'math-alg-rational': makeMastery({ state: '待学习' }),
-        'math-eq-ineq': makeMastery({ knowledgeId: 'math-eq-ineq' }),
+        [prereq.id]: makeMastery({ knowledgeId: prereq.id, state: '待学习' }),
+        [target.id]: makeMastery({ knowledgeId: target.id }),
       },
       Date.parse('2026-11-17T00:00:00.000Z')
     );
 
-    const blocked = result.find((o) => o.knowledgeId === 'math-eq-ineq');
-    assert.ok(blocked, '应包含 math-eq-ineq');
+    const blocked = result.find((o) => o.knowledgeId === target.id);
+    assert.ok(blocked, `应包含 ${target.name}（${target.id}）`);
     assert.ok(blocked.blockedByPrerequisite, '应标记被前置知识阻塞');
     assert.equal(blocked.priorityTier, '低');
   });

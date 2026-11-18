@@ -26,6 +26,7 @@ import { createApp } from '../src/app.ts';
 import { buildSevenDayPlan, computePriorityOpportunities } from '../src/engines/planning-engine.ts';
 import { evaluateMasteryTransition } from '../src/engines/mastery-engine.ts';
 import { getCurriculum } from '../src/infrastructure/knowledge/curriculum.ts';
+import { pickPrerequisitePair, pickUnblockedKnowledge } from './helpers/curriculum.ts';
 import { validateAgainstSchema } from '../src/infrastructure/ai/schema-validator.ts';
 import { DIAGNOSIS_SCHEMA } from '../src/infrastructure/ai/schemas.ts';
 import type {
@@ -148,125 +149,89 @@ describe('P0-5 每日排期不得超出调节后预算', () => {
 });
 
 describe('P1-1 先修知识锁定必须覆盖「未诊断」', () => {
+  /**
+   * 从**当前资产**里取一对真实先修关系。
+   *
+   * 不能写死 `math-eq-ineq ← math-alg-rational`：2026.02 版资产已换成
+   * 教材小节 id，写死会让引擎查不到前置点，`blockedByPrerequisite`
+   * 恒为 undefined —— 三个用例会全部"通过"但什么也没验证。
+   */
+  const { target, prereq } = pickPrerequisitePair();
+
+  /** 构造指定状态的掌握度记录 */
+  function rec(
+    knowledgeId: string,
+    state: MasteryRecord['state']
+  ): MasteryRecord {
+    return {
+      knowledgeId,
+      state,
+      confidence: '较可能',
+      lostScoreEvidence: state === '掌握' ? 1 : 8,
+      recoveryProbability: 0.5,
+      evidenceLogs: [],
+      consecutiveErrors: 0,
+      practiceCorrect: 0,
+      practiceTotal: 0,
+      variantPassed: false,
+      delayedRetestPassed: false,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   test('前置知识点无 MasteryRecord（= 未诊断）时，依赖它的知识点被降权锁定', () => {
-    const now = new Date().toISOString();
-    // 只有 math-eq-ineq 有记录；它的前置 math-alg-rational **没有**记录
     const records: Record<string, MasteryRecord> = {
-      'math-eq-ineq': {
-        knowledgeId: 'math-eq-ineq',
-        state: '待学习',
-        confidence: '较可能',
-        lostScoreEvidence: 8,
-        recoveryProbability: 0.5,
-        evidenceLogs: [],
-        consecutiveErrors: 0,
-        practiceCorrect: 0,
-        practiceTotal: 0,
-        variantPassed: false,
-        delayedRetestPassed: false,
-        updatedAt: now,
-      },
+      [target.id]: rec(target.id, '待学习'),
     };
 
     const opportunities = computePriorityOpportunities(
       records,
       Date.UTC(2026, 0, 1)
     );
-    const eq = opportunities.find((o) => o.knowledgeId === 'math-eq-ineq');
+    const opp = opportunities.find((o) => o.knowledgeId === target.id);
 
-    assert.ok(eq, '应产出 math-eq-ineq 的提分机会');
+    assert.ok(opp, `应产出 ${target.name}（${target.id}）的提分机会`);
     assert.ok(
-      eq!.blockedByPrerequisite,
+      opp!.blockedByPrerequisite,
       '前置知识点无记录（未诊断）时必须被锁定，而不是因 `preRec &&` 短路而跳过'
     );
-    assert.equal(eq!.priorityTier, '低', '被锁定后优先级档位应降为「低」');
+    assert.equal(opp!.priorityTier, '低', '被锁定后优先级档位应降为「低」');
     assert.ok(
-      eq!.rationale.includes('需先固牢前置知识'),
+      opp!.rationale.includes('需先固牢前置知识'),
       '理由中应引导先修基础内容'
     );
   });
 
   test('前置知识点状态为「待学习」时同样被锁定', () => {
-    const now = new Date().toISOString();
     const records: Record<string, MasteryRecord> = {
-      'math-eq-ineq': {
-        knowledgeId: 'math-eq-ineq',
-        state: '待学习',
-        confidence: '较可能',
-        lostScoreEvidence: 8,
-        recoveryProbability: 0.5,
-        evidenceLogs: [],
-        consecutiveErrors: 0,
-        practiceCorrect: 0,
-        practiceTotal: 0,
-        variantPassed: false,
-        delayedRetestPassed: false,
-        updatedAt: now,
-      },
-      'math-alg-rational': {
-        knowledgeId: 'math-alg-rational',
-        state: '待学习',
-        confidence: '较可能',
-        lostScoreEvidence: 6,
-        recoveryProbability: 0.5,
-        evidenceLogs: [],
-        consecutiveErrors: 0,
-        practiceCorrect: 0,
-        practiceTotal: 0,
-        variantPassed: false,
-        delayedRetestPassed: false,
-        updatedAt: now,
-      },
+      [target.id]: rec(target.id, '待学习'),
+      [prereq.id]: rec(prereq.id, '待学习'),
     };
 
     const opportunities = computePriorityOpportunities(
       records,
       Date.UTC(2026, 0, 1)
     );
-    const eq = opportunities.find((o) => o.knowledgeId === 'math-eq-ineq');
-    assert.ok(eq?.blockedByPrerequisite, '「待学习」的前置同样应触发锁定');
+    const opp = opportunities.find((o) => o.knowledgeId === target.id);
+
+    assert.ok(opp, '应产出目标的提分机会');
+    assert.ok(opp!.blockedByPrerequisite, '前置未掌握时必须被锁定');
+    assert.equal(opp!.priorityTier, '低');
   });
 
   test('前置知识点已掌握时不锁定', () => {
-    const now = new Date().toISOString();
     const records: Record<string, MasteryRecord> = {
-      'math-eq-ineq': {
-        knowledgeId: 'math-eq-ineq',
-        state: '待学习',
-        confidence: '较可能',
-        lostScoreEvidence: 8,
-        recoveryProbability: 0.5,
-        evidenceLogs: [],
-        consecutiveErrors: 0,
-        practiceCorrect: 0,
-        practiceTotal: 0,
-        variantPassed: false,
-        delayedRetestPassed: false,
-        updatedAt: now,
-      },
-      'math-alg-rational': {
-        knowledgeId: 'math-alg-rational',
-        state: '掌握',
-        confidence: '确定',
-        lostScoreEvidence: 1,
-        recoveryProbability: 0.9,
-        evidenceLogs: [],
-        consecutiveErrors: 0,
-        practiceCorrect: 3,
-        practiceTotal: 3,
-        variantPassed: true,
-        delayedRetestPassed: false,
-        updatedAt: now,
-      },
+      [target.id]: rec(target.id, '待学习'),
+      [prereq.id]: rec(prereq.id, '掌握'),
     };
 
     const opportunities = computePriorityOpportunities(
       records,
       Date.UTC(2026, 0, 1)
     );
-    const eq = opportunities.find((o) => o.knowledgeId === 'math-eq-ineq');
+    const opp = opportunities.find((o) => o.knowledgeId === target.id);
     assert.equal(
-      eq?.blockedByPrerequisite,
+      opp?.blockedByPrerequisite,
       undefined,
       '前置已掌握时不应锁定'
     );
@@ -313,6 +278,15 @@ after(async () => {
   fs.rmSync(tmpDataDir, { recursive: true, force: true });
 });
 
+
+/**
+ * 测试用的知识点 id —— 从当前资产里取真实的数学点。
+ *
+ * 写死旧 id（如 `math-func-linear`）的后果：换版后服务端照旧返回 200，
+ * 但掌握度聚合与提分机会里查不到这个点，断言全变成"空集合上恒真"。
+ */
+const [KP_A, KP_B, KP_C] = pickUnblockedKnowledge(3, '数学').map((k) => k.id);
+
 describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
   test('诊断失分写入 MasteryRecord 并产生掌握轨迹', async () => {
     const examId = 'exam-gap-1';
@@ -333,7 +307,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
         totalLostScore: 6,
         questionsCount: 2,
         summary: '测试',
-        knowledgeIds: ['math-func-linear'],
+        knowledgeIds: [KP_A],
         diagnosedItems: [
           {
             questionNumber: '10',
@@ -341,7 +315,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
             studentAnswer: '漏解',
             correctAnswer: '(-1,2)',
             scoreLost: 4,
-            knowledgeId: 'math-func-linear',
+            knowledgeId: KP_A,
             errorType: '方法问题',
             aiAnalysis: '未分类讨论',
             evidence: '第10题',
@@ -354,7 +328,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
             studentAnswer: 'x=2',
             correctAnswer: 'x=-2',
             scoreLost: 2,
-            knowledgeId: 'math-alg-rational',
+            knowledgeId: KP_B,
             errorType: '知识问题',
             aiAnalysis: '未检验分母',
             evidence: '第14题',
@@ -371,7 +345,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
       records: Record<string, MasteryRecord>;
     }>(`/api/v1/students/${STUDENT_ID}/mastery`);
 
-    const kp = mastery.records['math-func-linear'];
+    const kp = mastery.records[KP_A];
     assert.ok(
       kp,
       '诊断涉及的知识点必须在服务端掌握度聚合里出现（此前完全没有）'
@@ -395,7 +369,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
       '诊断必须产生掌握度迁移事件（否则报告页「掌握轨迹」为空）'
     );
     assert.ok(
-      history.history.some((e) => e.knowledgeId === 'math-func-linear'),
+      history.history.some((e) => e.knowledgeId === KP_A),
       '迁移事件应包含诊断涉及的知识点'
     );
 
@@ -412,7 +386,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
     }>(`/api/v1/students/${STUDENT_ID}/opportunities`);
 
     const kp = opps.opportunities.find(
-      (o) => o.knowledgeId === 'math-func-linear'
+      (o) => o.knowledgeId === KP_A
     );
     assert.ok(
       kp,
@@ -432,7 +406,7 @@ describe('P0-1 诊断落库必须更新服务端 MasteryRecord', () => {
      * 用与上一个用例**不同**的知识点，避免测试间互相干扰
      * （所有用例共用同一个演示学生，因为令牌只授权了这一个 studentId）。
      */
-    const AGG_KP = 'math-geo-triangle';
+    const AGG_KP = KP_C;
 
     const post = await fetch(
       `${baseUrl}/api/v1/exams/exam-gap-agg/papers`,
@@ -516,7 +490,7 @@ describe('P1-3 LearningAttempt 必须完整落库', () => {
     });
 
     const post = await fetch(
-      `${baseUrl}/api/v1/students/${studentId}/mastery/math-func-linear/attempt`,
+      `${baseUrl}/api/v1/students/${studentId}/mastery/${KP_A}/attempt`,
       {
         method: 'POST',
         headers: auth(),
@@ -528,7 +502,7 @@ describe('P1-3 LearningAttempt 必须完整落库', () => {
           hintsUsed: 1,
           timeSpentSeconds: 120,
           independent: true,
-          taskId: 'task-d0-math-func-linear',
+          taskId: `task-d0-${KP_A}`,
           questionStem: '求函数交点坐标',
           userAnswer: '(-1,2)',
           aiFeedback: '分类讨论完整，继续保持',
@@ -561,7 +535,7 @@ describe('P1-3 LearningAttempt 必须完整落库', () => {
     );
     assert.equal(
       attempt.taskId,
-      'task-d0-math-func-linear',
+      `task-d0-${KP_A}`,
       '任务 ID 必须落库（此前完全丢失）'
     );
   });
@@ -653,7 +627,7 @@ describe('P1-2 诊断输出必须通过 schema 校验且受控词表受约束', 
           studentAnswer: 'a',
           correctAnswer: 'b',
           scoreLost: 2,
-          knowledgeId: 'math-func-linear',
+          knowledgeId: KP_A,
           errorType: '方法问题',
           aiAnalysis: 'x',
           // 故意缺 evidence / confidence / verificationMethod
@@ -689,7 +663,7 @@ describe('P1-2 诊断输出必须通过 schema 校验且受控词表受约束', 
           studentAnswer: 'a',
           correctAnswer: 'b',
           scoreLost: 2,
-          knowledgeId: 'math-func-linear',
+          knowledgeId: KP_A,
           errorType: '方法问题',
           aiAnalysis: 'x',
           evidence: '第1题',
@@ -727,7 +701,7 @@ describe('P1-2 诊断输出必须通过 schema 校验且受控词表受约束', 
           studentAnswer: 'a',
           correctAnswer: 'b',
           scoreLost: 2,
-          knowledgeId: 'math-func-linear',
+          knowledgeId: KP_A,
           errorType: '方法问题',
           aiAnalysis: 'x',
           evidence: '第1题',
@@ -926,7 +900,7 @@ describe('P1-7 错题状态白名单由服务端强制', () => {
             studentAnswer: 'a',
             correctAnswer: 'b',
             scoreLost: 2,
-            knowledgeId: 'math-geo-triangle',
+            knowledgeId: KP_C,
             errorType: '知识问题',
             aiAnalysis: 'x',
             evidence: '第1题',

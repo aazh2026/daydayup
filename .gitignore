@@ -17,4 +17,9 @@ packages/server/data/logs/
 packages/server/data/jobs/
 packages/server/data/events/
 packages/server/data/audit/
+# 迁移备份（运行期产物，含学生数据，不入库）
+packages/server/data/backup/
+# 导入暂存区（DRAFT 中间产物，--promote 后即为正式资产的副本，可由 import 重新生成）
+packages/server/data/staging/knowledge/
+packages/server/data/staging/questions/
 packages/server/backups/

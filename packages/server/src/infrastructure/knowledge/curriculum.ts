@@ -13,14 +13,54 @@ import { logger } from '../logging/logger.ts';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * 数据目录：packages/server/data
+ * 打包的默认资产目录：packages/server/data
  *
  * 本文件位于 src/infrastructure/knowledge/，故需上溯 4 层：
  *   knowledge → infrastructure → src → packages/server
  */
-export const DATA_DIR = path.resolve(__dirname, '../../../data');
-const KNOWLEDGE_DIR = path.join(DATA_DIR, 'knowledge');
-const QUESTION_DIR = path.join(DATA_DIR, 'questions');
+const PACKAGED_DATA_DIR = path.resolve(__dirname, '../../../data');
+
+/**
+ * 运行期数据目录。
+ *
+ * 支持 `DATA_DIR` 环境变量覆盖（与 seed.ts / backup.ts 等脚本保持一致）：
+ * 测试、多实例部署、以及知识资产导入验证都需要指向自定义目录，
+ * 否则无法在不污染生产数据的前提下试跑新资产。
+ */
+export const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : PACKAGED_DATA_DIR;
+
+/**
+ * 解析知识资产目录。
+ *
+ * 优先用 `DATA_DIR/knowledge`（部署时随数据卷一起分发的资产），
+ * **回落到打包目录** `packages/server/data/knowledge`。
+ *
+ * 为什么需要回落：
+ * `DATA_DIR` 常被指向一个只包含 `db/` 的空目录
+ * （测试用临时目录、首次部署时新建的数据卷），
+ * 此时若只读 `DATA_DIR/knowledge` 就会 `ENOENT` ——
+ * 连 seed 脚本都跑不起来（它要读知识体系来打印版本号）。
+ *
+ * 回落让「数据与资产分离」成为可能：业务数据放数据卷，
+ * 知识资产用随包发布的版本，缺省即可用。
+ */
+function resolveAssetDir(dirName: 'knowledge' | 'questions'): string {
+  const override = path.join(DATA_DIR, dirName);
+  if (
+    fs.existsSync(override) &&
+    fs.readdirSync(override).some((f) => f.endsWith('.json'))
+  ) {
+    return override;
+  }
+  const packaged = path.join(PACKAGED_DATA_DIR, dirName);
+  if (fs.existsSync(packaged)) return packaged;
+  return override;
+}
+
+const KNOWLEDGE_DIR = resolveAssetDir('knowledge');
+const QUESTION_DIR = resolveAssetDir('questions');
 
 export interface CurriculumAsset {
   version: string;
@@ -70,7 +110,18 @@ export function selectCurriculumFile(
   // 优先选 ACTIVE 版本
   const active = candidates.find((c) => c.parsed.status === 'ACTIVE');
   if (active) return active.file;
-  // 没有 ACTIVE：取排序最后的（版本号字典序即版本序）
+
+  // 没有 ACTIVE：取排序最后的**非草稿**版本（DEPRECATED 表示曾生效）
+  const nonDraft = candidates.filter((c) => c.parsed.status !== 'DRAFT');
+  if (nonDraft.length > 0) {
+    return nonDraft[nonDraft.length - 1].file;
+  }
+
+  // 全部是 DRAFT：加载最后一个草稿，并明确告警
+  // （草稿仍可用于开发/预览，但必须让运维知道当前跑的不是审核过的版本）
+  logger.warn('curriculum.only_draft_assets', {
+    files: candidates.map((c) => c.file),
+  });
   return candidates[candidates.length - 1].file;
 }
 
@@ -140,13 +191,59 @@ export function getCurriculumVersion(): string {
   return getCurriculum().version;
 }
 
-export function listKnowledgePoints(subject?: Subject): KnowledgePoint[] {
-  const all = getCurriculum().knowledgePoints;
-  return subject ? all.filter((kp) => kp.subject === subject) : all;
+export type CurriculumStage = '小学' | '初中' | '高中';
+
+/**
+ * 判断知识点所属学段。
+ *
+ * 依据：
+ * - cn-math-taxonomy id 规则：小学带 _p，高中带 _h
+ * - chapter 章节名包含年级特征
+ */
+export function resolveKnowledgeStage(kp: { id: string; chapter?: string }): CurriculumStage {
+  if (kp.id.includes('_p') || /cn._p/.test(kp.id)) return '小学';
+  if (kp.id.includes('_h') || /cn._h/.test(kp.id)) return '高中';
+  const ch = kp.chapter || '';
+  if (
+    /六年级|六上|六下|五年级|五上|五下|四年级|四上|四下|三年级|三上|三下|二年级|二上|二下|一年级|一上|一下/.test(
+      ch
+    )
+  ) {
+    return '小学';
+  }
+  if (/高一|高二|高三|必修|选择性必修|选必/.test(ch)) {
+    return '高中';
+  }
+  return '初中';
 }
 
-export function getQuestionBank(): QuestionBankAsset {
-  if (bankCache) return bankCache;
+export function listKnowledgePoints(
+  subject?: Subject,
+  stage?: CurriculumStage | 'all'
+): KnowledgePoint[] {
+  const all = getCurriculum().knowledgePoints;
+  let result = subject ? all.filter((kp) => kp.subject === subject) : all;
+  if (stage && stage !== 'all') {
+    result = result.filter((kp) => resolveKnowledgeStage(kp) === stage);
+  }
+  return result;
+}
+
+/**
+ * 找出应当生效的题库资产文件。
+ *
+ * 规则（优先级从高到低）：
+ *  1. **与当前生效知识体系版本配套**的题库
+ *     （题库的 version 等于知识体系的 version 或 version+questions）
+ *  2. **文件名排序最后**的题库 —— 版本号字典序即版本序
+ *
+ * 为什么要有第 1 条：题库与知识体系是靠 `knowledgeIds` 关联的。
+ * 若两者版本不配套，新知识点会一条题都取不到（取题永远落空），
+ * 而这不会抛异常，只会让功能静默失效。
+ *
+ * 容错：某个文件损坏（JSON 非法）时跳过它；全部不可用才报错。
+ */
+function readActiveBankFile(): string {
   const files = fs
     .readdirSync(QUESTION_DIR)
     .filter((f) => f.endsWith('.json'))
@@ -154,8 +251,46 @@ export function getQuestionBank(): QuestionBankAsset {
   if (files.length === 0) {
     throw new Error(`No question bank asset found in ${QUESTION_DIR}`);
   }
+
+  const readable: Array<{ file: string; version: string }> = [];
+  for (const file of files) {
+    try {
+      const parsed = JSON.parse(
+        fs.readFileSync(path.join(QUESTION_DIR, file), 'utf8')
+      ) as { version?: string };
+      readable.push({ file, version: parsed.version ?? '' });
+    } catch (err) {
+      logger.error('questionbank.asset_unreadable', {
+        file,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  if (readable.length === 0) {
+    throw new Error(
+      `No readable question bank asset in ${QUESTION_DIR} (${files.length} file(s) found)`
+    );
+  }
+
+  // 1. 优先选与当前知识体系版本配套的题库
+  const curriculumVersion = getCurriculumVersion();
+  const matched = readable.find(
+    (b) =>
+      b.version === curriculumVersion ||
+      b.version === `${curriculumVersion}+questions`
+  );
+  if (matched) return matched.file;
+
+  // 2. 回落：文件名排序最后
+  return readable[readable.length - 1].file;
+}
+
+export function getQuestionBank(): QuestionBankAsset {
+  if (bankCache) return bankCache;
+  const file = readActiveBankFile();
   bankCache = JSON.parse(
-    fs.readFileSync(path.join(QUESTION_DIR, files[files.length - 1]), 'utf8')
+    fs.readFileSync(path.join(QUESTION_DIR, file), 'utf8')
   ) as QuestionBankAsset;
   return bankCache;
 }

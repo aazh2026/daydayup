@@ -151,7 +151,7 @@ export const INITIAL_APP_STATE: AppState = {
       totalLostScore: 24,
       questionsCount: 18,
       summary: '主要失分集中在函数交点与分式计算（10分）、全等三角形辅助线（8分）及方程应用题审题（6分）。',
-      knowledgeIds: ['math-alg-rational', 'math-func-linear', 'math-geo-triangle'],
+      knowledgeIds: ['cnm_165', 'cnm_204', 'cnm_130'],
       createdAt: '2026-11-08T10:10:00.000Z',
     },
     {
@@ -170,7 +170,7 @@ export const INITIAL_APP_STATE: AppState = {
       totalLostScore: 29,
       questionsCount: 16,
       summary: '10月阶段检测中暴露分式方程忘验增根（-3分）与概率审题漏看“不放回”（-2分）；其中概率考点目前已通过变式训练验证修复。',
-      knowledgeIds: ['math-alg-rational', 'math-stat-prob'],
+      knowledgeIds: ['cnm_165', 'cnm_286'],
       createdAt: '2026-10-15T14:50:00.000Z',
     },
   ],
@@ -187,8 +187,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '原分式当 x = 3 时无意义，不能代入求值',
       scoreLost: 4,
       errorType: '计算问题',
-      knowledgeId: 'math-alg-rational',
-      knowledgeName: '分式与代数式运算',
+      knowledgeId: 'cnm_165',
+      knowledgeName: '分式方程的解法与增根',
       aiAnalysis: '约分步骤正确，但未先检验原分式分母 x - 3 ≠ 0 的隐含约束，属于典型分式定义域遗漏与计算习惯问题。',
       evidence: '初三期中数学第14题（-4分）；10月月考第8题分式方程同样未验增根（-3分）',
       confidence: '确定',
@@ -208,8 +208,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '向下平移 4 个单位得 y = 2/3 x - 2，令 y = 0 解得交点 (3, 0)',
       scoreLost: 6,
       errorType: '知识问题',
-      knowledgeId: 'math-func-linear',
-      knowledgeName: '一次函数图像与性质',
+      knowledgeId: 'cnm_204',
+      knowledgeName: '一次函数图象的平移',
       aiAnalysis: '图像读点与待定系数法已掌握，但函数上下平移的符号规则混淆（“上加下减”记成加4）。',
       evidence: '初三期中数学第16题第二问（-6分）',
       confidence: '较可能',
@@ -228,8 +228,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '电流表变小，定值电阻 R₁ 分压减小，故 R₂ 分压即电压表示数变大',
       scoreLost: 3,
       errorType: '方法问题',
-      knowledgeId: 'phys-elec-ohm',
-      knowledgeName: '动态电路分析与电路故障判断',
+      knowledgeId: 'cnp_073',
+      knowledgeName: '欧姆定律在串、并联电路中的应用',
       aiAnalysis: '直接对滑动变阻器使用 U₂ = I·R₂ 导致两个变量同时变化无法定性，应先分析定值电阻分压再用串联总压推算。',
       evidence: '初三期中物理第10题与第15题动态电路连续失分（共-5分）',
       confidence: '确定',
@@ -248,8 +248,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: 'impolite',
       scoreLost: 2,
       errorType: '审题问题',
-      knowledgeId: 'eng-vocab-core',
-      knowledgeName: '上海中考高频核心词汇与词转',
+      knowledgeId: 'cne_j064',
+      knowledgeName: '描述性形容词',
       aiAnalysis: '看到词转题机械加 -ly，未读出句子语境为“大声说话是不礼貌的”否定含义，且此处 is 后需接形容词作表语。',
       evidence: '期中英语词性转换连续2题忽略否定前缀（-4分），阅读首字母填空失分2处',
       confidence: '确定',
@@ -268,8 +268,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: 'CO₂ + Ca(OH)₂ = CaCO₃↓ + H₂O',
       scoreLost: 2,
       errorType: '熟练度问题',
-      knowledgeId: 'chem-concept-symbols',
-      knowledgeName: '化学符号、化合价与方程式配平',
+      knowledgeId: 'cnk_j018',
+      knowledgeName: '化学方程式的书写',
       aiAnalysis: '反应物与生成物化学式记忆准确，但多次遗漏沉淀符号 ↓ 与反应条件标注，导致化学用语规范性扣分。',
       evidence: '期中化学方程式书写共扣5分，其中3处为漏标 ↑/↓ 或未配平',
       confidence: '确定',
@@ -288,8 +288,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '结构上收束全文并照应标题；内容上以景结情，烘托释怀与温暖的邻里之情，深化主旨。',
       scoreLost: 3,
       errorType: '方法问题',
-      knowledgeId: 'chi-modern-read',
-      knowledgeName: '现代文关键词句赏析与结构作用',
+      knowledgeId: 'cnc_j001',
+      knowledgeName: '阅读《春》',
       aiAnalysis: '只泛泛写“生动形象”，遗漏“结构作用（收束/照应）”和“以景结情/深化主旨”核心阅卷得分点。',
       evidence: '期中语文现代文阅读两道作用赏析题共扣6分，均缺少结构维度回答',
       confidence: '确定',
@@ -309,8 +309,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '去分母解得 x = 2 时分母为 0，故原分式方程无解',
       scoreLost: 3,
       errorType: '计算问题',
-      knowledgeId: 'math-alg-rational',
-      knowledgeName: '分式与代数式运算',
+      knowledgeId: 'cnm_165',
+      knowledgeName: '分式方程的解法与增根',
       aiAnalysis: '去分母后未检验增根条件 x - 2 ≠ 0，与期中第14题属同类定义域遗漏问题。',
       evidence: '10月阶段随堂检测第8题（-3分）',
       confidence: '确定',
@@ -330,8 +330,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: 'the train leaves',
       scoreLost: 2,
       errorType: '知识问题',
-      knowledgeId: 'eng-grammar-tense',
-      knowledgeName: '核心时态、被动语态与三大从句',
+      knowledgeId: 'cne_j197',
+      knowledgeName: '疑问词宾语从句',
       aiAnalysis: '宾语从句误用了疑问语序，未记住从句必须保持陈述语序的规则。',
       evidence: '10月阶段随堂检测第36题（-2分），后续11月基础练习 5/5 全对已改善',
       confidence: '确定',
@@ -352,8 +352,8 @@ export const INITIAL_APP_STATE: AppState = {
       correctAnswer: '不放回共12种等可能结果，同色占4种，概率为 1/3',
       scoreLost: 2,
       errorType: '审题问题',
-      knowledgeId: 'math-stat-prob',
-      knowledgeName: '统计图表分析与概率计算',
+      knowledgeId: 'cnm_286',
+      knowledgeName: '用列举法求概率',
       aiAnalysis: '未圈出题干关键词“不放回”，导致分母样本空间多算 4 种。',
       evidence: '10月检测第15题（-2分），期中与3天变式复测均全对',
       confidence: '确定',
@@ -364,8 +364,8 @@ export const INITIAL_APP_STATE: AppState = {
     },
   ],
   masteryRecords: {
-    'math-alg-rational': {
-      knowledgeId: 'math-alg-rational',
+    'cnm_165': {
+      knowledgeId: 'cnm_165',
       state: '待学习',
       confidence: '确定',
       lostScoreEvidence: 4.5,
@@ -378,8 +378,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:00:00.000Z',
     },
-    'math-eq-ineq': {
-      knowledgeId: 'math-eq-ineq',
+    'cnm_045': {
+      knowledgeId: 'cnm_045',
       state: '初步掌握',
       confidence: '较可能',
       lostScoreEvidence: 3.0,
@@ -394,8 +394,8 @@ export const INITIAL_APP_STATE: AppState = {
       nextRetestAvailableAt: TWO_DAYS_LATER,
       updatedAt: YESTERDAY,
     },
-    'math-func-linear': {
-      knowledgeId: 'math-func-linear',
+    'cnm_204': {
+      knowledgeId: 'cnm_204',
       state: '学习中',
       confidence: '较可能',
       lostScoreEvidence: 6.5,
@@ -408,8 +408,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:05:00.000Z',
     },
-    'math-func-quadratic': {
-      knowledgeId: 'math-func-quadratic',
+    'cnm_236': {
+      knowledgeId: 'cnm_236',
       state: '未诊断',
       confidence: '待验证',
       lostScoreEvidence: 4.0,
@@ -422,8 +422,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:15:00.000Z',
     },
-    'math-geo-triangle': {
-      knowledgeId: 'math-geo-triangle',
+    'cnm_130': {
+      knowledgeId: 'cnm_130',
       state: '学习中',
       confidence: '确定',
       lostScoreEvidence: 4.0,
@@ -436,8 +436,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:10:00.000Z',
     },
-    'math-stat-prob': {
-      knowledgeId: 'math-stat-prob',
+    'cnm_286': {
+      knowledgeId: 'cnm_286',
       state: '掌握',
       confidence: '确定',
       lostScoreEvidence: 1.0,
@@ -452,8 +452,8 @@ export const INITIAL_APP_STATE: AppState = {
       nextRetestAvailableAt: YESTERDAY,
       updatedAt: THREE_DAYS_AGO,
     },
-    'eng-vocab-core': {
-      knowledgeId: 'eng-vocab-core',
+    'cne_j064': {
+      knowledgeId: 'cne_j064',
       state: '待学习',
       confidence: '确定',
       lostScoreEvidence: 6.0,
@@ -466,8 +466,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T11:00:00.000Z',
     },
-    'eng-grammar-tense': {
-      knowledgeId: 'eng-grammar-tense',
+    'cne_j197': {
+      knowledgeId: 'cne_j197',
       state: '初步掌握',
       confidence: '确定',
       lostScoreEvidence: 3.0,
@@ -482,8 +482,8 @@ export const INITIAL_APP_STATE: AppState = {
       nextRetestAvailableAt: TWO_DAYS_LATER,
       updatedAt: YESTERDAY,
     },
-    'eng-read-cloze': {
-      knowledgeId: 'eng-read-cloze',
+    'cne_j240': {
+      knowledgeId: 'cne_j240',
       state: '待学习',
       confidence: '待验证',
       lostScoreEvidence: 5.0,
@@ -496,8 +496,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T11:15:00.000Z',
     },
-    'phys-mech-pressure': {
-      knowledgeId: 'phys-mech-pressure',
+    'cnp_037': {
+      knowledgeId: 'cnp_037',
       state: '学习中',
       confidence: '较可能',
       lostScoreEvidence: 4.0,
@@ -510,8 +510,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:35:00.000Z',
     },
-    'phys-elec-ohm': {
-      knowledgeId: 'phys-elec-ohm',
+    'cnp_073': {
+      knowledgeId: 'cnp_073',
       state: '待学习',
       confidence: '确定',
       lostScoreEvidence: 5.0,
@@ -524,8 +524,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:40:00.000Z',
     },
-    'phys-elec-power': {
-      knowledgeId: 'phys-elec-power',
+    'cnp_075': {
+      knowledgeId: 'cnp_075',
       state: '未诊断',
       confidence: '待验证',
       lostScoreEvidence: 3.5,
@@ -538,8 +538,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T10:45:00.000Z',
     },
-    'chem-concept-symbols': {
-      knowledgeId: 'chem-concept-symbols',
+    'cnk_j018': {
+      knowledgeId: 'cnk_j018',
       state: '待学习',
       confidence: '确定',
       lostScoreEvidence: 4.5,
@@ -552,8 +552,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T11:30:00.000Z',
     },
-    'chem-solution-calc': {
-      knowledgeId: 'chem-solution-calc',
+    'cnk_j034': {
+      knowledgeId: 'cnk_j034',
       state: '初步掌握',
       confidence: '较可能',
       lostScoreEvidence: 2.5,
@@ -568,8 +568,8 @@ export const INITIAL_APP_STATE: AppState = {
       nextRetestAvailableAt: TWO_DAYS_LATER,
       updatedAt: YESTERDAY,
     },
-    'chem-exp-gas': {
-      knowledgeId: 'chem-exp-gas',
+    'cnk_j008': {
+      knowledgeId: 'cnk_j008',
       state: '学习中',
       confidence: '较可能',
       lostScoreEvidence: 3.0,
@@ -582,8 +582,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T11:45:00.000Z',
     },
-    'chi-classical-read': {
-      knowledgeId: 'chi-classical-read',
+    'cnc_j024': {
+      knowledgeId: 'cnc_j024',
       state: '初步掌握',
       confidence: '确定',
       lostScoreEvidence: 3.5,
@@ -598,8 +598,8 @@ export const INITIAL_APP_STATE: AppState = {
       nextRetestAvailableAt: TWO_DAYS_LATER,
       updatedAt: YESTERDAY,
     },
-    'chi-modern-read': {
-      knowledgeId: 'chi-modern-read',
+    'cnc_j001': {
+      knowledgeId: 'cnc_j001',
       state: '待学习',
       confidence: '确定',
       lostScoreEvidence: 6.0,
@@ -612,8 +612,8 @@ export const INITIAL_APP_STATE: AppState = {
       delayedRetestPassed: false,
       updatedAt: '2026-11-08T12:00:00.000Z',
     },
-    'chi-writing-struct': {
-      knowledgeId: 'chi-writing-struct',
+    'cnc_j021': {
+      knowledgeId: 'cnc_j021',
       state: '学习中',
       confidence: '较可能',
       lostScoreEvidence: 5.0,
@@ -630,7 +630,7 @@ export const INITIAL_APP_STATE: AppState = {
   masteryHistory: [
     {
       id: 'mh-8',
-      knowledgeId: 'eng-grammar-tense',
+      knowledgeId: 'cne_j197',
       subject: '英语',
       fromState: '学习中',
       toState: '初步掌握',
@@ -639,7 +639,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-7',
-      knowledgeId: 'math-eq-ineq',
+      knowledgeId: 'cnm_045',
       subject: '数学',
       fromState: '学习中',
       toState: '初步掌握',
@@ -648,7 +648,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-6',
-      knowledgeId: 'chi-classical-read',
+      knowledgeId: 'cnc_j024',
       subject: '语文',
       fromState: '学习中',
       toState: '初步掌握',
@@ -657,7 +657,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-5',
-      knowledgeId: 'math-stat-prob',
+      knowledgeId: 'cnm_286',
       subject: '数学',
       fromState: '初步掌握',
       toState: '掌握',
@@ -666,7 +666,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-4',
-      knowledgeId: 'math-alg-rational',
+      knowledgeId: 'cnm_165',
       subject: '数学',
       fromState: '学习中',
       toState: '待学习',
@@ -675,7 +675,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-3',
-      knowledgeId: 'phys-elec-ohm',
+      knowledgeId: 'cnp_073',
       subject: '物理',
       fromState: '未诊断',
       toState: '待学习',
@@ -684,7 +684,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-2',
-      knowledgeId: 'chi-modern-read',
+      knowledgeId: 'cnc_j001',
       subject: '语文',
       fromState: '未诊断',
       toState: '待学习',
@@ -693,7 +693,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'mh-1',
-      knowledgeId: 'math-stat-prob',
+      knowledgeId: 'cnm_286',
       subject: '数学',
       fromState: '待学习',
       toState: '初步掌握',
@@ -704,7 +704,7 @@ export const INITIAL_APP_STATE: AppState = {
   learningAttempts: [
     {
       id: 'att-1',
-      knowledgeId: 'math-stat-prob',
+      knowledgeId: 'cnm_286',
       subject: '数学',
       mode: '变式训练',
       questionStem: '从分别标有 1、2、3、4 的四张卡片中不放回抽取两张，求数字之和为奇数的概率。',
@@ -718,7 +718,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'att-2',
-      knowledgeId: 'eng-grammar-tense',
+      knowledgeId: 'cne_j197',
       subject: '英语',
       mode: '基础练习',
       questionStem: 'Could you tell me where ____ (the nearest subway station is / is the nearest subway station)?',
@@ -732,7 +732,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'att-3',
-      knowledgeId: 'math-func-linear',
+      knowledgeId: 'cnm_204',
       subject: '数学',
       mode: '基础练习',
       questionStem: '将直线 y = 2x - 1 向上平移 3 个单位后，新直线与 y 轴交点坐标为 ____ 。',
@@ -746,7 +746,7 @@ export const INITIAL_APP_STATE: AppState = {
     },
     {
       id: 'att-4',
-      knowledgeId: 'chem-concept-symbols',
+      knowledgeId: 'cnk_j018',
       subject: '化学',
       mode: '诊断微测',
       questionStem: '写出高锰酸钾受热分解制取氧气的化学方程式。',
@@ -763,7 +763,7 @@ export const INITIAL_APP_STATE: AppState = {
     {
       id: 'var-math-1',
       sourceErrorId: 'err-math-01',
-      knowledgeId: 'math-alg-rational',
+      knowledgeId: 'cnm_165',
       subject: '数学',
       level: '基础题',
       stem: '若分式 (x² - 9) / (x + 3) 的值为 0，则 x 的值是？',
@@ -777,7 +777,7 @@ export const INITIAL_APP_STATE: AppState = {
     {
       id: 'var-phys-1',
       sourceErrorId: 'err-phys-01',
-      knowledgeId: 'phys-elec-ohm',
+      knowledgeId: 'cnp_073',
       subject: '物理',
       level: '变式题',
       stem: '定值电阻 R₁ 与滑动变阻器 R₂ 并联在电源两端，闭合开关后滑片向右增大 R₂ 阻值，干路电流表示数和 R₁ 支路电流表示数分别如何变化？',
@@ -799,7 +799,7 @@ export const INITIAL_APP_STATE: AppState = {
     {
       id: 'var-eng-1',
       sourceErrorId: 'err-eng-01',
-      knowledgeId: 'eng-vocab-core',
+      knowledgeId: 'cne_j064',
       subject: '英语',
       level: '迁移题',
       stem: 'It is ____ (possible) for a human to live without water for a month, so we must protect water resources.',
@@ -813,7 +813,7 @@ export const INITIAL_APP_STATE: AppState = {
     {
       id: 'var-chem-1',
       sourceErrorId: 'err-chem-01',
-      knowledgeId: 'chem-concept-symbols',
+      knowledgeId: 'cnk_j018',
       subject: '化学',
       level: '基础题',
       stem: '下列化学方程式书写完全正确的是（ ）',
@@ -832,7 +832,7 @@ export const INITIAL_APP_STATE: AppState = {
     {
       id: 'var-chi-1',
       sourceErrorId: 'err-chi-01',
-      knowledgeId: 'chi-modern-read',
+      knowledgeId: 'cnc_j001',
       subject: '语文',
       level: '基础题',
       stem: '在回答记叙文中间过渡段“不仅……而且……”或独立短段的作用时，标准答题结构应包含哪两部分？',
