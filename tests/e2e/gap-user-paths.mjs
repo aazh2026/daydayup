@@ -361,8 +361,86 @@ async function main() {
   }
   check(diagnosisOpened, '可打开「考试诊断」页');
 
-  // TC-09：思维导图可操作性（拖拽平移 / 全部与逐项收起展开）
   if (diagnosisOpened) {
+    // 「载入数学图片示例卷」按钮
+    let sampleLoaded = true;
+    try {
+      await page.getByText('载入数学图片示例卷').first().click();
+      await page.waitForTimeout(2500);
+    } catch (e) {
+      sampleLoaded = false;
+      console.log(`  ! 点击载入示例失败: ${e.message.split('\n')[0]}`);
+    }
+    check(sampleLoaded, '可点击「载入数学图片示例卷」');
+
+    if (sampleLoaded) {
+      const bodyText = await page.locator('body').innerText();
+      check(
+        bodyText.includes('已载入：上海九年级数学期中示例卷'),
+        '界面提示示例卷已载入'
+      );
+
+      // 启动诊断（无 GEMINI_API_KEY 时会失败，但失败必须是「明确的 AI 不可用」，
+      // 而不是「未提供试卷图片」——后者正是 P0-3 的症状）
+      let diagnoseClicked = true;
+      try {
+        await page.getByText(/启动\s*AI\s*试卷诊断|启动 AI 试卷诊断/).first().click();
+        await page.waitForTimeout(6000);
+      } catch (e) {
+        diagnoseClicked = false;
+        console.log(`  ! 点击启动诊断失败: ${e.message.split('\n')[0]}`);
+      }
+      check(diagnoseClicked, '可点击「启动 AI 试卷诊断」');
+
+      if (diagnoseClicked) {
+        const afterText = await page.locator('body').innerText();
+        /**
+         * 关键判据：不得出现「请提供试卷图片」——
+         * 那说明示例图没进入上传链路（P0-3 未修复）。
+         */
+        check(
+          !afterText.includes('请提供试卷图片'),
+          '启动诊断不报「请提供试卷图片」（示例图已真正进入上传链路）',
+          afterText.slice(0, 200).replace(/\n/g, ' ')
+        );
+
+        // 上传请求必须真的发出去了
+        const uploadCalls = apiCalls.filter((c) =>
+          c.p.includes('/uploads/papers')
+        );
+        check(
+          uploadCalls.length > 0,
+          '示例卷确实发起了上传请求（POST /uploads/papers）',
+          `上传调用数 ${uploadCalls.length}`
+        );
+        check(
+          uploadCalls.every((c) => c.s === 200),
+          '上传请求全部成功',
+          JSON.stringify(uploadCalls)
+        );
+      }
+    }
+  }
+
+
+  // =======================================================================
+  // TC-09：思维导图可操作性（拖拽平移 / 全部与逐项收起展开）
+  //
+  // 思维导图现在挂在「知识图谱」页（原先在诊断页，随页面拆分迁出）。
+  // =======================================================================
+  console.log('\n▶ TC-09 思维导图可操作性');
+
+  let mindMapOpened = true;
+  try {
+    await page.locator('header').getByText('知识图谱').first().click();
+    await page.waitForTimeout(2000);
+  } catch (e) {
+    mindMapOpened = false;
+    console.log(`  ! 打开知识图谱页失败: ${e.message.split('\n')[0]}`);
+  }
+  check(mindMapOpened, '可打开「知识图谱」页');
+
+  if (mindMapOpened) {
     console.log('  · 验证思维导图可拖拽、可收起展开');
 
     const mindMapSection = page
@@ -485,67 +563,6 @@ async function main() {
         (await mindMapNodes()) < subSkillNodeCount,
         '逐项收起考点后子技能节点消失'
       );
-    }
-  }
-
-  if (diagnosisOpened) {
-    // 「载入数学图片示例卷」按钮
-    let sampleLoaded = true;
-    try {
-      await page.getByText('载入数学图片示例卷').first().click();
-      await page.waitForTimeout(2500);
-    } catch (e) {
-      sampleLoaded = false;
-      console.log(`  ! 点击载入示例失败: ${e.message.split('\n')[0]}`);
-    }
-    check(sampleLoaded, '可点击「载入数学图片示例卷」');
-
-    if (sampleLoaded) {
-      const bodyText = await page.locator('body').innerText();
-      check(
-        bodyText.includes('已载入：上海九年级数学期中示例卷'),
-        '界面提示示例卷已载入'
-      );
-
-      // 启动诊断（无 GEMINI_API_KEY 时会失败，但失败必须是「明确的 AI 不可用」，
-      // 而不是「未提供试卷图片」——后者正是 P0-3 的症状）
-      let diagnoseClicked = true;
-      try {
-        await page.getByText(/启动\s*AI\s*试卷诊断|启动 AI 试卷诊断/).first().click();
-        await page.waitForTimeout(6000);
-      } catch (e) {
-        diagnoseClicked = false;
-        console.log(`  ! 点击启动诊断失败: ${e.message.split('\n')[0]}`);
-      }
-      check(diagnoseClicked, '可点击「启动 AI 试卷诊断」');
-
-      if (diagnoseClicked) {
-        const afterText = await page.locator('body').innerText();
-        /**
-         * 关键判据：不得出现「请提供试卷图片」——
-         * 那说明示例图没进入上传链路（P0-3 未修复）。
-         */
-        check(
-          !afterText.includes('请提供试卷图片'),
-          '启动诊断不报「请提供试卷图片」（示例图已真正进入上传链路）',
-          afterText.slice(0, 200).replace(/\n/g, ' ')
-        );
-
-        // 上传请求必须真的发出去了
-        const uploadCalls = apiCalls.filter((c) =>
-          c.p.includes('/uploads/papers')
-        );
-        check(
-          uploadCalls.length > 0,
-          '示例卷确实发起了上传请求（POST /uploads/papers）',
-          `上传调用数 ${uploadCalls.length}`
-        );
-        check(
-          uploadCalls.every((c) => c.s === 200),
-          '上传请求全部成功',
-          JSON.stringify(uploadCalls)
-        );
-      }
     }
   }
 
