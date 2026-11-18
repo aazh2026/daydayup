@@ -33,6 +33,7 @@ import { validateAgainstSchema } from '../../infrastructure/ai/schema-validator.
 import { requireAuth } from '../middleware/auth.ts';
 import { requireQuota } from '../middleware/quota.ts';
 import type { Role } from '../../infrastructure/security/token.ts';
+import { judgeAnswerDeterministically } from '../../engines/judge-engine.ts';
 
 function requireAi(container: Container) {
   if (!container.ai) {
@@ -377,10 +378,13 @@ export function createAiRoutes(
 
   /**
    * 4. 作答评测（原 /api/practice/evaluate）
+   *
+   * 采用“纯函数确定性判题前置 + LLM 复杂归因回落”双层架构：
+   * - 客观选择题与标准数值/代数式一致时：纯函数毫秒级判对，零 API 消耗、零不确定性；
+   * - 答案不一致或需要细分五维错因时：自动回落给 LLM 深入归因与反馈。
    */
   guard('/practice/evaluate', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ai = requireAi(container);
       const {
         subject = '数学',
         knowledgeName = '',
@@ -389,6 +393,27 @@ export function createAiRoutes(
         studentAnswer = '',
       } = req.body ?? {};
 
+      // 第一道防线：纯函数确定性判题
+      const deterministic = judgeAnswerDeterministically(
+        stem,
+        standardAnswer,
+        studentAnswer
+      );
+
+      if (deterministic.isDeterministic && deterministic.isCorrect) {
+        res.json({
+          isCorrect: true,
+          feedback: deterministic.feedback ?? '回答正确！',
+          errorType: deterministic.errorType ?? '无',
+          guidance: deterministic.guidance ?? '掌握扎实。',
+          confidence: deterministic.confidence ?? '确定',
+          isDeterministic: true,
+        });
+        return;
+      }
+
+      // 第二道防线：回落至 AI 智能评测与错因细分
+      const ai = requireAi(container);
       const prompt = buildPracticeEvaluatePrompt({
         subject,
         knowledgeName,
