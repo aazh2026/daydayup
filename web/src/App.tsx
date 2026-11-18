@@ -1168,6 +1168,7 @@ export default function App() {
             onSelectKnowledge={setActiveKnowledgeId}
             student={appState.student}
             masteryRecords={appState.masteryRecords}
+            errorRecords={appState.errorRecords}
             variantQuestions={appState.variantQuestions}
             coachHistoryByKnowledge={appState.coachHistoryByKnowledge}
             onUpdateCoachHistory={handleUpdateCoachHistory}

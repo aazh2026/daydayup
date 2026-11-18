@@ -267,6 +267,10 @@ export function createAiRoutes(
         history = [],
         studentMessage = '',
         activeProblem = '',
+        sourceErrorStem = '',
+        sourceStudentAnswer = '',
+        sourceErrorType = '',
+        sourceAnalysis = '',
       } = req.body ?? {};
 
       const { systemInstruction, prompt } = buildCoachPrompt({
@@ -281,6 +285,10 @@ export function createAiRoutes(
         history,
         studentMessage,
         activeProblem,
+        sourceErrorStem,
+        sourceStudentAnswer,
+        sourceErrorType,
+        sourceAnalysis,
       });
 
       const result = await ai.generateJson<Record<string, unknown>>({

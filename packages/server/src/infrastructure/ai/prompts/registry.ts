@@ -34,13 +34,14 @@ export function getPromptVersion(purpose: AIPurpose): string {
  */
 let ontologyCache: { key: string; text: string } | null = null;
 
-export function buildOntologySummary(subject?: string): string {
-  const key = subject ?? '*';
+export function buildOntologySummary(
+  subject?: string,
+  stage: '初中' | 'all' = '初中'
+): string {
+  const key = `${subject ?? '*'}:${stage}`;
   if (ontologyCache && ontologyCache.key === key) return ontologyCache.text;
 
-  const filtered = subject
-    ? listKnowledgePoints(subject as never)
-    : listKnowledgePoints();
+  const filtered = listKnowledgePoints(subject as never, stage);
 
   const text = filtered
     .map(
@@ -63,10 +64,12 @@ export interface DiagnosisPromptContext {
 }
 
 /**
- * 诊断提示词 v1 —— 与原 server.ts:114-155 逐字等价。
+ * 诊断提示词 v1 —— 针对上海初三中考，本体注入优化（学段与学科过滤，大幅节省 Token 并消除学段漂移）。
  */
 export function buildDiagnosisPrompt(ctx: DiagnosisPromptContext): string {
-  const ontologyText = buildOntologySummary();
+  const targetSubject =
+    ctx.subject && ctx.subject !== '自动识别' ? ctx.subject : undefined;
+  const ontologyText = buildOntologySummary(targetSubject, '初中');
 
   const trimmedText = typeof ctx.rawText === 'string' ? ctx.rawText.trim() : '';
   const textContextPrompt = trimmedText
@@ -123,19 +126,33 @@ export function buildCoachPrompt(ctx: {
   commonTraps?: string[];
   masteryState?: string;
   activeProblem?: string;
+  sourceErrorStem?: string;
+  sourceStudentAnswer?: string;
+  sourceErrorType?: string;
+  sourceAnalysis?: string;
   history?: Array<{ role: string; text: string }>;
   studentMessage?: string;
   requestFullExplanation?: boolean;
   teachingBehavior?: string;
   socraticStage?: number;
 }): { systemInstruction: string; prompt: string } {
+  const errorContextText = ctx.sourceErrorStem
+    ? `
+【学生既往失分证据与错题上下文】：
+- 对应错题原题：${ctx.sourceErrorStem}
+- 学生错误作答：${ctx.sourceStudentAnswer || '未记录'}
+- 归因错因类型：${ctx.sourceErrorType || '未知'}
+- 诊断归因分析：${ctx.sourceAnalysis || ''}
+核心原则：本轮教学应针对上述失分点有的放矢。在 Stage 0 诊断提问时，请直接结合该题的典型陷阱或概念易错点展开提问，避免泛泛而谈！`
+    : '';
+
   const systemInstruction = `你是上海初三“AI学习教练”，不是闲聊机器人，而是任务驱动的学科教学 Agent。
 你需要掌握五种教学行为：诊断、讲解、示范、引导、评测。
 当前训练学科：${ctx.subject ?? '数学'}
 当前知识点：${ctx.knowledgeName ?? ''}（当前掌握状态：${ctx.masteryState ?? '待学习'}）
 知识定义：${ctx.knowledgeDefinition ?? ''}
 常见易错点：${Array.isArray(ctx.commonTraps) ? ctx.commonTraps.join('；') : ''}
-${ctx.activeProblem ? `当前训练题目：${ctx.activeProblem}` : ''}
+${ctx.activeProblem ? `当前训练题目：${ctx.activeProblem}` : ''}${errorContextText}
 
 核心教学原则：
 1. 控制讲解粒度！每次只推进一小步（100-180字以内，禁止连续输出长篇大论）。

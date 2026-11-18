@@ -27,6 +27,7 @@ import { createCoachingRoutes } from './api/routes/coaching.routes.ts';
 import { createJobRoutes } from './api/routes/job.routes.ts';
 import { createUploadRoutes } from './api/routes/upload.routes.ts';
 import { createAdminRoutes } from './api/routes/admin.routes.ts';
+import { gzipJsonMiddleware } from './api/middleware/gzip.ts';
 import { logger } from './infrastructure/logging/logger.ts';
 
 export function createApp(container: Container): Express {
@@ -37,6 +38,8 @@ export function createApp(container: Container): Express {
 
   app.use(requestIdMiddleware);
   app.use(corsMiddleware(container.config.corsOrigins));
+  // 压缩 JSON 响应（知识体系资产 1.47 MB → 约 150 KB）
+  app.use(gzipJsonMiddleware);
   app.use(express.json({ limit: '35mb' }));
 
   // ---- 健康检查 ----

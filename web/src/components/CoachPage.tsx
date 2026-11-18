@@ -1,30 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BookOpen,
+  Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
+  Layers,
   Loader2,
   Lock,
   Send,
   ShieldCheck,
   Sparkles,
+  Tag,
+  Target,
 } from 'lucide-react';
 import { useCurriculum } from '../store/curriculum.tsx';
 import { MASTERY_ORDER, fetchRetestStatus } from '../engine/planner.ts';
 import { api } from '../api/client.ts';
+import { ALL_SUBJECTS } from '../types.ts';
 import type {
   CoachChatResponse,
   EvaluateResponse,
   GeneratePracticeResponse,
+  KnowledgePoint,
 } from '@daydayup/contracts';
 import type {
   CoachMessage,
+  ErrorRecord,
   ErrorType,
   MasteryRecord,
   PracticeMode,
   QuestionLevel,
   Student,
+  Subject,
   TeachingBehavior,
   VariantQuestion,
 } from '../types.ts';
@@ -34,6 +44,7 @@ interface CoachPageProps {
   onSelectKnowledge: (knowledgeId: string) => void;
   student: Student;
   masteryRecords: Record<string, MasteryRecord>;
+  errorRecords?: ErrorRecord[];
   variantQuestions: VariantQuestion[];
   coachHistoryByKnowledge: Record<string, CoachMessage[]>;
   onUpdateCoachHistory: (knowledgeId: string, messages: CoachMessage[]) => void;
@@ -63,61 +74,71 @@ interface CoachPageProps {
 
 function getInitialDiagnosticPrompt(
   knowledgeId: string,
-  knowledgeMap: Record<string, { name: string }>
+  knowledgeMap: Record<string, { name: string }>,
+  matchedError?: ErrorRecord
 ): {
   opening: string;
   quickReplies: string[];
 } {
-  if (knowledgeId === 'math-alg-rational') {
+  if (matchedError) {
+    const title = matchedError.examTitle || '试卷诊断';
+    const qNum = matchedError.questionNumber ? `第 ${matchedError.questionNumber} 题` : '关联题目';
+    return {
+      opening: `今天我们重点攻关「${knowledgeMap[knowledgeId]?.name ?? '核心考点'}」。在【${title}】的${qNum}中，归因为「${matchedError.errorType}」（失分 ${matchedError.scoreLost} 分）。在开始前先做个小诊断：当时面对这道题时，你的第一思考路径是什么？`,
+      quickReplies: ['看错或漏了关键条件', '公式定理或切入路径卡住', '会列式但计算或书写扣分'],
+    };
+  }
+
+  if (knowledgeId === 'cnm_165') {
     return {
       opening:
-        '今天我们攻克「分式与代数式运算」。在讲例题前，我先做一个诊断提问：如果一个分式的分母是 x - 2，那么 x 能不能等于 2？',
+        '今天我们攻克「分式方程的解法与增根」。在讲例题前，我先做一个诊断提问：如果一个分式的分母是 x - 2，那么 x 能不能等于 2？',
       quickReplies: ['可以', '不可以', '不确定'],
     };
   }
-  if (knowledgeId === 'math-func-linear') {
+  if (knowledgeId === 'cnm_204') {
     return {
       opening:
-        '今天我们训练「一次函数图像与性质」。我先确认一个核心问题：把直线 y = 2x + 1 向上平移 3 个单位，改变的是斜率 k 还是截距 b？',
+        '今天我们训练「一次函数图象的平移」。我先确认一个核心问题：把直线 y = 2x + 1 向上平移 3 个单位，改变的是斜率 k 还是截距 b？',
       quickReplies: ['只改变截距 b', '只改变斜率 k', '两个都变'],
     };
   }
-  if (knowledgeId === 'eng-vocab-core') {
+  if (knowledgeId === 'cne_j064') {
     return {
       opening:
-        '今天我们练习「上海中考词性转换与核心词汇」。先看一个小诊断：在 "It is ____ (polite) to shout in the library." 中，空格应当填副词还是形容词，肯定还是否定？',
+        '今天我们练习「描述性形容词与词形转换」。先看一个小诊断：在 "It is ____ (polite) to shout in the library." 中，空格应当填副词还是形容词，肯定还是否定？',
       quickReplies: ['否定形容词 impolite', '副词 politely', '不太确定'],
     };
   }
-  if (knowledgeId === 'chem-concept-symbols') {
+  if (knowledgeId === 'cnk_j021') {
     return {
       opening:
-        '今天我们强化「化学用语与方程式规范」。先确认一个高频扣分点：书写过氧化氢在二氧化锰催化下分解制氧气的方程式时，氧气后面要不要标气体符号 ↑ ？',
+        '今天我们强化「化学方程式的书写」。先确认一个高频扣分点：书写过氧化氢在二氧化锰催化下分解制氧气的方程式时，氧气后面要不要标气体符号 ↑ ？',
       quickReplies: ['需要标 ↑', '不需要标', '看反应物状态决定'],
     };
   }
-  if (knowledgeId === 'phys-elec-ohm') {
+  if (knowledgeId === 'cnp_073') {
     return {
       opening:
         '今天我们攻克物理「动态电路分析与故障判断」。先确认一个核心切入点：定值电阻 R₁ 与滑动变阻器 R₂ 串联时，如果滑片移动导致 R₂ 阻值增大，应该先用哪个电阻判断电压变化？',
       quickReplies: ['先看定值电阻 R₁ 分压', '直接看变阻器 R₂', '先看总电流不变'],
     };
   }
-  if (knowledgeId === 'phys-mech-pressure') {
+  if (knowledgeId === 'cnp_037') {
     return {
       opening:
         '今天我们训练物理「压强与浮力综合」。先做个小诊断：实心均匀正方体放在水平地面上，如果沿竖直方向切去一半，剩余部分对地面的压强会变小还是不变？',
       quickReplies: ['保持不变', '减小一半', '不确定'],
     };
   }
-  if (knowledgeId === 'chi-modern-read') {
+  if (knowledgeId === 'cnc_j001') {
     return {
       opening:
         '今天我们强化语文「现代文关键词句赏析与结构作用」。先问你一个核心得分点：当题目问“文章结尾段有什么作用”时，除了内容情感和主旨，阅卷老师一定会看哪个维度？',
       quickReplies: ['结构作用（收束/照应）', '修辞手法名称', '作者生平背景'],
     };
   }
-  if (knowledgeId === 'chi-classical-read') {
+  if (knowledgeId === 'cnc_j024') {
     return {
       opening:
         '今天我们训练语文「上海考纲文言实词与课外迁移」。翻译课外文言句子时，遇到和课内《岳阳楼记》相同的实词，优先直接套用白话语感还是回想课内对应义项？',
@@ -147,6 +168,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
   onSelectKnowledge,
   student,
   masteryRecords,
+  errorRecords,
   variantQuestions,
   coachHistoryByKnowledge,
   onUpdateCoachHistory,
@@ -163,7 +185,36 @@ export const CoachPage: React.FC<CoachPageProps> = ({
     knowledgePoints: SHANGHAI_CURRICULUM,
   } = useCurriculum();
 
-  const kp = KNOWLEDGE_MAP[activeKnowledgeId] ?? SHANGHAI_CURRICULUM[0];
+  /**
+   * 兜底知识点。
+   *
+   * 知识体系是异步加载的服务端资产：首帧或接口慢时
+   * `KNOWLEDGE_MAP[activeKnowledgeId]` 和 `knowledgePoints[0]` 都可能为空。
+   * 此时直接读 `kp.id` 会抛 TypeError 白屏。
+   *
+   * 不用「提前 return 加载态」是因为下方还有十几个 hook ——
+   * 条件 return 会让 hook 调用顺序在两次渲染间变化，触发 React 报错。
+   * 用占位对象可以保持 hook 顺序稳定，等资产到达后自动换成真实知识点。
+   */
+  const PLACEHOLDER_KP: KnowledgePoint = {
+    id: '',
+    subject: '数学',
+    chapter: '',
+    domain: '',
+    name: '加载中…',
+    subSkills: [],
+    definition: '',
+    prerequisites: [],
+    commonExamForms: [],
+    commonTraps: [],
+    examWeight: 1,
+    learningCostHours: 1,
+  };
+
+  const kp =
+    KNOWLEDGE_MAP[activeKnowledgeId] ??
+    SHANGHAI_CURRICULUM[0] ??
+    PLACEHOLDER_KP;
   const mastery = masteryRecords[kp.id];
 
   /**
@@ -200,6 +251,20 @@ export const CoachPage: React.FC<CoachPageProps> = ({
     };
   }, [student?.id, kp?.id]);
 
+  const [coachSubject, setCoachSubject] = useState<Subject | '全部'>(kp.subject);
+  const [showKpDetail, setShowKpDetail] = useState(false);
+
+  useEffect(() => {
+    if (kp.subject) {
+      setCoachSubject(kp.subject);
+    }
+  }, [kp.subject]);
+
+  const availableCoachKps = useMemo(() => {
+    if (coachSubject === '全部') return SHANGHAI_CURRICULUM;
+    return SHANGHAI_CURRICULUM.filter((k) => k.subject === coachSubject);
+  }, [SHANGHAI_CURRICULUM, coachSubject]);
+
   const savedHistory = coachHistoryByKnowledge[kp.id];
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -224,6 +289,14 @@ export const CoachPage: React.FC<CoachPageProps> = ({
   const [showSolution, setShowSolution] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [attemptedStems, setAttemptedStems] = useState<string[]>([]);
+  const [isPaperDraftMode, setIsPaperDraftMode] = useState(false);
+
+  // 关联当前知识点最近一次未闭环的错题
+  const matchedError = useMemo(() => {
+    return errorRecords?.find(
+      (e) => e.knowledgeId === kp.id && e.status !== '已闭环'
+    );
+  }, [errorRecords, kp.id]);
 
   // Initialize chat if no persistent history exists, and load bank-first question
   const messages: CoachMessage[] =
@@ -233,7 +306,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
           {
             id: `init-${kp.id}`,
             role: 'coach',
-            text: getInitialDiagnosticPrompt(kp.id, KNOWLEDGE_MAP).opening,
+            text: getInitialDiagnosticPrompt(kp.id, KNOWLEDGE_MAP, matchedError).opening,
             behavior: '诊断',
           },
         ];
@@ -383,6 +456,10 @@ export const CoachPage: React.FC<CoachPageProps> = ({
         history: updatedHistory.map((m) => ({ role: m.role, text: m.text })),
         studentMessage: userMsgText,
         activeProblem: currentQuestion?.stem ?? '',
+        sourceErrorStem: matchedError?.stem ?? '',
+        sourceStudentAnswer: matchedError?.studentAnswer ?? '',
+        sourceErrorType: matchedError?.errorType ?? '',
+        sourceAnalysis: matchedError?.aiAnalysis ?? '',
       });
 
       const behaviorUsed = (data.teachingBehaviorUsed as TeachingBehavior) || '引导';
@@ -512,8 +589,13 @@ export const CoachPage: React.FC<CoachPageProps> = ({
     }
   };
 
-  const handleEvaluateAnswer = async () => {
-    if (!currentQuestion || !studentAnswer.trim()) return;
+  const handleEvaluateAnswer = async (opts?: {
+    customAnswer?: string;
+    directCorrect?: boolean;
+    directErrorType?: ErrorType;
+  }) => {
+    const finalAnswer = opts?.customAnswer ?? studentAnswer.trim();
+    if (!currentQuestion || !finalAnswer) return;
     setIsEvaluating(true);
     setChatError(null);
 
@@ -526,22 +608,36 @@ export const CoachPage: React.FC<CoachPageProps> = ({
     };
 
     try {
-      const data = await api.post<EvaluateResponse>('/api/v1/practice/evaluate', {
-        subject: kp.subject,
-        knowledgeName: kp.name,
-        stem: currentQuestion.stem,
-        standardAnswer: currentQuestion.standardAnswer,
-        studentAnswer: studentAnswer.trim(),
-      });
-
-      const isCorrect = Boolean(data.isCorrect);
-      const resultObj = {
+      let isCorrect = Boolean(opts?.directCorrect);
+      let resultObj = {
         isCorrect,
-        errorType: String(data.errorType ?? '无'),
-        feedback: String(data.feedback ?? ''),
-        stepHint: String(data.stepHint ?? ''),
-        nextRecommendation: String(data.nextRecommendation ?? ''),
+        errorType: opts?.directErrorType ?? (isCorrect ? '无' : '计算问题'),
+        feedback: isCorrect
+          ? '纸笔独立推导演算正确！结果与标准答案吻合。'
+          : '纸笔推导出现疏漏或卡在中间关键步骤。',
+        stepHint: '',
+        nextRecommendation: isCorrect ? '推进到变式或迁移训练' : '建议回顾典型例题步骤',
       };
+
+      if (opts?.directCorrect === undefined) {
+        const data = await api.post<EvaluateResponse>('/api/v1/practice/evaluate', {
+          subject: kp.subject,
+          knowledgeName: kp.name,
+          stem: currentQuestion.stem,
+          standardAnswer: currentQuestion.standardAnswer,
+          studentAnswer: finalAnswer,
+        });
+
+        isCorrect = Boolean(data.isCorrect);
+        resultObj = {
+          isCorrect,
+          errorType: String(data.errorType ?? '无'),
+          feedback: String(data.feedback ?? ''),
+          stepHint: String(data.stepHint ?? ''),
+          nextRecommendation: String(data.nextRecommendation ?? ''),
+        };
+      }
+
       setEvalResult(resultObj);
       setShowSolution(true);
       setAttemptedStems((prev) => [...prev, currentQuestion.stem]);
@@ -566,7 +662,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
         knowledgeId: kp.id,
         mode: modeMap[practiceLevel],
         questionStem: currentQuestion.stem,
-        userAnswer: studentAnswer.trim(),
+        userAnswer: finalAnswer,
         isCorrect,
         hintsUsed: hintsUsedInSession,
         timeSpentSeconds: spentSec,
@@ -587,23 +683,54 @@ export const CoachPage: React.FC<CoachPageProps> = ({
       {/* Top Context & Mastery State Machine Bar */}
       <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="space-y-1">
+          <div className="space-y-2">
             <div className="text-xs text-slate-500">
               03. AI 学习教练 · 任务驱动苏格拉底教学与双轮验算评测（对话与步骤自动持久化）
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* 学科快捷过滤 */}
+              <select
+                aria-label="筛选学科"
+                value={coachSubject}
+                onChange={(e) => setCoachSubject(e.target.value as any)}
+                className="px-2.5 py-1.5 text-xs font-semibold text-slate-800 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+              >
+                <option value="全部">全部学科</option>
+                {ALL_SUBJECTS.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+
+              {/* 当前学科考点选择 */}
               <select
                 aria-label="选择训练知识点"
                 value={kp.id}
                 onChange={(e) => onSelectKnowledge(e.target.value)}
-                className="px-3 py-1.5 text-sm font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+                className="px-3 py-1.5 text-sm font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 max-w-sm truncate"
               >
-                {SHANGHAI_CURRICULUM.map((item) => (
+                {availableCoachKps.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.subject} · {item.name}
+                    [{item.subject}] {item.chapter ? `${item.chapter} · ` : ''}{item.name}
                   </option>
                 ))}
               </select>
+
+              <button
+                type="button"
+                onClick={() => setShowKpDetail((v) => !v)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                <span>{showKpDetail ? '收起考点全貌' : '查看考点全貌'}</span>
+                {showKpDetail ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+              </button>
+
               <span className="text-xs text-slate-500">
                 当前掌握状态：
                 <span className="font-semibold text-blue-700 ml-1">
@@ -634,6 +761,109 @@ export const CoachPage: React.FC<CoachPageProps> = ({
             })}
           </div>
         </div>
+
+        {/* Knowledge Point Panorama Expanded Panel */}
+        {showKpDetail && (
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+              <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+                <span>
+                  [{kp.subject}] {kp.chapter} · {kp.domain}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[11px]">
+                <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-medium">
+                  考纲权重 {kp.examWeight}x
+                </span>
+                <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">
+                  预估攻克工时 {kp.learningCostHours}h
+                </span>
+              </div>
+            </div>
+
+            <p className="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200">
+              <span className="font-semibold text-slate-900 mr-1">概念定义与要求：</span>
+              {kp.definition}
+            </p>
+
+            {kp.subSkills && kp.subSkills.length > 0 && (
+              <div className="space-y-1">
+                <div className="font-semibold text-slate-800 flex items-center gap-1">
+                  <Target className="w-3.5 h-3.5 text-blue-600" />
+                  <span>分步子能力清单：</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {kp.subSkills.map((sk) => (
+                    <span
+                      key={sk}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 text-[11px]"
+                    >
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      <span>{sk}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {kp.commonExamForms && kp.commonExamForms.length > 0 && (
+                <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                  <div className="font-semibold text-slate-800 flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>中考高频考法：</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {kp.commonExamForms.map((fmt) => (
+                      <span
+                        key={fmt}
+                        className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]"
+                      >
+                        {fmt}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {kp.commonTraps && kp.commonTraps.length > 0 && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1 text-amber-900">
+                  <div className="font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    <span>易错避坑要点：</span>
+                  </div>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {kp.commonTraps.map((trap) => (
+                      <li key={trap}>{trap}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {kp.prerequisites && kp.prerequisites.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="font-semibold text-slate-800 flex items-center gap-1">
+                  <Layers className="w-3.5 h-3.5 text-blue-600" />
+                  <span>前置依赖知识点（若当前点掌握不牢，建议切换）：</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {kp.prerequisites.map((preId) => (
+                    <button
+                      key={preId}
+                      type="button"
+                      onClick={() => onSelectKnowledge(preId)}
+                      className="px-2.5 py-1 rounded bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-blue-700 font-medium transition-colors text-left"
+                    >
+                      切换至前置：{KNOWLEDGE_MAP[preId]?.name ?? preId}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {(mastery?.consecutiveErrors ?? 0) >= 2 && (
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2.5 text-xs text-amber-900">
@@ -712,6 +942,28 @@ export const CoachPage: React.FC<CoachPageProps> = ({
           </div>
 
           <div className="flex-1 p-5 space-y-4 overflow-y-auto max-h-[420px]">
+            {matchedError && (
+              <div className="p-3.5 bg-rose-50/80 border border-rose-200 rounded-xl text-xs text-rose-950 space-y-1.5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold flex items-center gap-1.5 text-rose-900">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    <span>考试错题靶向攻关：{matchedError.examTitle || '诊断试卷'} · 第 {matchedError.questionNumber || '—'} 题</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                    {matchedError.errorType} · 扣 {matchedError.scoreLost} 分
+                  </span>
+                </div>
+                <div className="text-slate-700 leading-relaxed">
+                  <span className="font-medium text-slate-900">原错题：</span>{matchedError.stem}
+                </div>
+                {matchedError.studentAnswer && (
+                  <div className="text-slate-500 text-[11px]">
+                    <span className="font-medium text-slate-700">当时作答：</span>{matchedError.studentAnswer}
+                  </div>
+                )}
+              </div>
+            )}
+
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -885,35 +1137,109 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                   ))}
                 </div>
               ) : (
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                    你的独立作答
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={studentAnswer}
-                    onChange={(e) => setStudentAnswer(e.target.value)}
-                    placeholder="写出最终结果或关键计算步骤..."
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-slate-700">
+                      作答方式
+                    </label>
+                    <div className="inline-flex p-0.5 bg-slate-100 rounded-lg text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setIsPaperDraftMode(false)}
+                        className={`px-2.5 py-1 rounded-md transition-colors ${
+                          !isPaperDraftMode
+                            ? 'bg-white text-slate-900 shadow-sm font-medium'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        键盘输入
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsPaperDraftMode(true)}
+                        className={`px-2.5 py-1 rounded-md transition-colors ${
+                          isPaperDraftMode
+                            ? 'bg-white text-blue-700 shadow-sm font-medium'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        纸笔草稿自评
+                      </button>
+                    </div>
+                  </div>
+
+                  {!isPaperDraftMode ? (
+                    <textarea
+                      rows={3}
+                      value={studentAnswer}
+                      onChange={(e) => setStudentAnswer(e.target.value)}
+                      placeholder="写出最终结果或关键计算步骤..."
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+                    />
+                  ) : (
+                    <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-3">
+                      <div className="text-xs text-amber-950 leading-relaxed">
+                        <span className="font-semibold text-amber-900">初三草稿纸模式：</span>
+                        初中大题步骤较长，建议在草稿纸上完整写出推导与计算过程。完成后核对分步标准解答进行独立自评：
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          disabled={isEvaluating}
+                          onClick={() => {
+                            setStudentAnswer(currentQuestion.standardAnswer);
+                            void handleEvaluateAnswer({
+                              customAnswer: currentQuestion.standardAnswer,
+                              directCorrect: true,
+                            });
+                          }}
+                          className="py-2 px-3 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <Check className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>完全做对（核对一致）</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isEvaluating}
+                          onClick={() => {
+                            setStudentAnswer('计算或推导疏漏');
+                            void handleEvaluateAnswer({
+                              customAnswer: '计算或推导疏漏',
+                              directCorrect: false,
+                              directErrorType: '计算问题',
+                            });
+                          }}
+                          className="py-2 px-3 text-xs font-semibold text-rose-800 bg-rose-100 hover:bg-rose-200 border border-rose-300 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <span>做错或思路卡住</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isEvaluating || !studentAnswer.trim()}
-                  onClick={handleEvaluateAnswer}
-                  className="flex-1 py-2.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 rounded-lg transition-colors"
-                >
-                  {isEvaluating ? '正在评测并更新状态机...' : '提交作答并更新掌握状态'}
-                </button>
+                {!isPaperDraftMode && (
+                  <button
+                    type="button"
+                    disabled={isEvaluating || !studentAnswer.trim()}
+                    onClick={() => void handleEvaluateAnswer()}
+                    className="flex-1 py-2.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 rounded-lg transition-colors"
+                  >
+                    {isEvaluating ? '正在评测并更新状态机...' : '提交作答并更新掌握状态'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowSolution((s) => !s)}
-                  className="px-3 py-2.5 text-xs font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors whitespace-nowrap"
+                  className={`py-2.5 text-xs font-medium border rounded-lg transition-colors whitespace-nowrap ${
+                    isPaperDraftMode
+                      ? 'w-full bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
+                      : 'px-3 text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
                 >
-                  {showSolution ? '收起解析' : '看答案'}
+                  {showSolution ? '收起标准答案与解析' : '对照标准分步解答'}
                 </button>
               </div>
 
