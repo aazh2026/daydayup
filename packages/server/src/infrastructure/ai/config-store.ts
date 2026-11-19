@@ -34,7 +34,7 @@ export interface AIConfigDefaults {
 }
 
 /** 落盘的运行时配置（明文 Key 只在这里） */
-interface PersistedAIConfig {
+export interface PersistedAIConfig {
   apiKey: string;
   model: string;
   temperature: number;
