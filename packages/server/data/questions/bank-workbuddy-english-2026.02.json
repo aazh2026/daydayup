@@ -1,0 +1,1393 @@
+{
+  "version": "shanghai-junior-taxonomy-2026.02+questions",
+  "questions": [
+    {
+      "id": "cne_wb_q001",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "Your silk scarf is over there. This one is ______. A. I  B. me  C. my  D. mine",
+      "options": [
+        "I",
+        "me",
+        "my",
+        "mine"
+      ],
+      "standardAnswer": "D. mine",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：空格后无名词，必须用名词性物主代词独立作表语",
+        "迁移动作：看到空格先问\"后面还有没有名词\""
+      ],
+      "commonErrors": [
+        "选 my（形容词性，后面必须接名词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d084"
+      ]
+    },
+    {
+      "id": "cne_wb_q002",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "The young man often gives ______ helping hand to the old. A. a  B. an  C. the  D. /",
+      "options": [
+        "a",
+        "an",
+        "the",
+        "/"
+      ],
+      "standardAnswer": "A. a",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：give a helping hand 是固定搭配；helping 以辅音音素开头",
+        "迁移动作：固定搭配整体背，不拆开判断"
+      ],
+      "commonErrors": [
+        "选 an（按字母 h 误判）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_06_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q003",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "Will Alice take charge ______ the coming painting exhibition? A. for  B. with  C. of  D. from",
+      "options": [
+        "for",
+        "with",
+        "of",
+        "from"
+      ],
+      "standardAnswer": "C. of",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：take charge of 固定搭配，介词不可替换",
+        "迁移动作：把 take charge of 与 be responsible for 成组记"
+      ],
+      "commonErrors": [
+        "选 for（受中文\"为…负责\"影响）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d112"
+      ]
+    },
+    {
+      "id": "cne_wb_q004",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "This detective story is ______ than the one I read last night. A. attractive  B. more attractive  C. most attractive  D. the most attractive",
+      "options": [
+        "attractive",
+        "more attractive",
+        "most attractive",
+        "the most attractive"
+      ],
+      "standardAnswer": "B. more attractive",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：看到 than 立即锁定比较级；多音节形容词用 more",
+        "迁移动作：圈出 than / the / of 等比较信号词"
+      ],
+      "commonErrors": [
+        "选 the most attractive（忽略 than）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_05_03_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q005",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "Make sure ______ has the textbooks when the new term starts. A. nobody  B. anybody  C. somebody  D. everybody",
+      "options": [
+        "nobody",
+        "anybody",
+        "somebody",
+        "everybody"
+      ],
+      "standardAnswer": "D. everybody",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：句意要求\"每个人都拿到\"，且谓语 has 为单数",
+        "迁移动作：先译句意再选代词，不要只看语法"
+      ],
+      "commonErrors": [
+        "选 somebody（只看到单数谓语）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_03_01_06"
+      ]
+    },
+    {
+      "id": "cne_wb_q006",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "These strawberries look ______. I’d like to buy some. A. happily  B. lovely  C. softly  D. properly",
+      "options": [
+        "happily",
+        "lovely",
+        "softly",
+        "properly"
+      ],
+      "standardAnswer": "B. lovely",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：look 是系动词，后接形容词；lovely 是形容词而非副词",
+        "迁移动作：系动词 look/sound/taste/feel 后一律形容词"
+      ],
+      "commonErrors": [
+        "选 happily（见 -ly 就当副词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_04_01_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q007",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "The new restaurant ______ two surveys on its food and service since June. A. is doing  B. will do  C. did  D. has done",
+      "options": [
+        "is doing",
+        "will do",
+        "did",
+        "has done"
+      ],
+      "standardAnswer": "D. has done",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：since + 时间点 → have/has done",
+        "迁移动作：圈出 since / for / already / yet"
+      ],
+      "commonErrors": [
+        "选 did（只看到餐厅开业在六月）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_02_01_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q008",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "—There is an umbrella in the corner. ______ is it? —Perhaps it’s Mary’s. A. Whose  B. Who  C. When  D. Why",
+      "options": [
+        "Whose",
+        "Who",
+        "When",
+        "Why"
+      ],
+      "standardAnswer": "A. Whose",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：答语 Mary’s 表所属，问\"谁的\"",
+        "迁移动作：先看答语再定疑问词"
+      ],
+      "commonErrors": [
+        "选 Who（忽略 ’s）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_03_01_05"
+      ]
+    },
+    {
+      "id": "cne_wb_q009",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "—______ I use your glue? I’m making a kite. —No problem. Here you are. A. Should  B. Need  C. Must  D. May",
+      "options": [
+        "Should",
+        "Need",
+        "Must",
+        "May"
+      ],
+      "standardAnswer": "D. May",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：May I...? 表礼貌请求；答语 No problem 印证",
+        "迁移动作：请求许可场景优先 May / Could / Can"
+      ],
+      "commonErrors": [
+        "选 Must（把请求当必须）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d101"
+      ]
+    },
+    {
+      "id": "cne_wb_q010",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "The three Chinese astronauts ______ safely from space on April 16, 2022. A. returned  B. are returning  C. have returned  D. had returned",
+      "options": [
+        "returned",
+        "are returning",
+        "have returned",
+        "had returned"
+      ],
+      "standardAnswer": "A. returned",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：明确过去时间点 on April 16, 2022 → 一般过去时，不能用完成时",
+        "迁移动作：具体过去时间状语出现，排除完成时"
+      ],
+      "commonErrors": [
+        "选 have returned（忽略具体过去时间）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_02_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q011",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "The young player spends four hours ______ volleyball every day. A. practise  B. practising  C. to practise  D. practised",
+      "options": [
+        "practise",
+        "practising",
+        "to practise",
+        "practised"
+      ],
+      "standardAnswer": "B. practising",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：spend + 时间 + (in) doing 固定结构",
+        "迁移动作：把 spend / finish / enjoy / practise 归为 doing 组"
+      ],
+      "commonErrors": [
+        "选 to practise（把 spend 与 want 混）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d021"
+      ]
+    },
+    {
+      "id": "cne_wb_q012",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "The Internet enables farmers ______ fruits and vegetables across the country. A. sell  B. selling  C. to sell  D. sold",
+      "options": [
+        "sell",
+        "selling",
+        "to sell",
+        "sold"
+      ],
+      "standardAnswer": "C. to sell",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：enable / ask / tell / encourage 后接带 to 的不定式",
+        "迁移动作：区分 to do 组与 do 组（make/let/have）"
+      ],
+      "commonErrors": [
+        "选 sell（与 make/let 混）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d050"
+      ]
+    },
+    {
+      "id": "cne_wb_q013",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "Have a balanced diet and exercise regularly ______ you will stay healthy. A. and  B. or  C. but  D. for",
+      "options": [
+        "and",
+        "or",
+        "but",
+        "for"
+      ],
+      "standardAnswer": "A. and",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：「祈使句 + and + 将来结果」相当于 if 条件句",
+        "迁移动作：记住 \"祈使句 + and = 好的结果 / + or = 坏的结果\""
+      ],
+      "commonErrors": [
+        "选 or（or 表\"否则\"，语义相反）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q014",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "You won’t have a better view of the village ______ you reach the top of the hill. A. because  B. unless  C. when  D. if",
+      "options": [
+        "because",
+        "unless",
+        "when",
+        "if"
+      ],
+      "standardAnswer": "B. unless",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：unless = if...not，与 won’t 构成\"除非…否则不\"",
+        "迁移动作：把 unless 直接替换成 if...not 再读一遍"
+      ],
+      "commonErrors": [
+        "选 if（双重否定逻辑错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_05_02_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q015",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "选择",
+      "level": "基础题",
+      "stem": "______ exciting singing contest they had yesterday! A. What  B. How  C. What an  D. How an",
+      "options": [
+        "What",
+        "How",
+        "What an",
+        "How an"
+      ],
+      "standardAnswer": "C. What an",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：中心词是可数单数 contest，且 exciting 元音音素开头用 an",
+        "迁移动作：判断中心词：名词用 What，形副用 How"
+      ],
+      "commonErrors": [
+        "选 How（忽略名词中心词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d031"
+      ]
+    },
+    {
+      "id": "cne_wb_q016",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "There are many different ______ in that small garden. (plant)",
+      "standardAnswer": "plants",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：many different 后接可数名词复数",
+        "迁移动作：先数\"限定词\"，再定单复数"
+      ],
+      "commonErrors": [
+        "plant（漏加 -s）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d001"
+      ]
+    },
+    {
+      "id": "cne_wb_q017",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "Lily is reading the ______ story in the book about Chinese history. (six)",
+      "standardAnswer": "sixth",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：the + 序数词 + 单数名词表\"第几个\"",
+        "迁移动作：看到 the + 数字 + 单数名词 → 序数词"
+      ],
+      "commonErrors": [
+        "six（漏序数词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d091"
+      ]
+    },
+    {
+      "id": "cne_wb_q018",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "He learned how to make zongzi by ______ on the Dragon Boat Festival. (he)",
+      "standardAnswer": "himself",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：by oneself 表\"独自\"",
+        "迁移动作：by + 反身代词是固定结构"
+      ],
+      "commonErrors": [
+        "him（介词后虽用宾格，但语义需反身）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_03_01_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q019",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "These tips are ______ to improve your social skills. (use)",
+      "standardAnswer": "useful / used",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：be 动词后需要形容词，或 be used to do 表\"被用来\"",
+        "迁移动作：be + 空 → 优先形容词或过去分词"
+      ],
+      "commonErrors": [
+        "using（误填现在分词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_01_01_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q020",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "More citizens agree to be green travelers so as to reduce air ______. (pollute)",
+      "standardAnswer": "pollution",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：reduce 后接名词宾语，air pollution 固定搭配",
+        "迁移动作：动词后缺宾语 → 名词"
+      ],
+      "commonErrors": [
+        "polluting（把 reduce 当介词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_08_01_05"
+      ]
+    },
+    {
+      "id": "cne_wb_q021",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "The journalist hoped to ______ the brave act of the fireman. (reporter)",
+      "standardAnswer": "report",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：to 后需动词原形；reporter 是\"记者\"，需还原为 report\"报道\"",
+        "迁移动作：提示词与答案词性不同，先判断空格需要什么词性"
+      ],
+      "commonErrors": [
+        "reporter（照抄提示词）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_08_02_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q022",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "With the help of his workmates, he was able to operate the machine ______. (correct)",
+      "standardAnswer": "correctly",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：修饰动词 operate 用副词",
+        "迁移动作：动词后/句末修饰动作 → 副词"
+      ],
+      "commonErrors": [
+        "correct（漏 -ly）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_05_02_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q023",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "基础题",
+      "stem": "If you are ______ to get lost, calm down and look for possible help. (lucky)",
+      "standardAnswer": "unlucky",
+      "scoreValue": 2,
+      "difficulty": 3,
+      "solutionSteps": [
+        "得分关键：迷路是\"不幸\"，需加 un- 前缀",
+        "迁移动作：填完一定把整句翻译一遍"
+      ],
+      "commonErrors": [
+        "lucky（只看词形不听句意）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_08_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q024",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "My deskmate borrowed some books from the library at noon.（改为否定句）My deskmate ____ ____ any books...",
+      "standardAnswer": "didn’t borrow",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：borrowed 是过去式，否定用 didn’t + 动词原形；some 改 any",
+        "迁移动作：先找谓语时态，再决定助动词"
+      ],
+      "commonErrors": [
+        "didn’t borrowed / wasn’t borrow"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_02_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q025",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "The government has spent 10 million yuan improving the water quality.（对划线部分提问）____ ____ has the government spent...?",
+      "standardAnswer": "How much",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：10 million yuan 是钱数，不可数用 How much",
+        "迁移动作：划线是数量时先分类：钱/距离/时长/频率"
+      ],
+      "commonErrors": [
+        "How many / How long"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_08"
+      ]
+    },
+    {
+      "id": "cne_wb_q026",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "Doctor Wu Mengchao saved a lot of patients’ lives.（改为被动语态）A lot of patients’ lives ____ ____ by...",
+      "standardAnswer": "were saved",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：宾语变主语，复数 + 过去时 → were + done",
+        "迁移动作：被动题同时检查时态与新主语单复数"
+      ],
+      "commonErrors": [
+        "was saved / are saved"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_03_01_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q027",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "John is wondering how he can keep the balance...（改为简单句）John is wondering ____ ____ keep...",
+      "standardAnswer": "how to",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：宾语从句简化为\"疑问词 + to do\"",
+        "迁移动作：从句主语与主句主语一致时可简化"
+      ],
+      "commonErrors": [
+        "how can / how he to"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_04_01_05"
+      ]
+    },
+    {
+      "id": "cne_wb_q028",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "I had a good time in the ocean park...（保持句意基本不变）I ____ ____ in the ocean park...",
+      "standardAnswer": "enjoyed myself / had fun",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：have a good time = enjoy oneself = have fun",
+        "迁移动作：同义题必须换表达，不能照抄"
+      ],
+      "commonErrors": [
+        "had a good time（未改写）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_09_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q029",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "“Have you visited the National Book Expo?” Linda asked me.（改为间接引语）Linda asked me ____ I ____ visited...",
+      "standardAnswer": "whether/if; had",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：一般疑问句用 if/whether；语序陈述化；现在完成时后移为过去完成时",
+        "迁移动作：直接引语变间接引语按\"语序-连接词-时态-人称\"四步查"
+      ],
+      "commonErrors": [
+        "that; have / if; has"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_11"
+      ]
+    },
+    {
+      "id": "cne_wb_q030",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "a meal plan, the community, make, for the aged, is trying to（连词成句）",
+      "standardAnswer": "The community is trying to make a meal plan for the aged.",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：先找主语 the community，再找谓语 is trying to，最后补宾语与状语",
+        "迁移动作：连词成句先划主干，再放介词短语"
+      ],
+      "commonErrors": [
+        "语序混乱或漏词"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d026"
+      ]
+    },
+    {
+      "id": "cne_wb_q031",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "The new robots help passengers with their luggage at this airport.（改为一般疑问句）____ the new robots ____ passengers...?",
+      "standardAnswer": "Do; help",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：主语 robots 复数、谓语 help 原形 → Do + 主语 + 动原",
+        "迁移动作：三单判断看主语，不靠近的名词"
+      ],
+      "commonErrors": [
+        "Does; help / Do; helps"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_02_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q032",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "It is about 20 kilometres from our school to the National Forest Park.（划线提问）____ ____ is it...?",
+      "standardAnswer": "How far",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：20 kilometres 是距离，用 How far",
+        "迁移动作：距离/时长/价钱/频率四组疑问词成组背"
+      ],
+      "commonErrors": [
+        "How long / How much"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_08"
+      ]
+    },
+    {
+      "id": "cne_wb_q033",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "The research group discovered a new kind of insect last week.（被动）A new kind of insect ____ ____ by...",
+      "standardAnswer": "was discovered",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：last week 定过去时；新主语单数 → was + done",
+        "迁移动作：被动时态由原句时间状语决定"
+      ],
+      "commonErrors": [
+        "were discovered / has been discovered"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_03_01_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q034",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "The children are discussing what they are going to do this weekend.（改简单句）...discussing ____ ____ do...",
+      "standardAnswer": "what to",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：what they are going to do → what to do",
+        "迁移动作：简化后不能再出现主语和谓语"
+      ],
+      "commonErrors": [
+        "what they to / how to"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_04_01_05"
+      ]
+    },
+    {
+      "id": "cne_wb_q035",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "Tom was so excited that he couldn’t fall asleep.（保持句意）Tom was ____ excited ____ fall asleep.",
+      "standardAnswer": "too; to",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：so + adj. + that + 否定从句 = too + adj. + to do",
+        "迁移动作：看到 that 从句里是否定，才可用 too...to"
+      ],
+      "commonErrors": [
+        "so; to / very; to"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d039"
+      ]
+    },
+    {
+      "id": "cne_wb_q036",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "“When will we go to the VR experience center?” I asked the tour guide.（间接引语）I asked ... ____ we ____ go...",
+      "standardAnswer": "when; would",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：一般将来时后移为 would；特殊疑问句保留原疑问词",
+        "迁移动作：主句过去时，从句必须整体后移"
+      ],
+      "commonErrors": [
+        "when; will / what; would"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_11"
+      ]
+    },
+    {
+      "id": "cne_wb_q037",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "词汇语法",
+      "level": "变式题",
+      "stem": "the task, promised to, finish, as soon as possible, the engineer（连词成句）",
+      "standardAnswer": "The engineer promised to finish the task as soon as possible.",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：主语 The engineer + 谓语 promised to finish + 宾语 the task + 状语",
+        "迁移动作：连词成句后数一遍词数，不能漏词"
+      ],
+      "commonErrors": [
+        "漏 as soon as possible 或语序错"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d026"
+      ]
+    },
+    {
+      "id": "cne_wb_q038",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "Was Jim’s grandpa good at gardening?",
+      "standardAnswer": "Yes, he was.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：Yes/No + 主语 + 助动词，不能只写 Yes",
+        "迁移动作：一般疑问句一律写完整简答"
+      ],
+      "commonErrors": [
+        "只写 Yes"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_06_02_05"
+      ]
+    },
+    {
+      "id": "cne_wb_q039",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "Why did Grandpa and Jim have to wait a few more days to plant daffodils?",
+      "standardAnswer": "Because they needed to get the weeds out first.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：答案需回原文定位 \"We need to get the weeds out first\"",
+        "迁移动作：Why 题一律 Because + 主语 + 谓语"
+      ],
+      "commonErrors": [
+        "Because the weeds.（短语作答）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_05_02_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q040",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "What did Grandpa promise Grandma to do when they got married?",
+      "standardAnswer": "He promised her to plant daffodils every year.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：原文第一人称 I promised her → 转述为 He promised her",
+        "迁移动作：转述时把 I/we 换成 He/They"
+      ],
+      "commonErrors": [
+        "照抄 I promised her..."
+      ],
+      "knowledgeIds": [
+        "cne_wb_04_02_03_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q041",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "What might Jim say to Grandma? Fill in the blank with one sentence.",
+      "standardAnswer": "But I can do nothing about gardening without Grandpa’s help.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：后文奶奶说 \"He isn’t here, but he surely has taught you...\"，所以空格必须表达\"爷爷不在我做不了\"",
+        "迁移动作：补句题必须同时读空格前后两句"
+      ],
+      "commonErrors": [
+        "写与后文不衔接的积极句"
+      ],
+      "knowledgeIds": [
+        "cne_wb_05_02_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q042",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "How did Jim welcome Grandpa home?",
+      "standardAnswer": "By planting daffodils in the garden.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：问方式，用 By + 动名词作答",
+        "迁移动作：How 问方式优先 By doing"
+      ],
+      "commonErrors": [
+        "He planted daffodils.（可接受但不如 By doing 稳）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_07_01_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q043",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "Why did Jim say his grandparents were good teachers? Give three reasons.",
+      "standardAnswer": "Because he had learned the importance of patience, hard work and care from his grandparents.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：题干写明 Give three reasons，必须给足三点；答案由全文细节概括而来",
+        "迁移动作：看到 Give two/three reasons 先列序号再写"
+      ],
+      "commonErrors": [
+        "只写一条，或照抄某一句"
+      ],
+      "knowledgeIds": [
+        "cne_wb_05_02_01_02"
+      ]
+    },
+    {
+      "id": "cne_wb_q044",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "参考答案（题干见 2022 真题 D 篇）",
+      "standardAnswer": "He was seven. / He was 7.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：用完整句，不写 7 years 短语",
+        "迁移动作：数字题也要写主谓"
+      ],
+      "commonErrors": [
+        "Seven."
+      ],
+      "knowledgeIds": [
+        "cne_wb_d072"
+      ]
+    },
+    {
+      "id": "cne_wb_q045",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "参考答案（题干见 2022 真题 D 篇）",
+      "standardAnswer": "His favourite model car.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：该题为 What 提问且答案本身是名词短语",
+        "迁移动作：按疑问词决定答语形态，别一律写长句"
+      ],
+      "commonErrors": [
+        "写成一长段"
+      ],
+      "knowledgeIds": [
+        "cne_wb_05_02_02_04"
+      ]
+    },
+    {
+      "id": "cne_wb_q046",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "参考答案（题干见 2022 真题 D 篇）",
+      "standardAnswer": "Because he misunderstood his Grandma’s words “fruit bowl” as “football”.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：写出误解的双方（fruit bowl / football）才拿满",
+        "迁移动作：因果题把\"原因 + 结果\"都写全"
+      ],
+      "commonErrors": [
+        "Because he misunderstood.（信息不全）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_05_02_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q047",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "变式题",
+      "stem": "参考答案（开放题，言之成理即可）",
+      "standardAnswer": "He might feel happy because Grandma loved his gift.",
+      "scoreValue": 4,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：无标准答案，但必须有 because 支撑",
+        "迁移动作：开放题按\"观点 + because + 依据\"写"
+      ],
+      "commonErrors": [
+        "只写 Happy."
+      ],
+      "knowledgeIds": [
+        "cne_wb_06_01_02_03"
+      ]
+    },
+    {
+      "id": "cne_wb_q048",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(r) ____（真题答案词，原文见 2022 首字母短文）",
+      "standardAnswer": "reason",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：判断词性为名词后按语义锁定",
+        "迁移动作：填完复查名词单复数"
+      ],
+      "commonErrors": [
+        "写成 reasons 单复数错"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_01_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q049",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(c) ____",
+      "standardAnswer": "change",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：需结合上下文判断是\"改变\"还是\"零钱\"",
+        "迁移动作：一词多义先代入句意"
+      ],
+      "commonErrors": [
+        "changing（形式错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_01_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q050",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(p) ____",
+      "standardAnswer": "prefer",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：主语 + 动词原形/第三人称",
+        "迁移动作：注意重读闭音节双写规则"
+      ],
+      "commonErrors": [
+        "prefered（双写错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_04_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q051",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(s) ____",
+      "standardAnswer": "still",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：修饰全句表\"仍然\"",
+        "迁移动作：副词位置常在 be 后或实义动词前"
+      ],
+      "commonErrors": [
+        "stay（词性错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_05_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q052",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(j) ____",
+      "standardAnswer": "joy",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：介词/冠词后需名词",
+        "迁移动作：先定词性再定词"
+      ],
+      "commonErrors": [
+        "joyful（词性错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_01_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q053",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(c) ____",
+      "standardAnswer": "cycling",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：作宾语或介词宾语需 -ing",
+        "迁移动作：介词后动词一律 -ing"
+      ],
+      "commonErrors": [
+        "cycle / cycled"
+      ],
+      "knowledgeIds": [
+        "cne_wb_03_04_02_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q054",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "填空",
+      "level": "变式题",
+      "stem": "(s) ____",
+      "standardAnswer": "serious",
+      "scoreValue": 3,
+      "difficulty": 4,
+      "solutionSteps": [
+        "得分关键：系动词后或名词前用形容词",
+        "迁移动作：-ly 结尾多为副词，但需看位置"
+      ],
+      "commonErrors": [
+        "seriously（词性错）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_02_05_01_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q055",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "迁移题",
+      "stem": "给 Mr Zhang 写邮件，就\"学生活动室如何使用\"提出想法并说明理由（不少于 60 词）",
+      "standardAnswer": "参考范文：I am writing to you to share my ideas about the use of the student activity room. I prefer to make it a heart-to-heart room...",
+      "scoreValue": 6,
+      "difficulty": 5,
+      "solutionSteps": [
+        "得分关键：必须包含\"想法 + 至少两条理由 + 书信格式\"",
+        "迁移动作：所有上海作文题先列\"必答要点编号\""
+      ],
+      "commonErrors": [
+        "只写想法不写理由"
+      ],
+      "knowledgeIds": [
+        "cne_wb_05_01_01_04"
+      ]
+    },
+    {
+      "id": "cne_wb_q056",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "迁移题",
+      "stem": "社区\"时间管理\"培训方案征求意见，写邮件给王先生：①是否参加并简述理由 ②针对方案一项内容提修改建议",
+      "standardAnswer": "普通版范文见「作文抢分」页；高分要点：建议要具体到时间/对象/形式",
+      "scoreValue": 6,
+      "difficulty": 5,
+      "solutionSteps": [
+        "得分关键：两问都必须回答；建议不能空泛，要落到方案中的某一项",
+        "迁移动作：题目里出现 (1)(2) 就逐条编号打勾"
+      ],
+      "commonErrors": [
+        "只答\"我会参加\"，漏写建议（直接掉内容分）"
+      ],
+      "knowledgeIds": [
+        "cne_wb_d076"
+      ]
+    },
+    {
+      "id": "cne_wb_q057",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "迁移题",
+      "stem": "给外国生 Frank 写礼物卡：①礼物名称、特色、功能 ②选择这份礼物的理由",
+      "standardAnswer": "参考范文用 Chinese painting / Chinese red knot，写清外观 + 文化寓意 + 友谊",
+      "scoreValue": 6,
+      "difficulty": 5,
+      "solutionSteps": [
+        "得分关键：必须有\"中国元素\"的具体描述，不能只说 a Chinese gift",
+        "迁移动作：文化类话题准备 3 个可复用物件（中国结/剪纸/国画）"
+      ],
+      "commonErrors": [
+        "礼物名称一笔带过，大量篇幅写告别"
+      ],
+      "knowledgeIds": [
+        "cne_wb_06_01_03_06"
+      ]
+    },
+    {
+      "id": "cne_wb_q058",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "迁移题",
+      "stem": "三个英语项目化小组招新（健康食物 / 音乐与学习 / Happy ending 书籍），选一组写申请信：优势 + 选择理由 + 建议",
+      "standardAnswer": "高分结构：I am writing to apply for Group X → 优势+具体事例 → 理由 → 具体活动建议 → 期待",
+      "scoreValue": 6,
+      "difficulty": 5,
+      "solutionSteps": [
+        "得分关键：四要点缺一不可；必须明确\"只选一组\"；建议要写活动形式",
+        "迁移动作：用 3 行中文提纲把四个要点编号再动笔"
+      ],
+      "commonErrors": [
+        "漏写\"建议\"，或三组都提到"
+      ],
+      "knowledgeIds": [
+        "cne_wb_06_01_04_01"
+      ]
+    },
+    {
+      "id": "cne_wb_q059",
+      "region": "上海",
+      "grade": "初三",
+      "subject": "英语",
+      "questionType": "解答",
+      "level": "迁移题",
+      "stem": "外国友人 Jim 计划一个月读完 5 本中文小说遇困难，问 \"Am I not good enough?\" \"Should I give up the big plan?\"，回邮件回答两问并给建议",
+      "standardAnswer": "要点：先共情 → 明确回答\"不是能力问题\" → 建议调整计划（减量/分级读物/每天固定时间）→ 鼓励",
+      "scoreValue": 6,
+      "difficulty": 5,
+      "solutionSteps": [
+        "得分关键：两个疑问句必须逐一回应，不能只安慰；建议要可操作",
+        "迁移动作：回信题先数\"对方问了几个问题\""
+      ],
+      "commonErrors": [
+        "只写 Don’t give up，没有回答第一问"
+      ],
+      "knowledgeIds": [
+        "cne_wb_06_01_04_05"
+      ]
+    }
+  ]
+}

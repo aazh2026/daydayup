@@ -1,0 +1,377 @@
+{
+  "version": "workbuddy-english-2026.11",
+  "publishedAt": "2026-11-19T00:00:00.000Z",
+  "status": "ACTIVE",
+  "source": {
+    "repo": "workbuddy-research",
+    "path": "resources/workbuddy-research/上海中考英语提分实战手册.xlsx",
+    "license": "内部教研资料（未声明公开许可）",
+    "note": "产品商业化前须取得作者授权；冲刺表经教师核对后再 --promote 发布"
+  },
+  "stages": [
+    {
+      "name": "第一阶段 · 止血（基础分零失分）",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "fromDay": 1,
+      "toDay": 10
+    },
+    {
+      "name": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "fromDay": 11,
+      "toDay": 20
+    },
+    {
+      "name": "第三阶段 · 限时整套与稳定",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "fromDay": 21,
+      "toDay": 30
+    }
+  ],
+  "days": [
+    {
+      "dayIndex": 1,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "重做 2022 语法选择 21–35 + 词形转换 44–51，错题标考点标签",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j009",
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "句型转换 2021 七题 + 2022 七题第一遍，按 7 类归档",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j221",
+        "cne_j242"
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "词形转换限时 8 题 + 补 5 题同类型；写出每空词性",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j009"
+      ]
+    },
+    {
+      "dayIndex": 4,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "听力填空 2022 真题 16–20 听写，专查复数与完成时",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j009",
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 5,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "作文 2023 真题：只写提纲 + 要点句，不写全文",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245"
+      ]
+    },
+    {
+      "dayIndex": 6,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "语法选择错题二刷，重点 since/ spend doing / enable to do",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 7,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "句型转换被动语态专项 10 题，检查时态与新主语一致",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j205",
+        "cne_j221",
+        "cne_j242"
+      ]
+    },
+    {
+      "dayIndex": 8,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "首字母 1 篇，严格写词性标签；统计\"猜对但拼错\"数量",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j240",
+        "cne_j009"
+      ]
+    },
+    {
+      "dayIndex": 9,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "作文 2024 真题全文 1 篇 + 60 秒动词/复数检查",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245",
+        "cne_j009"
+      ]
+    },
+    {
+      "dayIndex": 10,
+      "stage": "第一阶段 · 止血（基础分零失分）",
+      "task": "阶段测：词形 8 题 + 句转 7 题限时 12 分钟，记录错因",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "词形 8 题错 ≤1、句转 7 题错 ≤1、听力填空 5 空全对",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j009",
+        "cne_j221",
+        "cne_j242"
+      ]
+    },
+    {
+      "dayIndex": 11,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "2023 阅读 D 篇 78–83 限时 10 分钟，全部写完整句",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j190"
+      ]
+    },
+    {
+      "dayIndex": 12,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "首字母 1 篇 + 完形 1 篇，圈出每空提示词",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j240"
+      ]
+    },
+    {
+      "dayIndex": 13,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "作文 2025 真题：四要点编号，写完逐条打勾",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245"
+      ]
+    },
+    {
+      "dayIndex": 14,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "阅读 2 篇（细节 + 推断），每题划出原文依据句",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j190"
+      ]
+    },
+    {
+      "dayIndex": 15,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "句子升级练习 5 句：合并两句 / 定语从句 / Having done",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j221",
+        "cne_j242"
+      ]
+    },
+    {
+      "dayIndex": 16,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "首字母 1 篇，专查名词复数与动词 -ing 形式",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j240",
+        "cne_j009"
+      ]
+    },
+    {
+      "dayIndex": 17,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "阅读问答 6 题：Why 用 Because、How 用 By doing",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j197",
+        "cne_j190"
+      ]
+    },
+    {
+      "dayIndex": 18,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "作文 2026 回忆题：逐一回应两个疑问句",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245"
+      ]
+    },
+    {
+      "dayIndex": 19,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "完形 1 篇 + 多模态材料 1 篇（海报/图表）",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j240"
+      ]
+    },
+    {
+      "dayIndex": 20,
+      "stage": "第二阶段 · 攻拉分题（阅读 / 首字母 / 作文）",
+      "task": "阶段测：首字母 1 篇 + 阅读问答 1 组 + 作文 1 篇，按评分细则自评",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "首字母 7 空错 ≤2 且拼写零错；阅读问答 ≥5 题完整句；作文 ≥60 词且要点全",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245",
+        "cne_j240",
+        "cne_j190"
+      ]
+    },
+    {
+      "dayIndex": 21,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "整套限时卷 1 套（90 分钟），只统计各板块失分",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245",
+        "cne_j240",
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 22,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "针对失分最多板块做 20 分钟专项，不重做整卷",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": []
+    },
+    {
+      "dayIndex": 23,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "听说全套模考 + 回放检查抢答/重复作答",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": []
+    },
+    {
+      "dayIndex": 24,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "作文 1 篇（近五年题目轮换）+ 按内容8/语言8/结构4 自评",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245"
+      ]
+    },
+    {
+      "dayIndex": 25,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "词形 + 句转 15 题保温，限时 10 分钟",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j009",
+        "cne_j221",
+        "cne_j242"
+      ]
+    },
+    {
+      "dayIndex": 26,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "首字母 1 篇 + 六选五/小标题 1 组（2027 衔接）",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j240"
+      ]
+    },
+    {
+      "dayIndex": 27,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "整套限时卷 1 套，重点看时间分配是否留够 15 分钟写作",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245",
+        "cne_j240",
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 28,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "错题归因统计：词汇/语法/逻辑/粗心 四类占比，只补最多一类",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j237"
+      ]
+    },
+    {
+      "dayIndex": 29,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "听说全套模考 + 朗读长句 2 句（标调）",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": []
+    },
+    {
+      "dayIndex": 30,
+      "stage": "第三阶段 · 限时整套与稳定",
+      "task": "考前一天：只看「考前10分钟」+ 作文骨架 + 高频词块，不做新题",
+      "timeLimit": "每日 35–45 分钟；整套卷日 90 分钟",
+      "acceptanceCriteria": "整套卷基础题零失分；作文自评 ≥16 分；听说模考无抢答无空白",
+      "subject": "英语",
+      "knowledgeIds": [
+        "cne_j245"
+      ]
+    }
+  ]
+}
