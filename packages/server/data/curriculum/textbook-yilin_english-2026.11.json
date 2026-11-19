@@ -1,0 +1,2665 @@
+{
+  "version": "textbook-yilin_english-2026.11",
+  "publishedAt": "2026-11-19T00:00:00.000Z",
+  "status": "ACTIVE",
+  "source": {
+    "repo": "cn-math-taxonomy",
+    "path": "resources/cn-math-taxonomy/data/mappings",
+    "license": "CC BY-NC 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "note": "译林版英语（译林出版社），上海中考英语用书"
+  },
+  "entries": [
+    {
+      "knowledgeId": "cne_p001",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 1 Hello!",
+        "chapter": "Letters in focus；书后 The English alphabet",
+        "note": "26个字母分散在各单元Letters in focus教学，完整字母表见书后The English alphabet；此处取首次教学落点"
+      }
+    },
+    {
+      "knowledgeId": "cne_p002",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 1 Hello!",
+        "chapter": "Letters in focus；书后 The English alphabet",
+        "note": "26个字母分散在各单元Letters in focus教学，完整字母表见书后The English alphabet；此处取首次教学落点"
+      }
+    },
+    {
+      "knowledgeId": "cne_p005",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 1 Hello!",
+        "chapter": "Cartoon time；Story time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p006",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 1 Hello!",
+        "chapter": "Cartoon time；Story time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p007",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 1 Hello!",
+        "chapter": "Cartoon time；Story time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p008",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 2 What's your name?",
+        "chapter": "Story time A new classmate"
+      }
+    },
+    {
+      "knowledgeId": "cne_p035",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 5 She's my mother",
+        "chapter": "Lead-in；Story time Meeting Liu Tao's family"
+      }
+    },
+    {
+      "knowledgeId": "cne_p036",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 5 She's my mother",
+        "chapter": "Lead-in；Story time Meeting Liu Tao's family"
+      }
+    },
+    {
+      "knowledgeId": "cne_p037",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 5 She's my mother",
+        "chapter": "Lead-in；Story time Meeting Liu Tao's family"
+      }
+    },
+    {
+      "knowledgeId": "cne_p038",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 5 She's my mother",
+        "chapter": "Lead-in；Story time Meeting Liu Tao's family"
+      }
+    },
+    {
+      "knowledgeId": "cne_p024",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 7 Happy Birthday!",
+        "chapter": "Lead-in；Story time Thank you, Dad!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p027",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 7 Happy Birthday!",
+        "chapter": "Lead-in；Story time Thank you, Dad!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p121",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 8 I can do this for you",
+        "chapter": "Lead-in；Story time I can sing"
+      }
+    },
+    {
+      "knowledgeId": "cne_p122",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 8 I can do this for you",
+        "chapter": "Lead-in；Story time I can sing"
+      }
+    },
+    {
+      "knowledgeId": "cne_p123",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 8 I can do this for you",
+        "chapter": "Wrap-up time Talk about things you can do for your family",
+        "note": "以I can ...自述及为家人做事为主，What can you do?不是本单元核心问句"
+      }
+    },
+    {
+      "knowledgeId": "cne_p124",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "上册",
+        "unit": "Unit 8 I can do this for you",
+        "chapter": "Lead-in；Story time I can sing"
+      }
+    },
+    {
+      "knowledgeId": "cne_p004",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 1 School things",
+        "chapter": "Sounds in focus"
+      }
+    },
+    {
+      "knowledgeId": "cne_p014",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 1 School things",
+        "chapter": "Cartoon time；Story time What's that?",
+        "note": "在What's this/that?及Is it ...?语境中合并学习this/that，非PEP家人介绍语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p063",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 1 School things",
+        "chapter": "Cartoon time；Story time What's that?",
+        "note": "译林核心词用rubber，对应PEP的eraser"
+      }
+    },
+    {
+      "knowledgeId": "cne_p064",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 1 School things",
+        "chapter": "Cartoon time；Story time What's that?"
+      }
+    },
+    {
+      "knowledgeId": "cne_p065",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 1 School things",
+        "chapter": "Cartoon time；Story time What's that?",
+        "note": "阅读重点为文具及所属，颜色不是本单元阅读重点"
+      }
+    },
+    {
+      "knowledgeId": "cne_p044",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 2 Clean our classroom",
+        "chapter": "Lead-in；Story time Let's clean our classroom；Word lists",
+        "note": "desk、chair、book在本单元教室清洁语境出现，bag在相邻Unit 1 School things教学，属相邻单元词包拆分"
+      }
+    },
+    {
+      "knowledgeId": "cne_p058",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 2 Clean our classroom",
+        "chapter": "Lead-in；Story time Let's clean our classroom"
+      }
+    },
+    {
+      "knowledgeId": "cne_p059",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 2 Clean our classroom",
+        "chapter": "Lead-in；Story time Let's clean our classroom"
+      }
+    },
+    {
+      "knowledgeId": "cne_p060",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 2 Clean our classroom",
+        "chapter": "Lead-in；Story time Let's clean our classroom"
+      }
+    },
+    {
+      "knowledgeId": "cne_p061",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 2 Clean our classroom",
+        "chapter": "Lead-in；Story time Let's clean our classroom",
+        "note": "文本为教室清洁配图故事和韵文，不是PEP的短通知体裁"
+      }
+    },
+    {
+      "knowledgeId": "cne_p151",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library",
+        "note": "核心词含rule、library、talk、quiet、keep等，与PEP规则词包不完全相同"
+      }
+    },
+    {
+      "knowledgeId": "cne_p152",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library"
+      }
+    },
+    {
+      "knowledgeId": "cne_p153",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library"
+      }
+    },
+    {
+      "knowledgeId": "cne_p154",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library"
+      }
+    },
+    {
+      "knowledgeId": "cne_p247",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Wrap-up time Make class rules"
+      }
+    },
+    {
+      "knowledgeId": "cne_p270",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library",
+        "note": "覆盖quietly/quiet、talk、keep等，公共秩序词包与PEP不完全相同"
+      }
+    },
+    {
+      "knowledgeId": "cne_p271",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library",
+        "note": "以Don't ...、Please keep quiet和No, thank you等呈现，未集中归纳No + doing"
+      }
+    },
+    {
+      "knowledgeId": "cne_p272",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library"
+      }
+    },
+    {
+      "knowledgeId": "cne_p275",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 3 School rules",
+        "chapter": "Lead-in；Story time In the library"
+      }
+    },
+    {
+      "knowledgeId": "cne_p045",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 4 Have fun after class",
+        "chapter": "Cartoon time；Story time Drawing in the school",
+        "note": "位置词还合教behind、by，不局限于PEP的in、on、under"
+      }
+    },
+    {
+      "knowledgeId": "cne_p046",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 4 Have fun after class",
+        "chapter": "Cartoon time；Story time Drawing in the school",
+        "note": "位置词还合教behind、by，不局限于PEP的in、on、under"
+      }
+    },
+    {
+      "knowledgeId": "cne_p047",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 4 Have fun after class",
+        "chapter": "Cartoon time；Story time Drawing in the school",
+        "note": "位置词还合教behind、by，不局限于PEP的in、on、under"
+      }
+    },
+    {
+      "knowledgeId": "cne_p026",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 5 Fruit",
+        "chapter": "Lead-in；Cartoon time；Story time Let's make a fruit salad",
+        "note": "How many见于数芒果等水果的韵文和活动"
+      }
+    },
+    {
+      "knowledgeId": "cne_p028",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 5 Fruit",
+        "chapter": "Lead-in；Cartoon time；Story time Let's make a fruit salad"
+      }
+    },
+    {
+      "knowledgeId": "cne_p050",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 5 Fruit",
+        "chapter": "Lead-in；Cartoon time；Story time Let's make a fruit salad",
+        "note": "核心水果为orange、grape、banana、apple、mango，未完整覆盖PEP的pear等例词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p052",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 5 Fruit",
+        "chapter": "Lead-in；Cartoon time；Story time Let's make a fruit salad",
+        "note": "结合apple/apples、mango/mangoes及Learning tips讲名词数，含-es和不规则复数提示"
+      }
+    },
+    {
+      "knowledgeId": "cne_p096",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 6 On the farm",
+        "chapter": "Cartoon time；Story time On Grandpa's farm",
+        "note": "覆盖cow、carrot等农场词，但horse、tomato、potato不是本单元核心词，属部分对应"
+      }
+    },
+    {
+      "knowledgeId": "cne_p097",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 6 On the farm",
+        "chapter": "Cartoon time；Story time On Grandpa's farm"
+      }
+    },
+    {
+      "knowledgeId": "cne_p098",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 6 On the farm",
+        "chapter": "Cartoon time；Story time On Grandpa's farm"
+      }
+    },
+    {
+      "knowledgeId": "cne_p099",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 6 On the farm",
+        "chapter": "Cartoon time；Story time On Grandpa's farm"
+      }
+    },
+    {
+      "knowledgeId": "cne_p252",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 6 On the farm",
+        "chapter": "Cartoon time；Story time On Grandpa's farm",
+        "note": "核心词含chicken、cow、rabbit、sheep、carrot等，未完整覆盖hen、horse、tomato、potato等PEP例词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p017",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 7 Animals",
+        "chapter": "Lead-in；Story time At the zoo；Word lists",
+        "note": "本单元集中教学monkey、lion、bear、tiger、panda、elephant等动物词；PEP的cat、dog、bird、duck分散于其他册次/单元，属同主题词包差异"
+      }
+    },
+    {
+      "knowledgeId": "cne_p021",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 7 Animals",
+        "chapter": "Cartoon time High five!；Story time At the zoo；Read and match"
+      }
+    },
+    {
+      "knowledgeId": "cne_p023",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 7 Animals",
+        "chapter": "Cartoon time High five!；Story time At the zoo；Read and match",
+        "note": "Cartoon time及Read and match直接读取Bobby和朋友们喜欢的食物；与cne_p053同单元合教，本点侧重人物食物喜好，cne_p053侧重Do you like ...?水果问答"
+      }
+    },
+    {
+      "knowledgeId": "cne_p051",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 7 Animals",
+        "chapter": "Cartoon time High five!；Story time At the zoo；Read and match"
+      }
+    },
+    {
+      "knowledgeId": "cne_p053",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 7 Animals",
+        "chapter": "Cartoon time High five!；Story time At the zoo；Read and match",
+        "note": "阅读对话含bananas、cakes等喜好，动物主题为At the zoo"
+      }
+    },
+    {
+      "knowledgeId": "cne_p009",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Cartoon time；Story time A little friend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p010",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Cartoon time；Story time A little friend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p011",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Cartoon time；Story time A little friend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p012",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Cartoon time；Story time A little friend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p018",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Cartoon time；Story time A little friend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p179",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Unit 8 Colours",
+        "chapter": "Sounds in focus Rising and falling tones",
+        "note": "在韵句朗读中标注升调和降调，未按PEP句类作同样细分"
+      }
+    },
+    {
+      "knowledgeId": "cne_p019",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Project 2 My nature park",
+        "chapter": "Show your nature park to the class"
+      }
+    },
+    {
+      "knowledgeId": "cne_p129",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Project 2 My nature park",
+        "chapter": "Show your nature park to the class",
+        "note": "项目词汇为cow、bear、rabbit、sheep、apple tree、orange tree等公园内容，river、lake、mountain、forest未集中教学，属同主题词包差异"
+      }
+    },
+    {
+      "knowledgeId": "cne_p132",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "三年级",
+        "term": "下册",
+        "unit": "Project 2 My nature park",
+        "chapter": "Show your nature park to the class",
+        "note": "项目展示文本读取公园里的动物及位置，不含PEP自然公园全部地貌词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p054",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time",
+        "note": "Story time集中列出eleven至twenty及thirty，用于时刻表达"
+      }
+    },
+    {
+      "knowledgeId": "cne_p088",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p089",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p090",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p091",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p133",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p135",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time",
+        "note": "主要用It's ...、It's time for/to ...及日常活动表达作息，I ... at ...并非唯一核心句式"
+      }
+    },
+    {
+      "knowledgeId": "cne_p136",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p248",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p249",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 2 My day",
+        "chapter": "Lead-in；Story time Wang Bing's day；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p113",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 3 My week",
+        "chapter": "Lead-in；Story time After school；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p114",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 3 My week",
+        "chapter": "Lead-in；Story time After school；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p117",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 3 My week",
+        "chapter": "Lead-in；Story time After school；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p134",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 3 My week",
+        "chapter": "Cartoon time Oh, it's Saturday!",
+        "note": "以When do you get up every day?和I get up at five呈现，也合教按星期回答"
+      }
+    },
+    {
+      "knowledgeId": "cne_p029",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 4 I like sport",
+        "chapter": "Sounds in focus a (happy)",
+        "note": "以happy、mat、bat等韵词练短元音a，不按PEP同样词表编排"
+      }
+    },
+    {
+      "knowledgeId": "cne_p013",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls"
+      }
+    },
+    {
+      "knowledgeId": "cne_p015",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls",
+        "note": "用My/His/Her加身体部位描述玩偶，不以This is my ...介绍自己的五官"
+      }
+    },
+    {
+      "knowledgeId": "cne_p016",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls"
+      }
+    },
+    {
+      "knowledgeId": "cne_p025",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls",
+        "note": "核心玩具为robot、doll，ball、kite、boat等PEP例词不在本单元集中教学"
+      }
+    },
+    {
+      "knowledgeId": "cne_p040",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls",
+        "note": "big、small、tall、short均出现，但short在本单元指短的，不是PEP所指的矮"
+      }
+    },
+    {
+      "knowledgeId": "cne_p041",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Lead-in；Cartoon time；Story time Our dolls",
+        "note": "用His/Her ... is/are ...及You're ...描述玩偶，非It is ...描述动物"
+      }
+    },
+    {
+      "knowledgeId": "cne_p057",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 5 Different toys, same fun",
+        "chapter": "Sounds in focus a (name)",
+        "note": "以name、Grace、face、late等韵词学习a-e读音"
+      }
+    },
+    {
+      "knowledgeId": "cne_p034",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Sounds in focus e (Wednesday)",
+        "note": "以Wednesday、wet、weather、together等韵词练短元音e"
+      }
+    },
+    {
+      "knowledgeId": "cne_p092",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Lead-in；Story time In the park；Wrap-up time",
+        "note": "Unit 6重点为warm、cool、hot及sunny、rainy等，cold在Unit 7季节语境出现，属部分词项拆分"
+      }
+    },
+    {
+      "knowledgeId": "cne_p093",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Lead-in；Story time In the park；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p094",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Lead-in；Story time In the park；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p095",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Lead-in；Story time In the park；Wrap-up time",
+        "note": "阅读材料为逐日天气变化及公园活动配图故事，不是按城市排列的天气预报"
+      }
+    },
+    {
+      "knowledgeId": "cne_p218",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 6 Weather",
+        "chapter": "Lead-in；Story time In the park；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p076",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Sounds in focus e (these)",
+        "note": "以these、tree、leave等韵词练长元音e"
+      }
+    },
+    {
+      "knowledgeId": "cne_p137",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p138",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time",
+        "note": "Unit 7以I like ... best谈最爱季节，Which season do you like best?在Project 2 A puppet show复现"
+      }
+    },
+    {
+      "knowledgeId": "cne_p139",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p220",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time",
+        "note": "活动为go swimming、pick fruit、play in the snow、go skating等，与PEP活动词包不完全相同"
+      }
+    },
+    {
+      "knowledgeId": "cne_p260",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time",
+        "note": "核心活动为plant trees、go boating、go swimming、pick fruit、go climbing、go skating等"
+      }
+    },
+    {
+      "knowledgeId": "cne_p262",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 7 Seasons",
+        "chapter": "Lead-in；Story time Four seasons；Wrap-up time",
+        "note": "以季节天气和活动说明喜好理由，未集中使用Why/Because问答"
+      }
+    },
+    {
+      "knowledgeId": "cne_p100",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 8 What we wear",
+        "chapter": "Cartoon time；Story time Happy Chinese New Year!；Wrap-up time",
+        "note": "译林用trousers对应PEP的pants，并合教cap、coat、shorts等"
+      }
+    },
+    {
+      "knowledgeId": "cne_p101",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 8 What we wear",
+        "chapter": "Cartoon time；Story time Happy Chinese New Year!；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p102",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 8 What we wear",
+        "chapter": "Cartoon time；Story time Happy Chinese New Year!；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p103",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "上册",
+        "unit": "Unit 8 What we wear",
+        "chapter": "Cartoon time；Story time Happy Chinese New Year!；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p042",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "阅读狮子与老鼠的big/small/strong/thin等特征，未完整覆盖高矮描述"
+      }
+    },
+    {
+      "knowledgeId": "cne_p062",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Sounds in focus i (I)",
+        "note": "以I、bike、ride、side等韵词学习长i及i-e读音"
+      }
+    },
+    {
+      "knowledgeId": "cne_p067",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "覆盖friend、strong、kind等，quiet、friendly不是本单元核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p069",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "以The lion is ...、The mouse is ...描述朋友特征，未使用He has ..."
+      }
+    },
+    {
+      "knowledgeId": "cne_p070",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "文本为朋友互助的寓言配图故事，非独立朋友介绍短文"
+      }
+    },
+    {
+      "knowledgeId": "cne_p126",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p212",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "品质词以kind及互助行为为主，funny、honest未在本单元集中教学"
+      }
+    },
+    {
+      "knowledgeId": "cne_p213",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "主题为朋友互助与和睦相处，不是PEP的选择朋友小书"
+      }
+    },
+    {
+      "knowledgeId": "cne_p253",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 1 We're friends",
+        "chapter": "Story time The lion and the mouse；Wrap-up time",
+        "note": "There is/are在森林、公园和朋友分享语境首次集中出现，不是农场语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p039",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Sounds in focus i (Miss)",
+        "note": "以Miss、is、six等韵词练短元音i"
+      }
+    },
+    {
+      "knowledgeId": "cne_p084",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time",
+        "note": "核心词为classroom、computer room、library、playground等，computer以computer room呈现"
+      }
+    },
+    {
+      "knowledgeId": "cne_p085",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p086",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p087",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time",
+        "note": "文本为新生校园导览及楼层说明，不是独立学校平面图短文"
+      }
+    },
+    {
+      "knowledgeId": "cne_p130",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p131",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time",
+        "note": "Is there/Are there用于学校场所问答，不是自然公园语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p144",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time",
+        "note": "首次结合first、second、third floor学习序数词，更多序数词在六上Unit 4集中扩展"
+      }
+    },
+    {
+      "knowledgeId": "cne_p217",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 2 Helping others at school",
+        "chapter": "Lead-in；Story time Let me show you around；Wrap-up time",
+        "note": "阅读帮助新生熟悉校园的配图故事，不是学校帮手海报"
+      }
+    },
+    {
+      "knowledgeId": "cne_p066",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 3 Road safety",
+        "chapter": "Sounds in focus o (oh)",
+        "note": "教材标作o (oh)，韵文含home等词；覆盖长o及部分o-e，不是完整o-e词组教学"
+      }
+    },
+    {
+      "knowledgeId": "cne_p043",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 4 Caring about others",
+        "chapter": "Sounds in focus o (tick-tock)",
+        "note": "以tick-tock、o'clock、not、hot等韵词练短元音o"
+      }
+    },
+    {
+      "knowledgeId": "cne_p078",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 4 Caring about others",
+        "chapter": "Story time What's the matter, Mum?",
+        "note": "以Would you like some bread?及No, thanks呈现用餐/照护对话"
+      }
+    },
+    {
+      "knowledgeId": "cne_p071",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 5 Eating out",
+        "chapter": "Sounds in focus u (student)",
+        "note": "教材以u (student)练长u，韵文含cute，覆盖u-e但未按PEP词表集中归纳"
+      }
+    },
+    {
+      "knowledgeId": "cne_p118",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 5 Eating out",
+        "chapter": "Lead-in；Story time In a Chinese restaurant；Wrap-up time",
+        "note": "覆盖tea、sandwich及noodles、fried rice、jiaozi等，salad、hamburger不是核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p119",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 5 Eating out",
+        "chapter": "Lead-in；Story time In a Chinese restaurant；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p120",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 5 Eating out",
+        "chapter": "Lead-in；Story time In a Chinese restaurant；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p048",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Sounds in focus u (mum)",
+        "note": "以mum、driver、trucks、rubber、ducks等韵词练短元音u"
+      }
+    },
+    {
+      "knowledgeId": "cne_p080",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p081",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!",
+        "note": "主要问法为What's your father's/mother's job?，his/her用于所属关系，未以What is his job?为核心"
+      }
+    },
+    {
+      "knowledgeId": "cne_p082",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p083",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p172",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!",
+        "note": "用What's ... job?询问职业，不用What does he/she do?；works工作地点仅在部分语篇出现"
+      }
+    },
+    {
+      "knowledgeId": "cne_p173",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!"
+      }
+    },
+    {
+      "knowledgeId": "cne_p174",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 6 Jobs",
+        "chapter": "Lead-in；Cartoon time Our parents' jobs；Story time Happy Labour Day!",
+        "note": "重点为家人职业及社会作用，工作地点在Cartoon time以work there/hospital等呈现"
+      }
+    },
+    {
+      "knowledgeId": "cne_p148",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 7 Doing chores at home",
+        "chapter": "Lead-in；Story time A busy weekend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p150",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 7 Doing chores at home",
+        "chapter": "Lead-in；Story time A busy weekend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p209",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 7 Doing chores at home",
+        "chapter": "Lead-in；Story time A busy weekend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p210",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 7 Doing chores at home",
+        "chapter": "Lead-in；Story time A busy weekend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p211",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 7 Doing chores at home",
+        "chapter": "Lead-in；Story time A busy weekend；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p022",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 8 In the kitchen",
+        "chapter": "Story time A happy dinner；Wrap-up time",
+        "note": "用I love ...和Have some ...表达喜好及劝食，与PEP的I like/Have some句式略有差异"
+      }
+    },
+    {
+      "knowledgeId": "cne_p077",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 8 In the kitchen",
+        "chapter": "Story time A happy dinner；Wrap-up time",
+        "note": "覆盖chicken、soup及meat、potato等，beef、noodles不是本单元核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p079",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 8 In the kitchen",
+        "chapter": "Story time A happy dinner；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p268",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Unit 8 In the kitchen",
+        "chapter": "Story time A happy dinner；Wrap-up time",
+        "note": "教材集中列出cook/wash/make/take/cut/swim等-ing变化"
+      }
+    },
+    {
+      "knowledgeId": "cne_p222",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "四年级",
+        "term": "下册",
+        "unit": "Project 2 A good helper",
+        "chapter": "Tell your class how you can help at home",
+        "note": "项目综合职业、家务和烹饪帮忙，不覆盖PEP复习单元全部朋友与社区语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p068",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 1 Good habits",
+        "chapter": "Story time Yang Ling's and Wang Bing's habits；Grammar time",
+        "note": "在I have ... habits与He/She has ... habits中对比have/has，不是人物外貌语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p108",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 1 Good habits",
+        "chapter": "Sounds in focus bl (blackboard)；Unit 2 Sounds in focus cl (climbing)",
+        "note": "bl在Unit 1、cl在Unit 2分教，fl未见对应集中教学，属部分覆盖；取首次落点"
+      }
+    },
+    {
+      "knowledgeId": "cne_p235",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 1 Good habits",
+        "chapter": "Story time Yang Ling's and Wang Bing's habits；Grammar time",
+        "note": "覆盖healthy、habit、do exercise及作息习惯；diet在六下Unit 3集中教学"
+      }
+    },
+    {
+      "knowledgeId": "cne_p237",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 1 Good habits",
+        "chapter": "Story time Yang Ling's and Wang Bing's habits；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p175",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 2 I feel good",
+        "chapter": "Lead-in；Story time Helen Keller",
+        "note": "核心词含happy、worried、excited、sad、angry，afraid未在本单元作为核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p167",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 3 Hobbies",
+        "chapter": "Lead-in；Story time Our school clubs；Grammar time",
+        "note": "核心爱好为paper-cutting、dancing、singing、skipping、playing ping-pong等，与PEP词包不同"
+      }
+    },
+    {
+      "knowledgeId": "cne_p168",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 3 Hobbies",
+        "chapter": "Lead-in；Story time Our school clubs；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p169",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 3 Hobbies",
+        "chapter": "Lead-in；Story time Our school clubs；Grammar time",
+        "note": "语境为学校社团及家人爱好，不含pen pal介绍"
+      }
+    },
+    {
+      "knowledgeId": "cne_p170",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 3 Hobbies",
+        "chapter": "Lead-in；Story time Our school clubs；Grammar time",
+        "note": "阅读为学校社团和爱好，不读取笔友住址信息"
+      }
+    },
+    {
+      "knowledgeId": "cne_p176",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 4 Safety first",
+        "chapter": "Story time Keeping safe at school；Grammar time should, shouldn't"
+      }
+    },
+    {
+      "knowledgeId": "cne_p115",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 5 At weekends",
+        "chapter": "Lead-in；Story time Weekend fun；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p116",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 5 At weekends",
+        "chapter": "Lead-in；Story time Weekend fun；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p254",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 5 At weekends",
+        "chapter": "Lead-in；Story time Weekend fun；Grammar time；Wrap-up time",
+        "note": "覆盖picnic、cinema、visit等周末活动词，但以一般现在时谈常态活动，museum/plan不是核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p258",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 5 At weekends",
+        "chapter": "Lead-in；Story time Weekend fun；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p259",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 5 At weekends",
+        "chapter": "Lead-in；Story time Weekend fun；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p104",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Lead-in；Story time In the shop；Word lists",
+        "note": "本单元购物物品为shoes、sweater、socks、bows等，PEP的glove、scarf、umbrella、sunglasses未在本单元集中教学，属同主题词包差异"
+      }
+    },
+    {
+      "knowledgeId": "cne_p105",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan"
+      }
+    },
+    {
+      "knowledgeId": "cne_p106",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan"
+      }
+    },
+    {
+      "knowledgeId": "cne_p107",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan",
+        "note": "通过购物故事及价格练习读取物品与价钱，不是独立价签短文"
+      }
+    },
+    {
+      "knowledgeId": "cne_p201",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan",
+        "note": "重点为pocket money、spend、need及预算；save、cost不作为本单元核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p203",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan"
+      }
+    },
+    {
+      "knowledgeId": "cne_p239",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan",
+        "note": "对应零花钱购物预算和支出计划，不是专门储蓄计划"
+      }
+    },
+    {
+      "knowledgeId": "cne_p250",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan",
+        "note": "教材用Let's take it及I'd like ...表达购买，未以I'll take ...为原句"
+      }
+    },
+    {
+      "knowledgeId": "cne_p251",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 7 Shopping smart",
+        "chapter": "Story time In the shop；Grammar time；Wrap-up time Make a shopping plan",
+        "note": "读取购物清单、购买结果和价格，不含购物小票体裁"
+      }
+    },
+    {
+      "knowledgeId": "cne_p141",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 8 We love festivals!",
+        "chapter": "Story time Time to celebrate；Grammar time in, on, at"
+      }
+    },
+    {
+      "knowledgeId": "cne_p142",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "上册",
+        "unit": "Unit 8 We love festivals!",
+        "chapter": "Story time Time to celebrate；Grammar time in, on, at"
+      }
+    },
+    {
+      "knowledgeId": "cne_p261",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 1 Cinderella",
+        "chapter": "Grammar time Why ...? Because ...",
+        "note": "以童话故事中的原因问答系统教学Why/Because，不是季节喜好语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p159",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 2 How do you come to school?",
+        "chapter": "Story time；Grammar time；Checkout time",
+        "note": "覆盖bus、metro、taxi、bike及ship等，plane、train在六下Unit 7假期出行语境出现，属词包拆合"
+      }
+    },
+    {
+      "knowledgeId": "cne_p161",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 2 How do you come to school?",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p155",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 3 Asking the way",
+        "chapter": "Lead-in；Story time；Grammar time",
+        "note": "核心场所含bookshop、cinema、hospital、shop等；bookshop对应PEP的bookstore，post office见Project 1"
+      }
+    },
+    {
+      "knowledgeId": "cne_p156",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 3 Asking the way",
+        "chapter": "Lead-in；Story time；Grammar time",
+        "note": "用Turn left/right及Go along this street指路，Go along对应直走指引而非Go straight原句"
+      }
+    },
+    {
+      "knowledgeId": "cne_p157",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 3 Asking the way",
+        "chapter": "Lead-in；Story time；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p158",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 3 Asking the way",
+        "chapter": "Lead-in；Story time；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p214",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 3 Asking the way",
+        "chapter": "Lead-in；Story time；Grammar time",
+        "note": "主题为城市场所和问路，含shop、hospital、library等，不是PEP社区单元原词包"
+      }
+    },
+    {
+      "knowledgeId": "cne_p177",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 4 Seeing the doctor",
+        "chapter": "Story time；Grammar time should/shouldn't；Cartoon time",
+        "note": "用How do you feel now?、What should I do?及should/shouldn't问答，语境为疾病和身体不适而非情绪"
+      }
+    },
+    {
+      "knowledgeId": "cne_p178",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 4 Seeing the doctor",
+        "chapter": "Story time；Grammar time should/shouldn't；Cartoon time",
+        "note": "阅读患者感受及医嘱，建议主题为健康照护而非情绪调节"
+      }
+    },
+    {
+      "knowledgeId": "cne_p236",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 4 Seeing the doctor",
+        "chapter": "Story time；Grammar time should/shouldn't；Cartoon time",
+        "note": "围绕休息、饮水、刷牙、少吃甜食等健康习惯使用should/shouldn't"
+      }
+    },
+    {
+      "knowledgeId": "cne_p072",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 5 Helping our parents",
+        "chapter": "Story time；Grammar time",
+        "note": "覆盖kitchen、living room、bedroom，bathroom、study未在本单元集中教学"
+      }
+    },
+    {
+      "knowledgeId": "cne_p073",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 5 Helping our parents",
+        "chapter": "Story time；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p074",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 5 Helping our parents",
+        "chapter": "Story time；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p075",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 5 Helping our parents",
+        "chapter": "Story time；Grammar time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p140",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 7 Chinese festivals",
+        "chapter": "Story time；Grammar time；Checkout time",
+        "note": "Grammar time集中复习12个月，Story time按月份介绍中国节日"
+      }
+    },
+    {
+      "knowledgeId": "cne_p263",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 7 Chinese festivals",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p264",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 7 Chinese festivals",
+        "chapter": "Story time；Grammar time；Checkout time",
+        "note": "以When's the ... Festival? / It's in ...谈节日月份，不是PEP校历活动语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p145",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 8 Birthdays",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p266",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 8 Birthdays",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p267",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "五年级",
+        "term": "下册",
+        "unit": "Unit 8 Birthdays",
+        "chapter": "Story time；Grammar time；Checkout time",
+        "note": "读取生日日期和庆祝活动，不是学校活动通知或日程表"
+      }
+    },
+    {
+      "knowledgeId": "cne_p185",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 1 Try your best",
+        "chapter": "Story time It was great!；Grammar time I was/did ... We were/did ..."
+      }
+    },
+    {
+      "knowledgeId": "cne_p189",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 1 Try your best",
+        "chapter": "Story time It was great!；Grammar time I was/did ... We were/did ...",
+        "note": "本单元含see/saw、begin/began、forget/forgot等，go/went、eat/ate在Unit 3继续归纳"
+      }
+    },
+    {
+      "knowledgeId": "cne_p193",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 1 Try your best",
+        "chapter": "Story time It was great!；Grammar time I was/did ... We were/did ..."
+      }
+    },
+    {
+      "knowledgeId": "cne_p186",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 2 Honesty",
+        "chapter": "Story time Meng Xin and his ox；Grammar time I did (not) ... Did you ...?"
+      }
+    },
+    {
+      "knowledgeId": "cne_p242",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 2 Honesty",
+        "chapter": "Story time Meng Xin and his ox；Grammar time I did (not) ... Did you ...?",
+        "note": "Did you ...?及Yes/No回答用于诚信故事等过去事件，不是专门询问上周末"
+      }
+    },
+    {
+      "knowledgeId": "cne_p243",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 3 Great people",
+        "chapter": "Cartoon time My hero；Grammar time How/Who was ...? How did ...?",
+        "note": "教材有How was school today? / Great!，对应过去评价句式，但不是How was your weekend?原句"
+      }
+    },
+    {
+      "knowledgeId": "cne_p225",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 4 Getting together",
+        "chapter": "Story time Grandma's birthday；Wrap-up time",
+        "note": "用What did ... do?谈生日聚会中的过去活动，不是假期旅行语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p265",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 4 Getting together",
+        "chapter": "Grammar time first, second, third ..."
+      }
+    },
+    {
+      "knowledgeId": "cne_p166",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time",
+        "note": "文本为周末plogging计划，主要使用will而非be going to"
+      }
+    },
+    {
+      "knowledgeId": "cne_p205",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time",
+        "note": "仅对应will表将来；首次集中教学语境为城市清洁和环保，不含太空生活"
+      }
+    },
+    {
+      "knowledgeId": "cne_p216",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time",
+        "note": "以学生参与plogging、城市清洁等公益活动呈现年轻人服务社区/城市"
+      }
+    },
+    {
+      "knowledgeId": "cne_p255",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p256",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p257",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 5 Keeping our city clean",
+        "chapter": "Story time Let's go plogging；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p207",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 6 Going green",
+        "chapter": "Lead-in；Story time Take care of the Earth；Wrap-up time Make an action plan",
+        "note": "覆盖save、turn off、wind及electricity等，solar/power未按PEP词表集中列出"
+      }
+    },
+    {
+      "knowledgeId": "cne_p208",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 6 Going green",
+        "chapter": "Lead-in；Story time Take care of the Earth；Wrap-up time Make an action plan"
+      }
+    },
+    {
+      "knowledgeId": "cne_p192",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 8 Then and now",
+        "chapter": "Story time Changes in life；Grammar time；Wrap-up time",
+        "note": "核心表达为ago、in the past、these days、internet等，different以changes主题呈现"
+      }
+    },
+    {
+      "knowledgeId": "cne_p194",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 8 Then and now",
+        "chapter": "Story time Changes in life；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p195",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "上册",
+        "unit": "Unit 8 Then and now",
+        "chapter": "Story time Changes in life；Grammar time；Wrap-up time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p187",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 1 The lion and the mouse",
+        "chapter": "Checkout time Su Hai's email My weekend"
+      }
+    },
+    {
+      "knowledgeId": "cne_p188",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 1 The lion and the mouse",
+        "chapter": "Checkout time Su Hai's email My weekend",
+        "note": "文本体裁为写给e-friend的周末邮件，不是日记"
+      }
+    },
+    {
+      "knowledgeId": "cne_p241",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 1 The lion and the mouse",
+        "chapter": "Checkout time Su Hai's email My weekend",
+        "note": "过去活动词为went、saw、helped等周末助人经历，与PEP家务/生病词包不同"
+      }
+    },
+    {
+      "knowledgeId": "cne_p244",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 1 The lion and the mouse",
+        "chapter": "Checkout time Su Hai's email My weekend"
+      }
+    },
+    {
+      "knowledgeId": "cne_p128",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 2 Good habits",
+        "chapter": "Cartoon time Tina's house and Bobby's bedroom",
+        "note": "通过配图对话读取房间及books、toys、bed等物品，不是独立房间说明短文"
+      }
+    },
+    {
+      "knowledgeId": "cne_p020",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 3 A healthy diet",
+        "chapter": "Story time Mike's and Yang Ling's diets；Grammar time",
+        "note": "在健康饮食中集中复现bread、egg、rice、milk等食物词，册次明显晚于PEP"
+      }
+    },
+    {
+      "knowledgeId": "cne_p200",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 3 A healthy diet",
+        "chapter": "Story time Mike's and Yang Ling's diets；Grammar time",
+        "note": "覆盖rice、milk、egg、bread，侧重健康饮食而非农场到餐桌的来源关系，wheat未作为核心词"
+      }
+    },
+    {
+      "knowledgeId": "cne_p160",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 4 Road safety",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p162",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 4 Road safety",
+        "chapter": "Story time；Grammar time；Checkout time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p246",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Project 1 Being a good student",
+        "chapter": "Make a poster about being a good student",
+        "note": "以A good student must/mustn't ...做好学生/校园规则海报，不是PEP班规原语境"
+      }
+    },
+    {
+      "knowledgeId": "cne_p146",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 5 A party",
+        "chapter": "Story time；Grammar time；Fun time",
+        "note": "阅读派对Invitation中的Date、Time、Place，不是学校活动通知"
+      }
+    },
+    {
+      "knowledgeId": "cne_p164",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 5 A party",
+        "chapter": "Story time；Grammar time；Fun time"
+      }
+    },
+    {
+      "knowledgeId": "cne_p165",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 5 A party",
+        "chapter": "Story time；Grammar time；Fun time",
+        "note": "以儿童节派对计划为语境谈be going to，不是周末计划"
+      }
+    },
+    {
+      "knowledgeId": "cne_p197",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 5 A party",
+        "chapter": "Story time；Grammar time；Fun time",
+        "note": "邀请函含日期、时间、地点和派对活动，对应短信的时间/地点/事件要素"
+      }
+    },
+    {
+      "knowledgeId": "cne_p238",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 5 A party",
+        "chapter": "Story time；Grammar time；Fun time",
+        "note": "核心材料含party、invitation及snacks、drinks、balloons等，invite/celebrate等词形未完全按PEP词包列出"
+      }
+    },
+    {
+      "knowledgeId": "cne_p030",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 6 An interesting country",
+        "chapter": "Story time Australia；Grammar time；Culture time",
+        "note": "国家含Australia、PRC、UK、US、Canada等，PRC对应中国，未按PEP四国词表编排"
+      }
+    },
+    {
+      "knowledgeId": "cne_p031",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 6 An interesting country",
+        "chapter": "Story time Australia；Grammar time；Culture time",
+        "note": "用He comes from Australia等come(s) from表达来源，不以am/is from为核心句型"
+      }
+    },
+    {
+      "knowledgeId": "cne_p171",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 8 Our dreams",
+        "chapter": "Story time；Cartoon time；Checkout time",
+        "note": "本单元扩展astronaut、dancer、writer、pianist等职业词，factory、postman、businessman未集中教学，属职业词包差异"
+      }
+    },
+    {
+      "knowledgeId": "cne_p204",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 8 Our dreams",
+        "chapter": "Story time；Cartoon time；Checkout time",
+        "note": "覆盖astronaut、spaceship、Moon、Mars、stars等太空相关词，earth、planet、rocket未按PEP词包集中列出"
+      }
+    },
+    {
+      "knowledgeId": "cne_p206",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 8 Our dreams",
+        "chapter": "Story time；Cartoon time；Checkout time",
+        "note": "阅读材料为职业梦想及astronaut/spaceship/Moon，不是中国航天事件说明文"
+      }
+    },
+    {
+      "knowledgeId": "cne_p240",
+      "textbook": {
+        "editionKey": "yilin_english",
+        "edition": "译林版（译林出版社）英语",
+        "grade": "六年级",
+        "term": "下册",
+        "unit": "Unit 8 Our dreams",
+        "chapter": "Story time；Cartoon time；Checkout time",
+        "note": "用What do you want to be? / I want to ...谈太空职业梦想，不以will/be going to谈探索计划"
+      }
+    }
+  ]
+}
