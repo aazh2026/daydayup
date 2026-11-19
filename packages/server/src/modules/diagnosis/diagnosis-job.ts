@@ -7,6 +7,7 @@
  * 幂等：同一 paperId 重复提交返回同一任务。
  */
 import type { JobHandler, JobContext } from '../../infrastructure/jobs/job-types.ts';
+import type { AIRuntime } from '../../infrastructure/ai/ai-runtime.ts';
 import type { AIProvider } from '../../infrastructure/ai/provider.ts';
 import { DIAGNOSIS_SCHEMA } from '../../infrastructure/ai/schemas.ts';
 import { validateAgainstSchema } from '../../infrastructure/ai/schema-validator.ts';
@@ -31,13 +32,45 @@ export interface DiagnosisJobInput {
   imagePaths?: string[];
 }
 
+/**
+ * AI Provider 的来源。
+ *
+ * - `AIRuntime`：生产路径。**执行时**按当前配置解析 Provider，
+ *   于是运行时才配上的 API Key 也能立即生效。
+ * - `AIProvider`：测试替身 / 固定实现（保持旧调用方式可用）。
+ */
+export type AIProviderSource = AIRuntime | AIProvider;
+
+async function resolveProvider(
+  source: AIProviderSource
+): Promise<AIProvider | null> {
+  if (typeof (source as AIRuntime).resolve === 'function') {
+    return (source as AIRuntime).resolve();
+  }
+  return source as AIProvider;
+}
+
 export function createDiagnosisJobHandler(
-  ai: AIProvider,
+  aiSource: AIProviderSource,
   storage: FileStorage
 ): JobHandler<DiagnosisJobInput, DiagnoseExamResponse> {
   return {
     async execute(input, context: JobContext) {
       context.reportProgress('准备试卷材料', 10);
+
+      /**
+       * **执行时**解析 Provider，而不是在启动时注入。
+       *
+       * 原因：API Key 现在可以运行时配置（配置中心），
+       * 启动时可能根本没有 Key。若在创建 Handler 时就把 Provider 定死，
+       * 运行时配置的 Key 永远用不上。
+       */
+      const ai = await resolveProvider(aiSource);
+      if (!ai) {
+        throw new Error(
+          'AI 能力不可用：请在「设置 → AI 配置」中填写 API Key 并启用 AI。'
+        );
+      }
 
       // ---- 组装多模态输入 ----
       const parts: Array<
@@ -95,6 +128,13 @@ export function createDiagnosisJobHandler(
         '../../infrastructure/ai/gemini-provider.ts'
       );
 
+      /**
+       * 模型 ID 来自运行时配置（配置中心可改），不再硬编码。
+       * Provider 本身已按当前配置创建，这里再取一次是为了
+       * 保证「任务执行瞬间」用的是最新配置。
+       */
+      const modelId = (ai as unknown as { model?: string }).model ?? 'gemini-4-hydrogen';
+
       context.reportProgress('解析诊断结果', 75);
 
       /**
@@ -116,7 +156,7 @@ export function createDiagnosisJobHandler(
 
       for (let attempt = 0; attempt <= DIAGNOSIS_MAX_RETRIES; attempt++) {
         const response = await client.models.generateContent({
-          model: 'gemini-4-hydrogen',
+          model: modelId,
           contents: { parts },
           config: {
             responseMimeType: 'application/json',
@@ -153,7 +193,7 @@ export function createDiagnosisJobHandler(
         ...(parsed as unknown as DiagnoseExamResponse),
         meta: {
           promptVersion: 'diagnosis.v1',
-          model: 'gemini-4-hydrogen',
+          model: modelId,
           curriculumVersion: getCurriculumVersion(),
           requestId: context.jobId,
           computedAt: new Date().toISOString(),
