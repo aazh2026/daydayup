@@ -55,11 +55,13 @@ const FRONTEND_PATHS: Array<{ method: string; path: string; note: string }> = [
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/opportunities`, note: '提分机会' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/effective-budget`, note: '有效预算' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/error-records`, note: '错题记录' },
+  { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/trap-distribution`, note: '错因形态分布' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/attempts`, note: '作答流水' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/exam-results`, note: '考试成绩' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/exams`, note: '考试场次' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/papers`, note: '试卷存档库' },
   { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/plans/current`, note: '当前计划' },
+  { method: 'GET', path: `/api/v1/students/${STUDENT_ID}/sprint-plan`, note: '30天冲刺计划' },
   { method: 'POST', path: `/api/v1/students/${STUDENT_ID}/plans`, note: '重算计划' },
   {
     method: 'GET',
@@ -129,11 +131,28 @@ const FRONTEND_PATHS: Array<{ method: string; path: string; note: string }> = [
     path: '/api/v1/practice/questions?knowledgeId=math-alg-rational',
     note: '题库取题',
   },
+  {
+    method: 'GET',
+    path: '/api/v1/practice/external?knowledgeId=math-alg-rational',
+    note: '题庄外部真题',
+  },
   { method: 'POST', path: '/api/v1/practice/generate', note: 'AI 出题' },
   { method: 'POST', path: '/api/v1/practice/evaluate', note: 'AI 评测' },
   { method: 'POST', path: '/api/v1/coach/chat', note: 'AI 教练' },
   { method: 'POST', path: '/api/v1/diagnose-microquiz', note: '诊断微测' },
   { method: 'POST', path: '/api/v1/diagnose-paper', note: '试卷诊断' },
+
+  // 三态自适应诊断
+  {
+    method: 'POST',
+    path: `/api/v1/students/${STUDENT_ID}/diagnosis/adaptive/start`,
+    note: '自适应诊断开题',
+  },
+  {
+    method: 'GET',
+    path: `/api/v1/students/${STUDENT_ID}/diagnosis/adaptive/sessions`,
+    note: '自适应诊断会话列表',
+  },
 
   // 上传
   { method: 'POST', path: '/api/v1/uploads/papers', note: '上传试卷图片' },

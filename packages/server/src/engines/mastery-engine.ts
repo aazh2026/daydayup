@@ -282,4 +282,74 @@ export function applyDiagnosisMasteryLoss(
   };
 }
 
+/**
+ * 三态自适应诊断结论 → 掌握度状态。
+ *
+ * 为什么单独一条规则，而不是复用 `evaluateMasteryTransition`：
+ * 练习路径的输入是「一次作答的对错」，而三态诊断的输入是
+ * **一段会话的结论**（掌握 / 不稳 / 薄弱）。
+ *
+ * 两者的语义差别会直接导致误判：
+ * - `shaky`（答错过、确认题答对）如果按「答对」处理，
+ *   会被算成「初步掌握」——但这个学生是**不稳**的，
+ *   不该进已掌握名单；
+ * - `weak`（确认题也没过）如果按「答错」处理，
+ *   只会掉到「学习中」——但确认题都错了，应该直接进「待学习」。
+ *
+ * 状态规则：
+ * - `mastered` → **初步掌握**（一次诊断只到「初步」；
+ *   「掌握 / 稳定掌握」仍需变式训练与延迟复测来确认，
+ *   否则报告页会把「已验证修复」算到没验证过的点上）；
+ * - `shaky` → **学习中**（会但不稳，必须继续练）；
+ * - `weak` → **待学习**（连确认题都不过，先补先修）。
+ */
+export interface DiagnosticTriStateInput {
+  current: MasteryRecord;
+  status: 'mastered' | 'shaky' | 'weak';
+  evidenceSummary: string;
+  subject?: string;
+  now?: number;
+}
+
+export function evaluateDiagnosticTriState(
+  input: DiagnosticTriStateInput
+): MasteryTransitionResult {
+  const nowMs = input.now ?? Date.now();
+  const now = new Date(nowMs).toISOString();
+  const current = input.current;
+
+  const nextState: MasteryState =
+    input.status === 'mastered'
+      ? '初步掌握'
+      : input.status === 'shaky'
+        ? '学习中'
+        : '待学习';
+
+  const confidence: MasteryRecord['confidence'] =
+    input.status === 'mastered'
+      ? '确定'
+      : input.status === 'shaky'
+        ? '较可能'
+        : '待验证';
+
+  const record: MasteryRecord = {
+    ...current,
+    state: nextState,
+    confidence:
+      current.confidence === '确定' && nextState === '初步掌握'
+        ? '确定'
+        : confidence,
+    consecutiveErrors: input.status === 'mastered' ? 0 : current.consecutiveErrors + 1,
+    evidenceLogs: [input.evidenceSummary, ...current.evidenceLogs].slice(0, 8),
+    updatedAt: now,
+  };
+
+  return {
+    record,
+    changed: nextState !== current.state,
+    fromState: current.state,
+    toState: nextState,
+  };
+}
+
 export type { MasteryRecord, MasteryState, PracticeMode, MasteryTransitionEvent };

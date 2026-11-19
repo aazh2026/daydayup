@@ -8,6 +8,8 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { findBankQuestions } from '../../infrastructure/knowledge/curriculum.ts';
+import { mergeTraps } from '../../infrastructure/knowledge/trap-context.ts';
+import { resolveKnowledgeIds } from '../../infrastructure/knowledge/id-aliases.ts';
 import { assertStudentAccess } from '../middleware/auth.ts';
 
 export interface BankQuestion {
@@ -16,6 +18,7 @@ export interface BankQuestion {
   questionType: string;
   level: string;
   stem: string;
+  options?: string[];
   standardAnswer: string;
   scoreValue: number;
   difficulty: number;
@@ -51,17 +54,44 @@ export function createPracticeRoutes(container: Container): Router {
           return;
         }
 
+        // 外部 id 兼容：旧链接带的是 cnm_ext_* / mt_* 这类外部 id，
+        // 这里解析成项目原生 id（不猜，无映射 → 404 语义上的空结果）。
+        const resolved = resolveKnowledgeIds([knowledgeId]);
+        if (resolved.resolved.length === 0) {
+          res.json({ found: false, questions: [] });
+          return;
+        }
+
         const level = req.query.level ? String(req.query.level) : undefined;
         const excludeRaw = String(req.query.exclude ?? '');
         const excludeStems = excludeRaw
           ? excludeRaw.split('||').map((s) => s.trim()).filter(Boolean)
           : [];
 
-        const matches = findBankQuestions(knowledgeId, level ?? '', excludeStems);
+        const matches = findBankQuestions(
+          resolved.resolved[0],
+          level ?? '',
+          excludeStems
+        );
+
+        // 题目级 commonErrors 由错因资产层覆盖（applyTrapSets），
+        // 但**知识点维度的**错因在这里也要带上 ——
+        // 前端拿题库题去生成变式题时，需要的是「这个知识点的通用避坑点」，
+        // 而不只是「这道题的历史错答」。
+        const questions = matches.map((q) => ({
+          ...q,
+          commonErrors: (q.commonErrors ?? []).length
+            ? q.commonErrors
+            : [],
+          knowledgeTraps: mergeTraps([], resolved.resolved[0], {
+            includeQuestionTraps: false,
+          }),
+        })) as (BankQuestion & { knowledgeTraps: string[] })[];
 
         res.json({
           found: matches.length > 0,
-          questions: matches as BankQuestion[],
+          questions,
+          resolvedKnowledgeId: resolved.resolved[0],
         });
       } catch (err) {
         next(err);

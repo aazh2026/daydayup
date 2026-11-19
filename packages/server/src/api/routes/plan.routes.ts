@@ -8,7 +8,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
-import { buildSevenDayPlan, computePriorityOpportunities } from '../../engines/planning-engine.ts';
+import { buildSevenDayPlan, buildSprintPlan, computePriorityOpportunities } from '../../engines/planning-engine.ts';
 import type {
   MasteryRecord,
   LearningPlan,
@@ -170,6 +170,36 @@ export function createPlanRoutes(container: Container): Router {
           records: Record<string, MasteryRecord>;
         }>(['db', 'mastery', `${sanitizeSegment(req.params.id)}.json`]);
         res.json({ opportunities: computePriorityOpportunities(mastery?.records ?? {}) });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /**
+   * GET /api/v1/students/:id/sprint-plan
+   *
+   * 30 天冲刺计划（如「上海中考英语 30 天冲刺」）。
+   * 与 7 天排课并存：冲刺表是教研手排的固定节奏，不落盘（随资产版本变化重算）。
+   * 没有生效的冲刺资产时返回空计划（totalDays=0），不报错。
+   */
+  router.get(
+    '/students/:id/sprint-plan',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const studentId = req.params.id;
+        assertStudentAccess(req, studentId);
+
+        const student = await container.db.read<Student>([
+          'db',
+          'students',
+          `${studentId}.json`,
+        ]);
+        if (!student) {
+          throw new ApiException('NOT_FOUND', '学生不存在');
+        }
+
+        res.json(buildSprintPlan(student));
       } catch (err) {
         next(err);
       }

@@ -6,61 +6,24 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type { KnowledgePoint, Subject } from '@daydayup/contracts';
+import type { KnowledgePoint, Subject, TrapSet } from '@daydayup/contracts';
 import { logger } from '../logging/logger.ts';
+import { applyTrapSets } from './converters/trap-overlay.ts';
+import { PACKAGED_ASSET_DIRS, resolveDataDir } from './asset-dirs.ts';
+import { applyTextbookAlignment, getTextbookMap } from './textbook-alignment.ts';
+import { applyKnowledgeOverlays } from './overlay.ts';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export { resolveDataDir };
 
+const KNOWLEDGE_DIR = PACKAGED_ASSET_DIRS.knowledge();
+const QUESTION_DIR = PACKAGED_ASSET_DIRS.questions();
 /**
- * 打包的默认资产目录：packages/server/data
+ * 错因资产目录（TrapSet）。
  *
- * 本文件位于 src/infrastructure/knowledge/，故需上溯 4 层：
- *   knowledge → infrastructure → src → packages/server
+ * 与知识资产分目录存放：来源授权不同、粒度不同、匹配置信度不同，
+ * 必须能单独下架某个来源（见 docs/trap-assets-integration-plan.md）。
  */
-const PACKAGED_DATA_DIR = path.resolve(__dirname, '../../../data');
-
-/**
- * 运行期数据目录。
- *
- * 支持 `DATA_DIR` 环境变量覆盖（与 seed.ts / backup.ts 等脚本保持一致）：
- * 测试、多实例部署、以及知识资产导入验证都需要指向自定义目录，
- * 否则无法在不污染生产数据的前提下试跑新资产。
- */
-export const DATA_DIR = process.env.DATA_DIR
-  ? path.resolve(process.env.DATA_DIR)
-  : PACKAGED_DATA_DIR;
-
-/**
- * 解析知识资产目录。
- *
- * 优先用 `DATA_DIR/knowledge`（部署时随数据卷一起分发的资产），
- * **回落到打包目录** `packages/server/data/knowledge`。
- *
- * 为什么需要回落：
- * `DATA_DIR` 常被指向一个只包含 `db/` 的空目录
- * （测试用临时目录、首次部署时新建的数据卷），
- * 此时若只读 `DATA_DIR/knowledge` 就会 `ENOENT` ——
- * 连 seed 脚本都跑不起来（它要读知识体系来打印版本号）。
- *
- * 回落让「数据与资产分离」成为可能：业务数据放数据卷，
- * 知识资产用随包发布的版本，缺省即可用。
- */
-function resolveAssetDir(dirName: 'knowledge' | 'questions'): string {
-  const override = path.join(DATA_DIR, dirName);
-  if (
-    fs.existsSync(override) &&
-    fs.readdirSync(override).some((f) => f.endsWith('.json'))
-  ) {
-    return override;
-  }
-  const packaged = path.join(PACKAGED_DATA_DIR, dirName);
-  if (fs.existsSync(packaged)) return packaged;
-  return override;
-}
-
-const KNOWLEDGE_DIR = resolveAssetDir('knowledge');
-const QUESTION_DIR = resolveAssetDir('questions');
+const TRAP_DIR = PACKAGED_ASSET_DIRS.traps();
 
 export interface CurriculumAsset {
   version: string;
@@ -80,6 +43,7 @@ export interface QuestionBankAsset {
     questionType: string;
     level: string;
     stem: string;
+    options?: string[];
     standardAnswer: string;
     scoreValue: number;
     difficulty: number;
@@ -92,6 +56,56 @@ export interface QuestionBankAsset {
 let curriculumCache: CurriculumAsset | null = null;
 let bankCache: QuestionBankAsset | null = null;
 let knowledgeMapCache: Record<string, KnowledgePoint> | null = null;
+let trapSetsCache: TrapSet[] | null = null;
+
+/**
+ * 读取生效中的错因资产（TrapSet）。
+ *
+ * 规则与知识资产一致：**只有 ACTIVE 才生效**。
+ * 只有 DRAFT 时不生效（错因未经教师审核不得进入线上提示词），
+ * 但会打告警，便于运维知道「错因资产还没审核」。
+ *
+ * 目录不存在（首次部署、尚未导入）时返回空数组 —— 缺错因资产不应让服务起不来。
+ */
+function readTrapSets(): TrapSet[] {
+  if (!fs.existsSync(TRAP_DIR)) return [];
+  const files = fs
+    .readdirSync(TRAP_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .sort();
+
+  const readable: Array<{ file: string; parsed: TrapSet }> = [];
+  for (const file of files) {
+    try {
+      const parsed = JSON.parse(
+        fs.readFileSync(path.join(TRAP_DIR, file), 'utf8')
+      ) as TrapSet;
+      // 形状校验：目录里可能还有 id-map.json、待审清单等非资产文件
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.entries)) continue;
+      readable.push({ file, parsed });
+    } catch (err) {
+      logger.error('trap.asset_unreadable', {
+        file,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  const active = readable.filter((r) => r.parsed.status === 'ACTIVE');
+  if (active.length > 0) return active.map((r) => r.parsed);
+
+  const drafts = readable.filter((r) => r.parsed.status === 'DRAFT');
+  if (drafts.length > 0) {
+    logger.warn('trap.only_draft_assets', { files: drafts.map((d) => d.file) });
+  }
+  return [];
+}
+
+/** 生效中的错因资产（无则空数组） */
+export function getTrapSets(): TrapSet[] {
+  if (!trapSetsCache) trapSetsCache = readTrapSets();
+  return trapSetsCache;
+}
 
 /**
  * 从候选资产中选出应生效的那一个。
@@ -172,9 +186,44 @@ function readActiveCurriculumFile(): string {
 export function getCurriculum(): CurriculumAsset {
   if (curriculumCache) return curriculumCache;
   const file = readActiveCurriculumFile();
-  curriculumCache = JSON.parse(
+  const parsed = JSON.parse(
     fs.readFileSync(path.join(KNOWLEDGE_DIR, file), 'utf8')
   ) as CurriculumAsset;
+
+  // 知识叠加层（overlay）：把「不属于任何教材单元」的应试点型补进体系。
+  // 与教材对齐一样是独立资产层：可单独下架/回滚，不动主资产。
+  //
+  // ⚠️ 必须排在错因资产**之前**：错因可以挂在叠加层知识点上
+  // （英语知识地图的 338 条就落在 `cne_wb_*`），
+  // 反过来先挂错因的话这些条目会因为「知识点还不存在」而全部落空。
+  parsed.knowledgePoints = applyKnowledgeOverlays(parsed.knowledgePoints);
+
+  // 错因资产覆盖：把 TrapSet 里的条目挂到对应知识点的 commonTraps 上。
+  // 知识资产本身不带错因（cn-mt 无此字段），错因由独立资产层提供，
+  // 这样错因可以单独更新/回滚，不必重跑整个知识体系导入。
+  const traps = getTrapSets();
+  if (traps.length > 0) {
+    const result = applyTrapSets(parsed.knowledgePoints, [], traps);
+    if (result.knowledgeTraps > 0) {
+      logger.info('trap.overlay_applied', {
+        knowledgeTraps: result.knowledgeTraps,
+        affected: result.affectedKnowledgeIds.length,
+      });
+    }
+  }
+
+  // 教材对齐覆盖：把上海本地课本落点（沪教版数学 / 译林版英语）挂到知识点上。
+  // 知识资产本身的 chapter 是人教版章节，不改写本体 —— 只叠加课本落点。
+  const textbookMap = getTextbookMap();
+  if (Object.keys(textbookMap).length > 0) {
+    const result = applyTextbookAlignment(parsed.knowledgePoints, textbookMap);
+    logger.info('textbook.overlay_applied', {
+      aligned: result.aligned,
+      total: parsed.knowledgePoints.length,
+    });
+  }
+
+  curriculumCache = parsed;
   return curriculumCache;
 }
 
@@ -241,9 +290,13 @@ export function listKnowledgePoints(
  * 若两者版本不配套，新知识点会一条题都取不到（取题永远落空），
  * 而这不会抛异常，只会让功能静默失效。
  *
+ * 多文件合并：第 1 条命中的**所有**文件都会被合并（按题 id 去重，先出现的保留）。
+ * 这样「不同来源的题库各自成一个文件」（如 workbuddy 专项题库）可以并存，
+ * 而不必把 1 万多道题塞进同一个文件里。
+ *
  * 容错：某个文件损坏（JSON 非法）时跳过它；全部不可用才报错。
  */
-function readActiveBankFile(): string {
+function readActiveBankFiles(): { files: string[]; version: string } {
   const files = fs
     .readdirSync(QUESTION_DIR)
     .filter((f) => f.endsWith('.json'))
@@ -273,25 +326,54 @@ function readActiveBankFile(): string {
     );
   }
 
-  // 1. 优先选与当前知识体系版本配套的题库
+  // 1. 优先选与当前知识体系版本配套的题库（全部命中文件都合并）
   const curriculumVersion = getCurriculumVersion();
-  const matched = readable.find(
+  const matched = readable.filter(
     (b) =>
       b.version === curriculumVersion ||
       b.version === `${curriculumVersion}+questions`
   );
-  if (matched) return matched.file;
+  if (matched.length > 0) {
+    // version 取按文件名排序后的第一个匹配文件的版本
+    return { files: matched.map((m) => m.file), version: matched[0].version };
+  }
 
-  // 2. 回落：文件名排序最后
-  return readable[readable.length - 1].file;
+  // 2. 回落：文件名排序最后（**不与其他文件合并**）
+  const last = readable[readable.length - 1];
+  return { files: [last.file], version: last.version };
 }
 
 export function getQuestionBank(): QuestionBankAsset {
   if (bankCache) return bankCache;
-  const file = readActiveBankFile();
-  bankCache = JSON.parse(
-    fs.readFileSync(path.join(QUESTION_DIR, file), 'utf8')
-  ) as QuestionBankAsset;
+  const { files, version } = readActiveBankFiles();
+
+  const questions: QuestionBankAsset['questions'] = [];
+  const seen = new Set<string>();
+  for (const file of files) {
+    const parsed = JSON.parse(
+      fs.readFileSync(path.join(QUESTION_DIR, file), 'utf8')
+    ) as QuestionBankAsset;
+    for (const q of parsed.questions ?? []) {
+      if (seen.has(q.id)) continue; // 同 id 保留先出现的
+      seen.add(q.id);
+      questions.push(q);
+    }
+  }
+
+  const bank: QuestionBankAsset = { version, questions };
+
+  // 题目级错因覆盖（commonErrors）。
+  const traps = getTrapSets();
+  if (traps.length > 0) {
+    const result = applyTrapSets([], bank.questions, traps);
+    if (result.questionErrors > 0) {
+      logger.info('trap.question_overlay_applied', {
+        questionErrors: result.questionErrors,
+      });
+    }
+  }
+
+  bankCache = bank;
   return bankCache;
 }
 

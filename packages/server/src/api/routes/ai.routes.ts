@@ -28,21 +28,33 @@ import {
   buildMicroQuizPrompt,
 } from '../../infrastructure/ai/prompts/registry.ts';
 import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
+import { mergeTraps } from '../../infrastructure/knowledge/trap-context.ts';
 import { toGeminiSchema } from '../../infrastructure/ai/gemini-provider.ts';
 import { validateAgainstSchema } from '../../infrastructure/ai/schema-validator.ts';
+import type { AIProvider } from '../../infrastructure/ai/provider.ts';
 import { requireAuth } from '../middleware/auth.ts';
 import { requireQuota } from '../middleware/quota.ts';
 import type { Role } from '../../infrastructure/security/token.ts';
 import { judgeAnswerDeterministically } from '../../engines/judge-engine.ts';
 
-function requireAi(container: Container) {
-  if (!container.ai) {
+/**
+ * 解析当前可用的 AI Provider。
+ *
+ * **每次请求都按当前配置解析**，而不是用 `container.ai`（启动时的一次性快照）：
+ * 运行时在配置中心改了 API Key / 模型 / 温度 / 开关都会立刻生效，无需重启。
+ *
+ * 注入场景（测试替身 / 外部实现）由 `AIRuntime.setOverride` 承担，
+ * 它压过配置中心 —— 「调用方明确指定用哪个实现」优先于「配置里说了什么」。
+ */
+async function requireAi(container: Container) {
+  const ai = await container.aiRuntime.resolve();
+  if (!ai) {
     throw new ApiException(
       'INTERNAL_ERROR',
-      '服务端未配置 GEMINI_API_KEY，AI 能力不可用'
+      'AI 能力不可用：请在「设置 → AI 配置」中填写 API Key 并启用 AI'
     );
   }
-  return container.ai;
+  return ai;
 }
 
 /** AI 超时与非法输出 → 明确的错误码，而非笼统 500 */
@@ -122,7 +134,7 @@ export function createAiRoutes(
    */
   guard('/diagnose-paper', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ai = requireAi(container);
+      const ai = await requireAi(container);
       const {
         images = [],
         imageBase64,
@@ -254,7 +266,7 @@ export function createAiRoutes(
    */
   guard('/coach/chat', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ai = requireAi(container);
+      const ai = await requireAi(container);
       const {
         subject = '数学',
         knowledgeName = '',
@@ -271,13 +283,19 @@ export function createAiRoutes(
         sourceStudentAnswer = '',
         sourceErrorType = '',
         sourceAnalysis = '',
+        knowledgeId = '',
       } = req.body ?? {};
+
+      // 错因兜底：前端传的在前，服务端从错因资产层补知识点/题目错因在后。
+      // 不做这一步的话，直接调本接口的调用方拿不到任何易错点，
+      // 教练的诊断提问就会退化成泛泛而谈。
+      const resolvedTraps = mergeTraps(commonTraps, knowledgeId);
 
       const { systemInstruction, prompt } = buildCoachPrompt({
         subject,
         knowledgeName,
         knowledgeDefinition,
-        commonTraps,
+        commonTraps: resolvedTraps,
         masteryState,
         socraticStage,
         requestFullExplanation,
@@ -310,7 +328,7 @@ export function createAiRoutes(
    */
   guard('/practice/generate', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ai = requireAi(container);
+      const ai = await requireAi(container);
       const {
         subject = '数学',
         knowledgeId,
@@ -321,6 +339,14 @@ export function createAiRoutes(
         sourceErrorStem = '',
       } = req.body ?? {};
 
+      // ---- 错因兜底 ----
+      // 前端传的在前，服务端从错因资产层补：
+      //   1) 知识点维度的 commonTraps（英语 139 个主资产点 + 468 个叠加层点）
+      //   2) 题目维度的 commonErrors（题库里挂在该知识点上的真实失分描述）
+      // 第 2 层是 P2 验收标准「变式题提示词带上陷阱」的关键 ——
+      // 题目级错因比知识点级更贴近这道题。
+      const resolvedTraps = mergeTraps(commonTraps, knowledgeId);
+
       // ---- Pass 1: 生成题目 ----
       const genPrompt = buildPracticeGeneratePrompt({
         subject,
@@ -328,7 +354,7 @@ export function createAiRoutes(
         knowledgeName,
         knowledgeId,
         subSkills,
-        commonTraps,
+        commonTraps: resolvedTraps,
         sourceErrorStem,
       });
 
@@ -421,7 +447,7 @@ export function createAiRoutes(
       }
 
       // 第二道防线：回落至 AI 智能评测与错因细分
-      const ai = requireAi(container);
+      const ai = await requireAi(container);
       const prompt = buildPracticeEvaluatePrompt({
         subject,
         knowledgeName,
@@ -448,7 +474,7 @@ export function createAiRoutes(
    */
   guard('/diagnose-microquiz', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ai = requireAi(container);
+      const ai = await requireAi(container);
       const { targets = [] } = req.body ?? {};
 
       const prompt = buildMicroQuizPrompt(targets);
@@ -487,18 +513,21 @@ export function createAiRoutes(
  *   而不是把结构不完整的结果当成正常诊断落库。
  */
 async function runMultimodalDiagnosis(
-  ai: NonNullable<Container['ai']>,
+  ai: AIProvider,
   parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>,
   maxRetries = 2
 ): Promise<Record<string, unknown> | null> {
   const client = (ai as unknown as { client: any }).client;
   if (!client) return null;
 
+  /** 模型 ID 来自运行时配置（配置中心可改），不再硬编码。 */
+  const modelId = (ai as unknown as { model?: string }).model ?? 'gemini-4-hydrogen';
+
   let lastError = '未知错误';
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const response = await client.models.generateContent({
-      model: 'gemini-4-hydrogen',
+      model: modelId,
       contents: { parts },
       config: {
         responseMimeType: 'application/json',

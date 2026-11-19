@@ -16,6 +16,7 @@ import {
   getCurriculumVersion,
   getCurriculum,
 } from '../../infrastructure/knowledge/curriculum.ts';
+import { resolveKnowledgeIds } from '../../infrastructure/knowledge/id-aliases.ts';
 
 export function createKnowledgeRoutes(): Router {
   const router = Router();
@@ -58,6 +59,23 @@ export function createKnowledgeRoutes(): Router {
   /** GET /api/v1/knowledge-points/curriculum-version */
   router.get('/knowledge-points/curriculum-version', (_req: Request, res: Response) => {
     res.json({ version: getCurriculumVersion() });
+  });
+
+  /**
+   * GET /api/v1/knowledge-points/resolve?ids=a,b,c
+   *
+   * 外部 id → 项目原生 id 的解析。旧链接、旧资料里带的是
+   * `cnm_ext_*` / `mt_*` / atlas 的 `m1-*` / workbuddy 的 `01.01.01.01`，
+   * 这些 id 不是主键，只能解析后使用。
+   */
+  router.get('/knowledge-points/resolve', (req: Request, res: Response) => {
+    const raw = String(req.query.ids ?? '');
+    const ids = raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const { resolved, unresolved } = resolveKnowledgeIds(ids);
+    res.json({ resolved, unresolved });
   });
 
   return router;

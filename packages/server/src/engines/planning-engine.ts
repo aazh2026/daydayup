@@ -19,8 +19,17 @@ import type {
   DailySchedule,
   LearningPlan,
   Subject,
+  SprintDay,
+  SprintSet,
+  SprintPlan,
+  SprintDayPlan,
 } from '@daydayup/contracts';
 import { getCurriculum, getKnowledgeMap } from '../infrastructure/knowledge/curriculum.ts';
+import {
+  getActiveSprintSet,
+  getSprintKnowledgeIndex,
+  getSprintKnowledgeBySubject,
+} from '../infrastructure/knowledge/sprint.ts';
 
 export const CONFIDENCE_WEIGHT: Record<ConfidenceLevel, number> = {
   确定: 1.0,
@@ -521,11 +530,16 @@ export function buildSevenDayPlan(input: PlanInput): LearningPlan {
         ? '连续失误触发降阶保护：拆解前置条件与基础步骤，确保基础题稳定做对'
         : `针对「${item.knowledgeName}」失分点完成诊断讲解与变式验证`;
 
+      const trapHint = kp?.commonTraps?.[0];
+      const trapSuffix = trapHint ? `（重点：${trapHint}）` : '';
+      const textbook = kp?.textbook;
+      const textbookSuffix = textbook
+        ? `（${textbook.edition} ${textbook.grade}${textbook.term} ${textbook.chapter}）`
+        : '';
+
       const objective = carriedOverFromToday
-        ? `由今日重排顺延（已置换明日低优任务，不堆积总负荷）：${baseObjective}`
-        : kp
-          ? `${baseObjective}（重点：${kp.commonTraps[0]}）`
-          : baseObjective;
+        ? `由今日重排顺延（已置换明日低优任务，不堆积总负荷）：${baseObjective}${textbookSuffix}`
+        : `${baseObjective}${trapSuffix}${textbookSuffix}`;
 
       const verifiableOutcome =
         rec?.state === '初步掌握'
@@ -548,6 +562,7 @@ export function buildSevenDayPlan(input: PlanInput): LearningPlan {
         priorityRank: idx + 1,
         difficultyAdjusted,
         carriedOverFromToday,
+        ...(textbook ? { textbook } : {}),
       };
     });
 
@@ -570,4 +585,262 @@ export function buildSevenDayPlan(input: PlanInput): LearningPlan {
   };
 }
 
-export type { Student, MasteryRecord, MasteryState, PriorityOpportunity, LearningTask, DailySchedule, LearningPlan, Subject };
+// ===========================================================================
+// 冲刺计划引擎（30 天冲刺资产 → 可执行日程）
+// ===========================================================================
+
+/**
+ * 冲刺引擎版本——独立于 7 天排课引擎的 `planning.v1`。
+ *
+ * 为什么不复用 planning.v1：7 天排课是「按提分优先级动态排」，
+ * 冲刺表是「教研老师手排的 30 天固定节奏」，两者节奏模型不同，
+ * 版本号必须能区分，否则线上出问题时分不清是哪个引擎的产物。
+ */
+export const SPRINT_ENGINE_VERSION = 'sprint.v1';
+
+/** 冲刺每天最多几个任务（与 7 天排课一致） */
+export const SPRINT_MAX_TASKS_PER_DAY = 3;
+
+/** 冲刺单个任务的最小分钟数（低于 5 分钟已无学习价值） */
+export const SPRINT_MIN_TASK_MINUTES = 5;
+
+/** 冲刺学科（当前只有英语冲刺资产） */
+export const SPRINT_SUBJECT: Subject = '英语';
+
+export interface SprintPlanOptions {
+  /** 显式指定冲刺资产；不传则取当前生效（ACTIVE）的冲刺资产 */
+  sprintSet?: SprintSet;
+  /** 生成时间基准（显式传入可保证输出完全确定） */
+  now?: Date;
+}
+
+/**
+ * 解析冲刺日的目标时长（分钟）。
+ *
+ * 资产里的限时描述是自然语言：
+ * - 「每日 35–45 分钟；整套卷日 90 分钟」→ 常规日取上界 45
+ * - 整套卷日（day21 / day27）的任务文本里带「(90 分钟)」→ 取 90
+ *
+ * 取上界而不是中值：冲刺是「限时训练」，
+ * 上界才对应手册要求的「必须在这个时间内做完」。
+ */
+export function parseSprintTargetMinutes(day: SprintDay): number {
+  const task = day.task ?? '';
+  const limit = day.timeLimit ?? '';
+
+  // 整套卷日：任务文本里带明确分钟数（90 分钟）
+  if (/整套|限时卷/.test(task)) {
+    // 优先取括号内的时长：「（90 分钟）」
+    const paren = /[（(]\s*(\d+)\s*分钟\s*[)）]/.exec(task);
+    if (paren) return Number(paren[1]);
+    // 其次取紧跟在「套/卷」后的时长：「整套限时卷 90 分钟」
+    const near = /(?:套|卷)\D{0,6}(\d+)\s*分钟/.exec(task);
+    if (near) return Number(near[1]);
+    // 兜底：手册约定整套卷 90 分钟
+    return 90;
+  }
+
+  // 限时字段里的区间：35–45 分钟 → 上界
+  const range = /(\d+)\s*[–—\-~至]\s*(\d+)\s*分钟/.exec(limit);
+  if (range) return Math.max(Number(range[1]), Number(range[2]));
+
+  // 限时字段里的单值：90 分钟
+  const single = /(\d+)\s*分钟/.exec(limit);
+  if (single) return Number(single[1]);
+
+  return 45;
+}
+
+/**
+ * 兜底知识点：冲刺任务映射不到知识点时用英语学科的稳定知识点。
+ *
+ * 优先「书面表达要点」（中考英语最大得分项，且每天几乎都涉及），
+ * 没有则取英语学科 id 排序第一个（确定性）。
+ */
+function resolveFallbackKnowledge(
+  subject: Subject
+): { id: string; name: string } | null {
+  const candidates = getSprintKnowledgeBySubject(subject);
+  if (candidates.length === 0) return null;
+  const preferred = candidates.find((kp) => kp.name === '书面表达要点');
+  const picked = preferred ?? candidates[0];
+  return { id: picked.id, name: picked.name };
+}
+
+/**
+ * 冲刺日 → 知识点列表。
+ *
+ * 查找顺序：先查主知识资产，再查 overlay 叠加层（`cne_wb_*`）；
+ * 找不到映射 → 兜底到英语学科的稳定知识点，**不抛错**。
+ */
+function resolveSprintDayKnowledge(
+  day: SprintDay,
+  fallback: { id: string; name: string } | null
+): Array<{ id: string; name: string }> {
+  const index = getSprintKnowledgeIndex();
+  const out: Array<{ id: string; name: string }> = [];
+  for (const id of day.knowledgeIds ?? []) {
+    if (out.length >= SPRINT_MAX_TASKS_PER_DAY) break;
+    if (out.some((k) => k.id === id)) continue;
+    const ref = index.get(id);
+    if (!ref) continue; // 资产里写了但知识库里没有 → 跳过，最终走兜底
+    out.push({ id: ref.id, name: ref.name });
+  }
+  if (out.length === 0 && fallback) out.push(fallback);
+  return out;
+}
+
+/**
+ * 30 天冲刺计划生成。
+ *
+ * 与 7 天排课的差异：
+ * - 天数由**冲刺资产**决定（30 天），不受 7 天限制；
+ * - 每天的任务来自冲刺表（教研老师手排），不是按提分优先级动态选；
+ * - 但**预算约束完全继承 7 天排课**：每天任务 ≤3、总时长 ≤ 有效每日预算；
+ * - 知识点挂载用冲刺资产里的 knowledgeIds（映射不到走兜底）。
+ *
+ * 确定性：同样的资产 + 同样的学生 → 同样的 plan（id 不含随机数/当前时刻）。
+ */
+export function buildSprintPlan(
+  student: Student,
+  options: SprintPlanOptions = {}
+): SprintPlan {
+  const now = options.now ?? new Date();
+  const effectiveBudget = getEffectiveDailyBudget(student);
+  const sprintSet = options.sprintSet ?? getActiveSprintSet();
+
+  if (!sprintSet || sprintSet.days.length === 0) {
+    // 没有生效的冲刺资产 → 返回空计划（不抛错：冲刺是可选能力，不能拖垮主流程）
+    return {
+      id: 'sprint-plan-empty',
+      subject: SPRINT_SUBJECT,
+      engineVersion: SPRINT_ENGINE_VERSION,
+      generatedAt: now.toISOString(),
+      effectiveDailyBudget: effectiveBudget,
+      totalDays: 0,
+      days: [],
+    };
+  }
+
+  const fallback = resolveFallbackKnowledge(SPRINT_SUBJECT);
+  const days: SprintDayPlan[] = [];
+
+  for (const day of [...sprintSet.days].sort((a, b) => a.dayIndex - b.dayIndex)) {
+    const knowledge = resolveSprintDayKnowledge(day, fallback);
+    if (knowledge.length === 0) continue; // 连兜底都没有 → 跳过这天（不产出空天）
+
+    const targetMinutes = parseSprintTargetMinutes(day);
+    const dayTotal = Math.min(targetMinutes, effectiveBudget);
+
+    const ratios =
+      knowledge.length === 3
+        ? [0.42, 0.33, 0.25]
+        : knowledge.length === 2
+          ? [0.55, 0.45]
+          : [1.0];
+
+    /**
+     * 冲刺日时长分配（与 7 天排课同一套**约束**，但按冲刺口径重算比例）。
+     *
+     * 1. 冲刺表本身有「限时」：先按 timeLimit 解析出当天该投入的分钟数
+     *    （常规 45 分钟 / 整套卷 90 分钟），再受每日预算封顶；
+     * 2. 按任务数比例分配（3 任务 [0.42,0.33,0.25] / 2 任务 [0.55,0.45]）；
+     * 3. 每个任务 ≥5 分钟；总数 ≤ 每日有效预算。
+     */
+    const allocateSprintMinutes = (total: number, count: number): number[] => {
+      if (count <= 0) return [];
+      const usable = Math.max(SPRINT_MIN_TASK_MINUTES * count, total);
+
+      const ideal = ratios.map((w) => (usable * w) / 1);
+      const out = ideal.map((v) => Math.floor(v));
+
+      // 取整余数补给最后一个任务，保证总和 == usable
+      const used = out.reduce((a, b) => a + b, 0);
+      out[out.length - 1] += usable - used;
+
+      // 每个任务不得低于 5 分钟：从最宽裕的任务挪时间补齐
+      for (let i = 0; i < out.length; i++) {
+        if (out[i] >= SPRINT_MIN_TASK_MINUTES) continue;
+        let need = SPRINT_MIN_TASK_MINUTES - out[i];
+        out[i] = SPRINT_MIN_TASK_MINUTES;
+        for (let j = 0; j < out.length && need > 0; j++) {
+          if (j === i) continue;
+          const spare = out[j] - SPRINT_MIN_TASK_MINUTES;
+          if (spare <= 0) continue;
+          const take = Math.min(spare, need);
+          out[j] -= take;
+          need -= take;
+        }
+      }
+
+      return out;
+    };
+
+    const allocations = allocateSprintMinutes(dayTotal, knowledge.length);
+
+    const tasks: LearningTask[] = knowledge.map((kp, idx) => {
+      const minutes = allocations[idx] ?? allocations[allocations.length - 1] ?? 0;
+      const ref = getSprintKnowledgeIndex().get(kp.id);
+      const trapHint = ref?.commonTraps?.[0];
+      const trapSuffix = trapHint ? `（重点：${trapHint}）` : '';
+
+      return {
+        id: `sprint-d${day.dayIndex}-${kp.id}`,
+        dayIndex: day.dayIndex,
+        dayLabel: `第${day.dayIndex}天`,
+        subject: day.subject ?? SPRINT_SUBJECT,
+        knowledgeId: kp.id,
+        knowledgeName: kp.name,
+        title: `${day.subject ?? SPRINT_SUBJECT}：${kp.name}`,
+        objective: `冲刺第${day.dayIndex}天（${day.stage}）：${day.task}${trapSuffix}`,
+        verifiableOutcome: day.acceptanceCriteria
+          ? `当日验收标准：${day.acceptanceCriteria}`
+          : '按当日任务清单完成并自查',
+        estimatedMinutes: minutes,
+        steps: buildTaskSteps(minutes, '待学习'),
+        status: '待开始',
+        priorityRank: idx + 1,
+        difficultyAdjusted: false,
+        carriedOverFromToday: false,
+      };
+    });
+
+    const totalMinutes = tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
+
+    days.push({
+      dayIndex: day.dayIndex,
+      dayLabel: `第${day.dayIndex}天`,
+      stage: day.stage,
+      task: day.task,
+      timeLimit: day.timeLimit,
+      acceptanceCriteria: day.acceptanceCriteria,
+      totalMinutes,
+      tasks,
+    });
+  }
+
+  return {
+    id: `sprint-plan-${sprintSet.version}`,
+    subject: SPRINT_SUBJECT,
+    engineVersion: SPRINT_ENGINE_VERSION,
+    generatedAt: now.toISOString(),
+    effectiveDailyBudget: effectiveBudget,
+    totalDays: days.length,
+    days,
+  };
+}
+
+export type {
+  Student,
+  MasteryRecord,
+  MasteryState,
+  PriorityOpportunity,
+  LearningTask,
+  DailySchedule,
+  LearningPlan,
+  Subject,
+  SprintSet,
+  SprintPlan,
+  SprintDay,
+  SprintDayPlan,
+};

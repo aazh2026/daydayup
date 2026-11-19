@@ -13,8 +13,9 @@ import type { Container } from '../../bootstrap/container.ts';
 import { ApiException } from '../middleware/error-handler.ts';
 import { assertStudentAccess, assertStudentWriteAccess } from '../middleware/auth.ts';
 import { logger } from '../../infrastructure/logging/logger.ts';
-import { getCurriculumVersion } from '../../infrastructure/knowledge/curriculum.ts';
+import { getCurriculumVersion, getCurriculum } from '../../infrastructure/knowledge/curriculum.ts';
 import { sanitizeSegment } from '../../infrastructure/persistence/file-database.ts';
+import { computeTrapDistribution } from '../../infrastructure/knowledge/trap-distribution.ts';
 import { applyDiagnosisMastery } from '../../modules/mastery/mastery-service.ts';
 import type {
   Exam,
@@ -725,6 +726,47 @@ export function createExamRoutes(container: Container): Router {
         }));
 
         res.json({ records, total: records.length });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  /**
+   * GET /api/v1/students/:id/trap-distribution
+   *
+   * 错因形态分布：把学生的每道错题映射到错因资产（TrapSet）里的
+   * **具体陷阱形态**上，回答「错成了什么样子」。
+   *
+   * 与五维错因正交：五维错因来自 AI 诊断（「错在哪个环节」），
+   * 这里的形态来自错因资产（「错成了什么样」）—— 报告页两轴并排展示。
+   *
+   * 命中不到资产条目的错题计入 `unattributedErrors` / `unattributedLost`，
+   * **不丢数据**（让用户看见「这条错题还没有对应的资产化陷阱」）。
+   */
+  router.get(
+    '/students/:id/trap-distribution',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        assertStudentAccess(req, req.params.id);
+        const studentId = req.params.id;
+
+        const ids = await container.db.list([...ERRORS_DIR, studentId]);
+        const records: ErrorRecord[] = [];
+        for (const fileId of ids) {
+          const record = await container.db.read<ErrorRecord>([
+            ...ERRORS_DIR,
+            studentId,
+            fileId.replace(/\.json$/, ''),
+          ]);
+          if (record) records.push(record);
+        }
+
+        const nameById = new Map(
+          getCurriculum().knowledgePoints.map((kp) => [kp.id, kp.name])
+        );
+
+        res.json(computeTrapDistribution(records, (id) => nameById.get(id) ?? id));
       } catch (err) {
         next(err);
       }

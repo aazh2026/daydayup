@@ -24,6 +24,7 @@ import {
   evaluateMasteryTransition,
   buildTransitionEvent,
   applyDiagnosisMasteryLoss,
+  evaluateDiagnosticTriState,
 } from '../../engines/mastery-engine.ts';
 
 export const MASTERY_DIR = ['db', 'mastery'];
@@ -153,6 +154,66 @@ export async function applyMasteryTransition(
         trigger: params.triggerPrefix
           ? `${params.triggerPrefix}: ${params.evidenceSummary}`.slice(0, 200)
           : `${params.mode}: ${params.evidenceSummary}`.slice(0, 200),
+        now: params.now,
+      });
+      transitionEventId = event.id;
+      aggregate.history.unshift(event);
+      aggregate.history = aggregate.history.slice(0, HISTORY_LIMIT);
+    }
+
+    await writeMasteryAggregate(container, aggregate);
+    return { ...result, transitionEventId };
+  });
+}
+
+export interface ApplyDiagnosticTriStateParams {
+  studentId: string;
+  knowledgeId: string;
+  status: 'mastered' | 'shaky' | 'weak';
+  evidenceSummary: string;
+  subject: string;
+  now?: number;
+}
+
+/**
+ * 应用**三态自适应诊断**的结论并落库。
+ *
+ * 与 `applyMasteryTransition`（一次作答对错）的区别：
+ * 这里的输入是一段诊断会话的结论（掌握 / 不稳 / 薄弱），
+ * 走 `evaluateDiagnosticTriState` 的专属规则 ——
+ * 掌握只到「初步掌握」，不稳留在「学习中」，薄弱直接「待学习」。
+ */
+export async function applyDiagnosticTriState(
+  container: Container,
+  params: ApplyDiagnosticTriStateParams
+): Promise<ApplyMasteryTransitionResult> {
+  const { studentId, knowledgeId } = params;
+
+  return container.db.withExclusive(`mastery:${studentId}`, async () => {
+    const aggregate = await readMasteryAggregate(container, studentId);
+    const current =
+      aggregate.records[knowledgeId] ??
+      createEmptyMasteryRecord(knowledgeId);
+
+    const result = evaluateDiagnosticTriState({
+      current,
+      status: params.status,
+      evidenceSummary: params.evidenceSummary,
+      subject: params.subject,
+      now: params.now,
+    });
+
+    aggregate.records[knowledgeId] = result.record;
+
+    let transitionEventId: string | undefined;
+    if (result.changed) {
+      const event = buildTransitionEvent({
+        id: `mte_${randomUUID()}`,
+        knowledgeId,
+        subject: params.subject,
+        fromState: result.fromState,
+        toState: result.toState,
+        trigger: `自适应诊断: ${params.evidenceSummary}`.slice(0, 200),
         now: params.now,
       });
       transitionEventId = event.id;
