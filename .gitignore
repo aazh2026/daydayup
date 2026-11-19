@@ -22,4 +22,6 @@ packages/server/data/backup/
 # 导入暂存区（DRAFT 中间产物，--promote 后即为正式资产的副本，可由 import 重新生成）
 packages/server/data/staging/knowledge/
 packages/server/data/staging/questions/
+# 题庄（外部真题服务）运行期缓存与试用令牌（不入库，含外部服务返回的题干）
+packages/server/data/tizhuang/
 packages/server/backups/

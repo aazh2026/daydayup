@@ -46,6 +46,14 @@ export interface GenerateJsonRequest<T = unknown> {
   temperature?: number;
   maxRetries?: number;
   timeoutMs?: number;
+  /**
+   * 运行时模型 ID。
+   *
+   * 不传则用 Provider 的默认模型（来自 AI 配置中心）。
+   * 提供它是为了让「配置生效」在**单次调用粒度**也可验证，
+   * 而不必依赖 Provider 的可变状态。
+   */
+  model?: string;
 }
 
 export interface GenerateJsonResult<T = unknown> {
@@ -62,4 +70,34 @@ export interface GenerateJsonResult<T = unknown> {
 
 export interface AIProvider {
   generateJson<T>(request: GenerateJsonRequest<T>): Promise<GenerateJsonResult<T>>;
+}
+
+/**
+ * Provider 运行时参数（来自 AI 配置中心）。
+ */
+export interface AIProviderRuntimeOptions {
+  model?: string;
+  temperature?: number;
+  timeoutMs?: number;
+  maxRetries?: number;
+}
+
+/**
+ * 支持热更新的 Provider（可选能力）。
+ *
+ * 为什么需要：配置中心保存后要**立刻生效**，
+ * 而重建 Provider 会丢弃已持有的 API Key 客户端。
+ * 用类型守卫判断 Provider 是否支持热更新，避免 `as any`。
+ */
+export interface MutableAIProvider extends AIProvider {
+  applyOptions(options: AIProviderRuntimeOptions): void;
+}
+
+/**
+ * 判断 Provider 是否支持运行时热更新。
+ */
+export function isMutableAIProvider(
+  provider: AIProvider
+): provider is MutableAIProvider {
+  return typeof (provider as Partial<MutableAIProvider>).applyOptions === 'function';
 }

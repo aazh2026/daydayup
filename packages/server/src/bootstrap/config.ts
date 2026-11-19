@@ -4,6 +4,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { logger } from '../infrastructure/logging/logger.ts';
+import {
+  DEFAULT_AI_MAX_RETRIES,
+  DEFAULT_AI_MODEL,
+  DEFAULT_AI_TEMPERATURE,
+  DEFAULT_AI_TIMEOUT_MS,
+} from '../infrastructure/ai/gemini-provider.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,6 +17,14 @@ export interface AppConfig {
   port: number;
   host: string;
   geminiApiKey: string;
+  /** AI 模型 ID（运行时可在配置中心覆盖） */
+  geminiModel: string;
+  /** AI 采样温度（运行时可在配置中心覆盖） */
+  geminiTemperature: number;
+  /** AI 单次调用超时（毫秒，运行时可在配置中心覆盖） */
+  geminiTimeoutMs: number;
+  /** AI 单次请求最大尝试次数（运行时可在配置中心覆盖） */
+  geminiMaxRetries: number;
   dataDir: string;
   logLevel: string;
   corsOrigins: string[];
@@ -124,6 +138,22 @@ export function loadConfig(): AppConfig {
     port: readNumber(process.env.PORT, 3000, 'PORT'),
     host: process.env.HOST ?? '0.0.0.0',
     geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+    geminiModel: process.env.GEMINI_MODEL ?? DEFAULT_AI_MODEL,
+    geminiTemperature: readNumber(
+      process.env.GEMINI_TEMPERATURE,
+      DEFAULT_AI_TEMPERATURE,
+      'GEMINI_TEMPERATURE'
+    ),
+    geminiTimeoutMs: readNumber(
+      process.env.GEMINI_TIMEOUT_MS,
+      DEFAULT_AI_TIMEOUT_MS,
+      'GEMINI_TIMEOUT_MS'
+    ),
+    geminiMaxRetries: readNumber(
+      process.env.GEMINI_MAX_RETRIES,
+      DEFAULT_AI_MAX_RETRIES,
+      'GEMINI_MAX_RETRIES'
+    ),
     dataDir,
     logLevel: process.env.LOG_LEVEL ?? 'info',
     corsOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:5173')

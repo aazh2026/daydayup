@@ -17,7 +17,13 @@ interface QuotaRecord {
 
 export class QuotaService {
   private readonly db: FileDatabase;
-  private readonly limit: number;
+  /**
+   * 每日限额。
+   *
+   * 运行时可改（AI 配置中心里能调），所以不能是 `readonly`：
+   * 改额度必须**立即生效**，不必重启进程。
+   */
+  private limit: number;
 
   /**
    * 按账号串行化「读-判-写」三步。
@@ -54,6 +60,20 @@ export class QuotaService {
   constructor(db: FileDatabase, limit: number) {
     this.db = db;
     this.limit = limit;
+  }
+
+  /**
+   * 更新每日限额（运行时生效）。
+   *
+   * 由 AI 配置中心保存配额后调用。
+   */
+  setLimit(limit: number): void {
+    this.limit = Number.isFinite(limit) && limit >= 0 ? Math.floor(limit) : 0;
+  }
+
+  /** 当前限额（0 = 不限制） */
+  getLimit(): number {
+    return this.limit;
   }
 
   private today(): string {
