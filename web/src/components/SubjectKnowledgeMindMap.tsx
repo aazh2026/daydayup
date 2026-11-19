@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { MathText } from './MathText.tsx';
 import {
   AlertCircle,
   AlertTriangle,
   ArrowRight,
+  BookOpen,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -21,6 +21,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useCurriculum } from '../store/curriculum.tsx';
+import { MathText } from './MathText.tsx';
 import type {
   ErrorRecord,
   Exam,
@@ -42,6 +43,12 @@ export interface SubjectKnowledgeMindMapProps {
   onSelectGrade?: (grade: string) => void;
   onLaunchCoach: (knowledgeId: string) => void;
   compactHeader?: boolean;
+  /** 需要定位的考点（跨页深链：从提分报告「考点档案」跳来） */
+  focusKnowledgeId?: string | null;
+  /** 定位请求的序号 —— 重复定位同一个考点时用于重新触发 */
+  focusToken?: number;
+  /** 打开提分报告中的该考点档案 */
+  onOpenArchive?: (knowledgeId: string) => void;
 }
 
 type NodeHealth = 'critical' | 'warning' | 'mastered' | 'neutral';
@@ -144,7 +151,12 @@ function matchesSubSkill(subSkill: string, err: ErrorRecord): boolean {
   return tokens.some((tok) => haystack.includes(tok.toLowerCase()));
 }
 
-import { resolveGradeInfo, type GradeInfo } from '../utils/grade.ts';
+import {
+  resolveGradeInfo,
+  buildGradeOptions,
+  filterByGrade,
+  type GradeInfo,
+} from '../utils/grade.ts';
 export { resolveGradeInfo, type GradeInfo };
 
 /**
@@ -243,6 +255,9 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
   onSelectGrade,
   onLaunchCoach,
   compactHeader = false,
+  focusKnowledgeId = null,
+  focusToken,
+  onOpenArchive,
 }) => {
   /** 知识体系（服务端资产） */
   const {
@@ -279,68 +294,10 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
   };
 
   /** 计算当前学科下可用的年级与学段筛选选项 */
-  const gradeOptions = useMemo(() => {
-    const counts = {
-      all: subjectKps.length,
-      初三: 0,
-      初二: 0,
-      初一: 0,
-      junior: 0,
-      primary: 0,
-      senior: 0,
-    };
-
-    for (const kp of subjectKps) {
-      const info = resolveGradeInfo(kp.chapter);
-      if (info.grade === '初三') counts['初三']++;
-      if (info.grade === '初二') counts['初二']++;
-      if (info.grade === '初一') counts['初一']++;
-      if (info.stage === '初中') counts.junior++;
-      if (info.stage === '小学') counts.primary++;
-      if (info.stage === '高中') counts.senior++;
-    }
-
-    const options: Array<{ id: string; label: string; count: number }> = [
-      { id: 'all', label: '全部年级', count: counts.all },
-    ];
-
-    if (counts['初三'] > 0) {
-      options.push({ id: '初三', label: '初三（九年级）', count: counts['初三'] });
-    }
-    if (counts['初二'] > 0) {
-      options.push({ id: '初二', label: '初二（八年级）', count: counts['初二'] });
-    }
-    if (counts['初一'] > 0) {
-      options.push({ id: '初一', label: '初一（七年级）', count: counts['初一'] });
-    }
-    const juniorGradeCount =
-      (counts['初三'] > 0 ? 1 : 0) +
-      (counts['初二'] > 0 ? 1 : 0) +
-      (counts['初一'] > 0 ? 1 : 0);
-    if (juniorGradeCount > 1 && counts.junior > counts['初三']) {
-      options.push({
-        id: 'junior',
-        label: '初中全学段（七~九年级）',
-        count: counts.junior,
-      });
-    }
-    if (counts.primary > 0) {
-      options.push({
-        id: 'primary',
-        label: '小学阶段（先修回溯）',
-        count: counts.primary,
-      });
-    }
-    if (counts.senior > 0) {
-      options.push({
-        id: 'senior',
-        label: '高中阶段（衔接拓展）',
-        count: counts.senior,
-      });
-    }
-
-    return options;
-  }, [subjectKps]);
+  const gradeOptions = useMemo(
+    () => buildGradeOptions(subjectKps),
+    [subjectKps]
+  );
 
   // 当切换学科后，如果当前选中的年级在当前学科下没有考点，重置为 'all'
   useEffect(() => {
@@ -352,16 +309,10 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
   }, [subject, gradeOptions, effectiveGrade]);
 
   /** 按年级与学段筛选后的学科考点集合 */
-  const filteredSubjectKps = useMemo(() => {
-    if (effectiveGrade === 'all') return subjectKps;
-    return subjectKps.filter((kp) => {
-      const info = resolveGradeInfo(kp.chapter);
-      if (effectiveGrade === 'junior') return info.stage === '初中';
-      if (effectiveGrade === 'primary') return info.stage === '小学';
-      if (effectiveGrade === 'senior') return info.stage === '高中';
-      return info.grade === effectiveGrade;
-    });
-  }, [subjectKps, effectiveGrade]);
+  const filteredSubjectKps = useMemo(
+    () => filterByGrade(subjectKps, effectiveGrade),
+    [subjectKps, effectiveGrade]
+  );
 
   const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(
     () => buildDefaultCollapse(filteredSubjectKps).domains
@@ -773,6 +724,21 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
       setSelection({ level: 'root' });
     }
   }, [subject, effectivePaperId, effectiveGrade]);
+
+  /**
+   * 跨页深链定位：从提分报告「考点档案」跳到图谱时，
+   * 自动展开并定位到目标考点（否则用户会落在总览页找不到节点）。
+   *
+   * 只依赖 focusToken 触发 —— 重复定位同一个考点时也能重新展开。
+   */
+  useEffect(() => {
+    if (!focusKnowledgeId) return;
+    const node = mindMap.allKpNodes.find((k) => k.kp.id === focusKnowledgeId);
+    if (!node) return;
+    setSelection({ level: 'kp', knowledgeId: focusKnowledgeId });
+    revealKp(focusKnowledgeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKnowledgeId, focusToken]);
 
   /** 当前实际参与布局（可见）的考点节点；收起的分支只在 allKpNodes 中保留数据。 */
   const layoutKpNodes = useMemo(
@@ -1948,6 +1914,17 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
                     ))}
                   </ul>
                 </div>
+              )}
+
+              {onOpenArchive && (
+                <button
+                  type="button"
+                  onClick={() => onOpenArchive(selectedKpNode.kp.id)}
+                  className="w-full py-2.5 px-4 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>查看考点全景档案</span>
+                </button>
               )}
 
               <button

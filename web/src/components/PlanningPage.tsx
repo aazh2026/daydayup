@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MathText } from './MathText.tsx';
 import { ArrowRight, Calculator, Calendar, Lock } from 'lucide-react';
+import { MathText } from './MathText.tsx';
 import { ALL_SUBJECTS } from '../types.ts';
 import { Pagination } from './Pagination.tsx';
 import { paginateList } from '../utils/pagination.ts';

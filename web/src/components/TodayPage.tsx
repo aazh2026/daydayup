@@ -1,6 +1,6 @@
 import React from 'react';
-import { MathText } from './MathText.tsx';
 import { ArrowRight, CheckCircle2, Clock, RotateCw } from 'lucide-react';
+import { MathText } from './MathText.tsx';
 import type { AppPage, LearningPlan, LearningTask, MasteryRecord, Student } from '../types.ts';
 import { computeDaysToZhongkao } from '../engine/planner.ts';
 

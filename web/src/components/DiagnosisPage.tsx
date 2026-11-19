@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MathText } from './MathText.tsx';
 import {
   AlertCircle,
   ArrowRight,
@@ -24,6 +23,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useCurriculum } from '../store/curriculum.tsx';
+import { MathText } from './MathText.tsx';
 import { SAMPLE_EXAM_IMAGE_URL } from '../data/initialStore.ts';
 import { api } from '../api/client.ts';
 import {
@@ -32,13 +32,12 @@ import {
 } from '../api/jobs.ts';
 import { ALL_SUBJECTS } from '../types.ts';
 import { Pagination } from './Pagination.tsx';
+import { AdaptiveDiagnosisPanel } from './AdaptiveDiagnosisPanel.tsx';
 import { paginateList } from '../utils/pagination.ts';
 import type {
   DetectedMetadata,
   DiagnosedItem,
   DiagnoseExamResponse,
-  MicroQuizItem as ContractMicroQuizItem,
-  MicroQuizResponse,
 } from '@daydayup/contracts';
 import type {
   AppPage,
@@ -89,16 +88,6 @@ interface PendingDiagnosisDraft {
   items: DiagnosedDraftItem[];
 }
 
-interface MicroQuizItem {
-  id: string;
-  knowledgeId: string;
-  subject: Subject;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
 interface DiagnosisPageProps {
   /** 当前学生 ID（用于服务端鉴权与数据隔离） */
   studentId: string;
@@ -123,46 +112,12 @@ interface DiagnosisPageProps {
     evidenceNote: string
   ) => void;
   onLaunchCoach: (knowledgeId: string) => void;
+  /** 自适应诊断 finalize 后，刷新服务端权威掌握度 */
+  onMasteryUpdated?: () => void | Promise<void>;
   onNavigate?: (page: AppPage) => void;
 }
 
 type InputTab = 'paper' | 'wrong' | 'score' | 'quiz';
-
-const FALLBACK_MICRO_QUIZ: MicroQuizItem[] = [
-  {
-    id: 'mq-1',
-    knowledgeId: 'cnm_204',
-    subject: '数学',
-    question: '将一次函数 y = 3x + 2 的图像向下平移 5 个单位长度，得到的新函数解析式是？',
-    options: ['y = 3x + 7', 'y = 3x - 3', 'y = 3(x - 5) + 2', 'y = 3(x + 5) + 2'],
-    correctIndex: 1,
-    explanation: '上下平移遵循“上加下减”常数项原则，故 b = 2 - 5 = -3，新函数为 y = 3x - 3。',
-  },
-  {
-    id: 'mq-2',
-    knowledgeId: 'cnm_236',
-    subject: '数学',
-    question: '抛物线 y = (x - 2)² + 1 的顶点坐标与对称轴分别是？',
-    options: [
-      '顶点 (-2, 1)，对称轴 x = -2',
-      '顶点 (2, 1)，对称轴 x = 2',
-      '顶点 (2, -1)，对称轴 x = 2',
-      '顶点 (-2, -1)，对称轴 x = -2',
-    ],
-    correctIndex: 1,
-    explanation: '顶点式 y = a(x - h)² + k 的顶点为 (h, k)，对称轴为直线 x = h，即 (2, 1) 与 x = 2。',
-  },
-  {
-    id: 'mq-3',
-    knowledgeId: 'cne_j240',
-    subject: '英语',
-    question:
-      'In Shanghai, many students choose to ride shared bikes; h______, they still need to follow traffic rules carefully.',
-    options: ['hardly', 'however', 'happily', 'helpful'],
-    correctIndex: 1,
-    explanation: '前半句讲骑共享单车很便利，后半句强调仍需遵守交规，上下文为转折关系，首字母 h 对应 however。',
-  },
-];
 
 const ERROR_TYPES: ErrorType[] = [
   '知识问题',
@@ -204,6 +159,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   examId,
   onVerifyKnowledge,
   onLaunchCoach,
+  onMasteryUpdated,
   onNavigate,
 }) => {
   /** 知识体系（服务端资产） */
@@ -253,12 +209,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
   const [fullScoreVal, setFullScoreVal] = useState('100');
   const [targetScoreVal, setTargetScoreVal] = useState('90');
   const [scoreDate, setScoreDate] = useState(new Date().toISOString().slice(0, 10));
-
-  // Dynamic Micro-quiz state
-  const [microQuizzes, setMicroQuizzes] = useState<MicroQuizItem[]>(FALLBACK_MICRO_QUIZ);
-  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
-  const [quizSubmitted, setQuizSubmitted] = useState<Record<string, boolean>>({});
 
   // Pagination states
   const [errorPage, setErrorPage] = useState(1);
@@ -854,58 +804,6 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
     }
     setDiagnoseSuccessMsg(
       `已录入「${existingExam ? existingExam.title : scoreExamName}」${scoreSubject}成绩（${s}/${full}），诊断基线与提分差距已同步更新。`
-    );
-  };
-
-  const handleGenerateDynamicMicroQuiz = async () => {
-    const targets = (unverifiedKps.length > 0 ? unverifiedKps : SHANGHAI_CURRICULUM).slice(0, 3);
-    setIsGeneratingQuiz(true);
-    setDiagnoseError(null);
-    try {
-      const data = await api.post<MicroQuizResponse>('/api/v1/diagnose-microquiz', {
-        targets: targets.map((kp) => ({
-          id: kp.id,
-          subject: kp.subject,
-          name: kp.name,
-          definition: kp.definition,
-        })),
-      });
-      const items = Array.isArray(data.items) ? data.items : [];
-      if (items.length > 0) {
-        setMicroQuizzes(
-          items.map((item: ContractMicroQuizItem, i: number) => ({
-            id: `dyn-mq-${Date.now()}-${i}`,
-            knowledgeId: KNOWLEDGE_MAP[String(item.knowledgeId)]
-              ? String(item.knowledgeId)
-              : targets[i]?.id ?? SHANGHAI_CURRICULUM[0]?.id ?? '',
-            subject: (ALL_SUBJECTS.includes(String(item.subject) as Subject)
-              ? String(item.subject)
-              : targets[i]?.subject ?? '数学') as Subject,
-            question: String(item.question ?? ''),
-            options: Array.isArray(item.options) ? item.options.map(String) : [],
-            correctIndex: Number(item.correctIndex ?? 0),
-            explanation: String(item.explanation ?? ''),
-          }))
-        );
-        setQuizAnswers({});
-        setQuizSubmitted({});
-      }
-    } catch (err) {
-      setDiagnoseError(err instanceof Error ? err.message : '生成微测失败');
-    } finally {
-      setIsGeneratingQuiz(false);
-    }
-  };
-
-  const handleSubmitMicroQuiz = (quizItem: MicroQuizItem) => {
-    const selectedIdx = quizAnswers[quizItem.id];
-    if (selectedIdx === undefined) return;
-    const isCorrect = selectedIdx === quizItem.correctIndex;
-    setQuizSubmitted((prev) => ({ ...prev, [quizItem.id]: true }));
-    onVerifyKnowledge(
-      quizItem.knowledgeId,
-      isCorrect,
-      `主动诊断微测（${quizItem.subject}）：${isCorrect ? '作答正确，确认前置概念清晰' : '作答错误，确认存在概念或方法漏洞'}`
     );
   };
 
@@ -2227,97 +2125,28 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
           </form>
         )}
 
-        {/* Tab 4: Dynamic Active Diagnostic Micro-Quiz */}
+        {/* Tab 4: Server-authoritative three-state adaptive diagnosis */}
         {inputTab === 'quiz' && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-xs text-slate-600">
-                当前共有 <span className="font-semibold text-slate-900">{unverifiedKps.length}</span> 个置信度为「待验证/较可能」的考点，可一键按需生成高区分度微测题补充证据：
+                当前共有{' '}
+                <span className="font-semibold text-slate-900">
+                  {unverifiedKps.length}
+                </span>{' '}
+                个置信度为「待验证/较可能」的考点，由服务端三态诊断引擎出题、判题与落库：
               </p>
-              <button
-                type="button"
-                disabled={isGeneratingQuiz}
-                onClick={handleGenerateDynamicMicroQuiz}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto"
-              >
-                {isGeneratingQuiz ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
-                )}
-                <span>按当前待验证考点动态出题</span>
-              </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {microQuizzes.map((q) => {
-                const chosen = quizAnswers[q.id];
-                const isSub = quizSubmitted[q.id];
-                const isRight = chosen === q.correctIndex;
-                const kp = KNOWLEDGE_MAP[q.knowledgeId];
-
-                return (
-                  <div
-                    key={q.id}
-                    className="p-4 border border-slate-200 rounded-xl bg-slate-50/50 flex flex-col justify-between space-y-3"
-                  >
-                    <div className="space-y-2.5">
-                      <div className="text-xs text-slate-500">
-                        {q.subject} · {kp?.name}
-                      </div>
-                      <p className="text-sm font-medium text-slate-900 leading-relaxed">
-                        <MathText text={q.question} />
-                      </p>
-                      <div className="space-y-1.5">
-                        {q.options.map((opt, oIdx) => (
-                          <button
-                            key={oIdx}
-                            type="button"
-                            disabled={isSub}
-                            onClick={() =>
-                              setQuizAnswers((prev) => ({ ...prev, [q.id]: oIdx }))
-                            }
-                            className={`w-full text-left px-3 py-2 text-xs rounded-lg border transition-colors ${
-                              chosen === oIdx
-                                ? 'border-blue-600 bg-blue-50 text-blue-900 font-medium'
-                                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                            }`}
-                          >
-                            <MathText text={opt} />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      {!isSub ? (
-                        <button
-                          type="button"
-                          disabled={chosen === undefined}
-                          onClick={() => handleSubmitMicroQuiz(q)}
-                          className="w-full py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 rounded-lg transition-colors"
-                        >
-                          提交并更新证据置信度
-                        </button>
-                      ) : (
-                        <div
-                          className={`p-2.5 rounded-lg text-xs border ${
-                            isRight
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                              : 'bg-red-50 border-red-200 text-red-900'
-                          }`}
-                        >
-                          <div className="font-semibold">
-                            {isRight ? '验证通过 · 已提升置信度' : '验证暴露漏洞 · 已纳入重点补强'}
-                          </div>
-                          <div className="mt-1 text-slate-700"><MathText text={q.explanation} /></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <AdaptiveDiagnosisPanel
+              studentId={studentId}
+              targetKnowledgeIds={unverifiedKps.map((kp) => kp.id)}
+              knowledgeNames={Object.fromEntries(
+                SHANGHAI_CURRICULUM.map((kp) => [kp.id, kp.name])
+              )}
+              onMasteryUpdated={onMasteryUpdated}
+              onLaunchCoach={onLaunchCoach}
+            />
           </div>
         )}
       </section>

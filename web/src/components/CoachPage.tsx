@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MathText } from './MathText.tsx';
 import {
   AlertTriangle,
   BookOpen,
@@ -18,8 +17,10 @@ import {
   Target,
 } from 'lucide-react';
 import { useCurriculum } from '../store/curriculum.tsx';
+import { MathText } from './MathText.tsx';
 import { MASTERY_ORDER, fetchRetestStatus } from '../engine/planner.ts';
 import { api } from '../api/client.ts';
+import { fetchExternalQuestions } from '../api/sprint.ts';
 import { ALL_SUBJECTS } from '../types.ts';
 import type {
   CoachChatResponse,
@@ -383,6 +384,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
           found: boolean;
           questions: Array<{
             stem: string;
+            options?: string[];
             standardAnswer: string;
             solutionSteps: string[];
             commonErrors: string[];
@@ -394,7 +396,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
         if (hit) {
           setCurrentQuestion({
             stem: hit.stem,
-            options: undefined,
+            options: hit.options,
             standardAnswer: hit.standardAnswer,
             solutionSteps: hit.solutionSteps ?? [],
             commonTrap: hit.commonErrors?.[0] ?? kp.commonTraps[0] ?? '',
@@ -509,6 +511,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
           found: boolean;
           questions: Array<{
             stem: string;
+            options?: string[];
             standardAnswer: string;
             solutionSteps: string[];
             commonErrors: string[];
@@ -523,7 +526,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
         if (bankHit) {
           setCurrentQuestion({
             stem: bankHit.stem,
-            options: undefined,
+            options: bankHit.options,
             standardAnswer: bankHit.standardAnswer,
             solutionSteps: bankHit.solutionSteps ?? [],
             commonTrap: bankHit.commonErrors?.[0] ?? '',
@@ -536,6 +539,28 @@ export const CoachPage: React.FC<CoachPageProps> = ({
         }
       } catch {
         // 题库不可用时降级为 AI 生成
+      }
+
+      // 第二来源：题庄外部真题（教研题库未命中时）
+      try {
+        const extRes = await fetchExternalQuestions(kp.id, { limit: 5 });
+        const extHit = extRes.questions?.[0];
+        if (extHit) {
+          setCurrentQuestion({
+            stem: extHit.stem,
+            options: extHit.options,
+            standardAnswer: extHit.standardAnswer,
+            solutionSteps: extHit.solutionSteps ?? [],
+            commonTrap: extHit.commonErrors?.[0] ?? kp.commonTraps[0] ?? '',
+            sourceLabel: '题庄外部真题',
+            dualVerified: true,
+            verificationCheck: '题庄真题库收录，含标准答案与解析',
+          });
+          setQuestionStartTime(Date.now());
+          return;
+        }
+      } catch {
+        // 外部真题不可用：继续降级到 AI 生成
       }
     }
 
