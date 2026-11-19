@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { MathText } from './MathText.tsx';
 import {
   AlertCircle,
   AlertTriangle,
@@ -1821,7 +1822,7 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
               )}
 
               <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                {selectedKpNode.kp.definition}
+                <MathText text={selectedKpNode.kp.definition} />
               </p>
 
               {/* Sub-skills (分步能力细项) */}
@@ -1844,7 +1845,7 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
                         <span className="font-mono text-slate-400 text-[10px]">
                           0{idx + 1}.
                         </span>
-                        <span>{sk}</span>
+                        <span><MathText text={sk} /></span>
                       </div>
                     ))}
                   </div>
@@ -1898,7 +1899,7 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
                         key={fmt}
                         className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]"
                       >
-                        {fmt}
+                        <MathText text={fmt} />
                       </span>
                     ))}
                   </div>
@@ -1926,8 +1927,8 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
                             {err.errorType} · -{err.scoreLost}分
                           </span>
                         </div>
-                        <div className="text-slate-700 line-clamp-2">{err.stem}</div>
-                        <div className="text-slate-500">归因：{err.aiAnalysis}</div>
+                        <div className="text-slate-700 line-clamp-2"><MathText text={err.stem} /></div>
+                        <div className="text-slate-500">归因：<MathText text={err.aiAnalysis} /></div>
                       </div>
                     ))}
                   </div>
@@ -1943,7 +1944,7 @@ export const SubjectKnowledgeMindMap: React.FC<SubjectKnowledgeMindMapProps> = (
                   </div>
                   <ul className="list-disc list-inside space-y-0.5">
                     {selectedKpNode.kp.commonTraps.map((trap) => (
-                      <li key={trap}>{trap}</li>
+                      <li key={trap}><MathText text={trap} /></li>
                     ))}
                   </ul>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { MathText } from './MathText.tsx';
 import {
   AlertCircle,
   ArrowRight,
@@ -2022,30 +2023,30 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                                   <div className="pt-2.5 text-xs text-slate-700 space-y-1.5">
                                     <div className="font-medium text-slate-900 flex items-start gap-1.5">
                                       <span className="text-slate-500 shrink-0">题干：</span>
-                                      <span>{item.stem || '（未识别题干）'}</span>
+                                      <span><MathText text={item.stem || '（未识别题干）'} /></span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-600">
                                       <div>
                                         <span className="text-slate-500">学生作答：</span>
                                         <span className="text-rose-600 font-medium">
-                                          {item.studentAnswer || '未作答/空白'}
+                                          <MathText text={item.studentAnswer || '未作答/空白'} />
                                         </span>
                                       </div>
                                       {item.correctAnswer && (
                                         <div>
                                           <span className="text-slate-500">标准答案：</span>
                                           <span className="text-emerald-700 font-medium">
-                                            {item.correctAnswer}
+                                            <MathText text={item.correctAnswer} />
                                           </span>
                                         </div>
                                       )}
                                     </div>
                                     <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-slate-600">
                                       <span className="text-blue-700 font-semibold">AI 根因分析：</span>
-                                      <span>{item.aiAnalysis || '知识点掌握不牢固，做题时缺乏清晰解题逻辑。'}</span>
+                                      <span><MathText text={item.aiAnalysis || '知识点掌握不牢固，做题时缺乏清晰解题逻辑。'} /></span>
                                       {item.verificationMethod && (
                                         <div className="mt-1 text-[11px] text-slate-500">
-                                          💡 建议验证方式：{item.verificationMethod}
+                                          💡 建议验证方式：<MathText text={item.verificationMethod} />
                                         </div>
                                       )}
                                     </div>
@@ -2265,7 +2266,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                         {q.subject} · {kp?.name}
                       </div>
                       <p className="text-sm font-medium text-slate-900 leading-relaxed">
-                        {q.question}
+                        <MathText text={q.question} />
                       </p>
                       <div className="space-y-1.5">
                         {q.options.map((opt, oIdx) => (
@@ -2282,7 +2283,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                                 : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                             }`}
                           >
-                            {opt}
+                            <MathText text={opt} />
                           </button>
                         ))}
                       </div>
@@ -2309,7 +2310,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                           <div className="font-semibold">
                             {isRight ? '验证通过 · 已提升置信度' : '验证暴露漏洞 · 已纳入重点补强'}
                           </div>
-                          <div className="mt-1 text-slate-700">{q.explanation}</div>
+                          <div className="mt-1 text-slate-700"><MathText text={q.explanation} /></div>
                         </div>
                       )}
                     </div>
@@ -2533,7 +2534,7 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                       </div>
                     </div>
 
-                    <p className="text-slate-700 leading-relaxed">{paper.summary}</p>
+                    <p className="text-slate-700 leading-relaxed"><MathText text={paper.summary} /></p>
 
                     {isExpanded && (
                       <div className="pt-3 border-t border-slate-200 space-y-3">
@@ -2719,33 +2720,33 @@ export const DiagnosisPage: React.FC<DiagnosisPageProps> = ({
                     </div>
 
                     <div className="text-sm text-slate-900 bg-slate-50 border border-slate-100 rounded-lg p-3.5 leading-relaxed">
-                      {err.stem}
+                      <MathText text={err.stem} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       <div className="p-3 border border-slate-100 rounded-lg">
                         <span className="text-slate-500">学生作答：</span>
-                        <span className="text-slate-800">{err.studentAnswer}</span>
+                        <span className="text-slate-800"><MathText text={err.studentAnswer} /></span>
                       </div>
                       <div className="p-3 border border-slate-100 rounded-lg">
                         <span className="text-slate-500">规范参考：</span>
-                        <span className="text-emerald-800 font-medium">{err.correctAnswer}</span>
+                        <span className="text-emerald-800 font-medium"><MathText text={err.correctAnswer} /></span>
                       </div>
                     </div>
 
                     <div className="text-xs text-slate-700 space-y-1 leading-relaxed">
                       <div>
                         <span className="font-semibold text-slate-900">证据：</span>
-                        {err.evidence}
+                        <MathText text={err.evidence} />
                       </div>
                       <div>
                         <span className="font-semibold text-slate-900">判断：</span>
-                        {err.aiAnalysis}
+                        <MathText text={err.aiAnalysis} />
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
                         <div>
                           <span className="font-semibold text-slate-900">建议验证方式：</span>
-                          {err.verificationMethod}
+                          <MathText text={err.verificationMethod} />
                         </div>
                         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
                           {onNavigate && (

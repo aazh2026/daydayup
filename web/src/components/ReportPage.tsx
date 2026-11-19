@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { MathText } from './MathText.tsx';
 import {
   AlertTriangle,
   ArrowRight,
@@ -1081,8 +1082,8 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                       <span aria-hidden="true">·</span>
                       <span className="font-mono tabular-nums">{att.timeSpentSeconds}秒</span>
                     </div>
-                    <div className="text-slate-900">{att.questionStem}</div>
-                    <div className="text-slate-500">{att.aiFeedback}</div>
+                    <div className="text-slate-900"><MathText text={att.questionStem} /></div>
+                    <div className="text-slate-500"><MathText text={att.aiFeedback} /></div>
                   </div>
                   <div
                     className={`font-semibold shrink-0 ${
@@ -1272,7 +1273,7 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                     {/* Diagnostic Summary */}
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-700 leading-relaxed">
                       <span className="font-semibold text-slate-900">AI 卷面分析摘要：</span>
-                      {paper.summary}
+                      <MathText text={paper.summary} />
                     </div>
 
                     {/* 5-Dimension Breakdown + Subsequent Knowledge Mastery Tracking */}
@@ -1463,10 +1464,10 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                                         变式复测
                                       </button>
                                     </div>
-                                    <div className="text-slate-800">{err.stem}</div>
+                                    <div className="text-slate-800"><MathText text={err.stem} /></div>
                                     <div className="text-slate-500">
-                                      原答：{err.studentAnswer} ｜ 参考：{err.correctAnswer} ｜ 归因：
-                                      {err.aiAnalysis}
+                                      原答：<MathText text={err.studentAnswer} /> ｜ 参考：<MathText text={err.correctAnswer} /> ｜ 归因：
+                                      <MathText text={err.aiAnalysis} />
                                     </div>
                                   </div>
                                 ))}
@@ -2185,9 +2186,9 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                                 {err.errorType} · -{err.scoreLost}分
                               </span>
                             </div>
-                            <p className="text-slate-600 line-clamp-2">{err.stem}</p>
+                            <p className="text-slate-600 line-clamp-2"><MathText text={err.stem} /></p>
                             <div className="text-[11px] text-slate-500">
-                              学生作答：{err.studentAnswer} · 归因：{err.aiAnalysis}
+                              学生作答：<MathText text={err.studentAnswer} /> · 归因：<MathText text={err.aiAnalysis} />
                             </div>
                           </div>
                         ))}
@@ -2482,24 +2483,24 @@ export const ReportPage: React.FC<ReportPageProps> = ({
                         </div>
 
                         <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-900">
-                          {err.stem}
+                          <MathText text={err.stem} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                           <div className="p-3 border border-slate-100 rounded-lg">
                             <span className="text-slate-500">学生原答：</span>
-                            <span className="text-slate-800">{err.studentAnswer}</span>
+                            <span className="text-slate-800"><MathText text={err.studentAnswer} /></span>
                           </div>
                           <div className="p-3 border border-slate-100 rounded-lg">
                             <span className="text-slate-500">规范参考：</span>
-                            <span className="text-emerald-800 font-medium">{err.correctAnswer}</span>
+                            <span className="text-emerald-800 font-medium"><MathText text={err.correctAnswer} /></span>
                           </div>
                         </div>
 
                         <div className="text-xs text-slate-700 space-y-1">
                           <div>
                             <span className="font-semibold text-slate-900">AI 分析：</span>
-                            {err.aiAnalysis}
+                            <MathText text={err.aiAnalysis} />
                           </div>
                           <div>
                             <span className="font-semibold text-slate-900">关联变式题资产：</span>

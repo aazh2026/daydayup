@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MathText } from './MathText.tsx';
 import { ArrowRight, Calculator, Calendar, Lock } from 'lucide-react';
 import { ALL_SUBJECTS } from '../types.ts';
 import { Pagination } from './Pagination.tsx';
@@ -205,7 +206,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
                         {item.blockedByPrerequisite && (
                           <Lock className="w-3 h-3 text-amber-600 shrink-0" />
                         )}
-                        <span>{item.rationale}</span>
+                        <span><MathText text={item.rationale} /></span>
                       </div>
                     </td>
                     <td className="py-3.5 px-3 text-right font-mono tabular-nums text-slate-700">
@@ -330,8 +331,8 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
                       {task.carriedOverFromToday ? '今日顺延优先' : task.status}
                     </span>
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-900">{task.title}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">{task.objective}</p>
+                  <h3 className="text-sm font-semibold text-slate-900"><MathText text={task.title} /></h3>
+                  <p className="text-xs text-slate-600 leading-relaxed"><MathText text={task.objective} /></p>
                 </div>
 
                 <button

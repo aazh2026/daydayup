@@ -20,6 +20,27 @@
   .font-mono, .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /**
+   * 数学排版微调：
+   * - 行内公式与中文基线对齐，避免 $x$ 比正文高出一截；
+   * - 行间公式独占一行并允许横向滚动，长公式不撑破卡片。
+   */
+  .math-inline .katex {
+    font-size: 1.02em;
+  }
+
+  .math-block {
+    display: block;
+    margin: 0.6em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-align: center;
+  }
+
+  .math-block .katex-display {
+    margin: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

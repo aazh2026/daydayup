@@ -1,4 +1,5 @@
 import React from 'react';
+import { MathText } from './MathText.tsx';
 import { ArrowRight, CheckCircle2, Clock, RotateCw } from 'lucide-react';
 import type { AppPage, LearningPlan, LearningTask, MasteryRecord, Student } from '../types.ts';
 import { computeDaysToZhongkao } from '../engine/planner.ts';
@@ -159,10 +160,10 @@ export const TodayPage: React.FC<TodayPageProps> = ({
 
                   <div>
                     <h3 className="text-base font-semibold text-slate-900 leading-snug">
-                      {task.title}
+                      <MathText text={task.title} />
                     </h3>
                     <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
-                      {task.objective}
+                      <MathText text={task.objective} />
                     </p>
                   </div>
 
@@ -183,7 +184,7 @@ export const TodayPage: React.FC<TodayPageProps> = ({
                           }`}
                         >
                           <span>
-                            {sIdx + 1}. {step.label}
+                            {sIdx + 1}. <MathText text={step.label} />
                           </span>
                           <span className="font-mono tabular-nums text-slate-400 no-underline">
                             {step.minutes} 分钟
@@ -195,7 +196,7 @@ export const TodayPage: React.FC<TodayPageProps> = ({
 
                   <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-700">
                     <span className="font-medium text-slate-900">验收标准：</span>
-                    {task.verifiableOutcome}
+                    <MathText text={task.verifiableOutcome} />
                   </div>
                 </div>
 

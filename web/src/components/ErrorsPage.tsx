@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { MathText } from './MathText.tsx';
 import {
   AlertCircle,
   AlertTriangle,
@@ -1021,7 +1022,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                       )}
                     </div>
                     <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-900 font-sans whitespace-pre-wrap">
-                      {err.stem}
+                      <MathText text={err.stem} />
                     </div>
                   </div>
 
@@ -1067,7 +1068,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                           </span>
                         </div>
                         <div className="text-slate-800 leading-relaxed font-sans bg-white/70 p-2.5 rounded-lg border border-rose-100">
-                          {err.studentAnswer || '（空白未答或步骤严重缺失）'}
+                          <MathText text={err.studentAnswer || '（空白未答或步骤严重缺失）'} />
                         </div>
                       </div>
 
@@ -1083,7 +1084,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                           </span>
                         </div>
                         <div className="text-emerald-950 font-medium leading-relaxed font-sans bg-white/70 p-2.5 rounded-lg border border-emerald-100">
-                          {err.correctAnswer}
+                          <MathText text={err.correctAnswer} />
                         </div>
                       </div>
                     </div>
@@ -1099,7 +1100,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                           <span>AI 错因深度归因剖析</span>
                         </div>
                         <p className="text-slate-700 leading-relaxed">
-                          {err.aiAnalysis}
+                          <MathText text={err.aiAnalysis} />
                         </p>
                       </div>
 
@@ -1112,7 +1113,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                             <span>认知佐证链条</span>
                           </div>
                           <p className="text-slate-700 text-[11px] leading-relaxed">
-                            {err.evidence || '本卷单次失分证据独立建档'}
+                            <MathText text={err.evidence || '本卷单次失分证据独立建档'} />
                           </p>
                         </div>
 
@@ -1123,7 +1124,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                             <span>建议验证闭环方式</span>
                           </div>
                           <p className="text-slate-700 text-[11px] leading-relaxed">
-                            {err.verificationMethod || '完成同类型微测检验是否真正掌握'}
+                            <MathText text={err.verificationMethod || '完成同类型微测检验是否真正掌握'} />
                           </p>
                         </div>
 
@@ -1137,7 +1138,7 @@ export const ErrorsPage: React.FC<ErrorsPageProps> = ({
                             <ul className="text-slate-700 text-[11px] space-y-0.5 list-disc list-inside">
                               {commonTraps.slice(0, 2).map((trap, tIdx) => (
                                 <li key={tIdx} className="leading-tight">
-                                  {trap}
+                                  <MathText text={trap} />
                                 </li>
                               ))}
                             </ul>

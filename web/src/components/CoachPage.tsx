@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { MathText } from './MathText.tsx';
 import {
   AlertTriangle,
   BookOpen,
@@ -755,7 +756,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                       : 'border-slate-200 bg-slate-50 text-slate-400'
                   }`}
                 >
-                  {st}
+                  <MathText text={st} />
                 </div>
               );
             })}
@@ -784,7 +785,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
 
             <p className="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200">
               <span className="font-semibold text-slate-900 mr-1">概念定义与要求：</span>
-              {kp.definition}
+              <MathText text={kp.definition} />
             </p>
 
             {kp.subSkills && kp.subSkills.length > 0 && (
@@ -800,7 +801,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 text-[11px]"
                     >
                       <Check className="w-3 h-3 text-emerald-600" />
-                      <span>{sk}</span>
+                      <span><MathText text={sk} /></span>
                     </span>
                   ))}
                 </div>
@@ -820,7 +821,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                         key={fmt}
                         className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]"
                       >
-                        {fmt}
+                        <MathText text={fmt} />
                       </span>
                     ))}
                   </div>
@@ -835,7 +836,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                   </div>
                   <ul className="list-disc list-inside space-y-0.5">
                     {kp.commonTraps.map((trap) => (
-                      <li key={trap}>{trap}</li>
+                      <li key={trap}><MathText text={trap} /></li>
                     ))}
                   </ul>
                 </div>
@@ -954,11 +955,11 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                   </span>
                 </div>
                 <div className="text-slate-700 leading-relaxed">
-                  <span className="font-medium text-slate-900">原错题：</span>{matchedError.stem}
+                  <span className="font-medium text-slate-900">原错题：</span><MathText text={matchedError.stem} />
                 </div>
                 {matchedError.studentAnswer && (
                   <div className="text-slate-500 text-[11px]">
-                    <span className="font-medium text-slate-700">当时作答：</span>{matchedError.studentAnswer}
+                    <span className="font-medium text-slate-700">当时作答：</span><MathText text={matchedError.studentAnswer} />
                   </div>
                 )}
               </div>
@@ -981,7 +982,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                       教学行为：{msg.behavior}
                     </div>
                   )}
-                  {msg.text}
+                  <MathText text={msg.text} />
                 </div>
               </div>
             ))}
@@ -1115,7 +1116,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                   </button>
                 </div>
                 <p className="text-sm text-slate-900 leading-relaxed font-medium">
-                  {currentQuestion.stem}
+                  <MathText text={currentQuestion.stem} />
                 </p>
               </div>
 
@@ -1132,7 +1133,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                           : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                     >
-                      {opt}
+                      <MathText text={opt} />
                     </button>
                   ))}
                 </div>
@@ -1259,16 +1260,16 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                         : `作答有误（归因：${evalResult.errorType}）`}
                     </span>
                   </div>
-                  <p className="leading-relaxed text-slate-800">{evalResult.feedback}</p>
+                  <p className="leading-relaxed text-slate-800"><MathText text={evalResult.feedback} /></p>
                   {!evalResult.isCorrect && evalResult.stepHint && (
                     <p className="text-slate-700">
                       <span className="font-semibold">关键提示：</span>
-                      {evalResult.stepHint}
+                      <MathText text={evalResult.stepHint} />
                     </p>
                   )}
                   <p className="text-slate-600">
                     <span className="font-semibold">下一步建议：</span>
-                    {evalResult.nextRecommendation}
+                    <MathText text={evalResult.nextRecommendation} />
                   </p>
                 </div>
               )}
@@ -1277,12 +1278,12 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2 text-slate-700">
                   <div>
                     <span className="font-semibold text-slate-900">参考答案：</span>
-                    {currentQuestion.standardAnswer}
+                    <MathText text={currentQuestion.standardAnswer} />
                   </div>
                   {currentQuestion.verificationCheck && (
                     <div className="text-emerald-800">
                       <span className="font-semibold">验算校验：</span>
-                      {currentQuestion.verificationCheck}
+                      <MathText text={currentQuestion.verificationCheck} />
                     </div>
                   )}
                   {currentQuestion.solutionSteps.length > 0 && (
@@ -1290,7 +1291,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                       <div className="font-semibold text-slate-900">标准解题路径：</div>
                       {currentQuestion.solutionSteps.map((st, idx) => (
                         <div key={idx}>
-                          {idx + 1}. {st}
+                          {idx + 1}. <MathText text={st} />
                         </div>
                       ))}
                     </div>
@@ -1298,7 +1299,7 @@ export const CoachPage: React.FC<CoachPageProps> = ({
                   {currentQuestion.commonTrap && (
                     <div className="text-amber-800">
                       <span className="font-semibold">易错点提示：</span>
-                      {currentQuestion.commonTrap}
+                      <MathText text={currentQuestion.commonTrap} />
                     </div>
                   )}
                 </div>
