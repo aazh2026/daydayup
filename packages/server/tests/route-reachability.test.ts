@@ -156,6 +156,12 @@ const FRONTEND_PATHS: Array<{ method: string; path: string; note: string }> = [
 
   // 上传
   { method: 'POST', path: '/api/v1/uploads/papers', note: '上传试卷图片' },
+
+  // AI 配置（老师）
+  { method: 'GET', path: '/api/v1/admin/ai-settings', note: '读取 AI 配置' },
+  { method: 'PUT', path: '/api/v1/admin/ai-settings', note: '修改 AI 配置' },
+  { method: 'POST', path: '/api/v1/admin/ai-settings/test', note: 'AI 连通性测试' },
+  { method: 'POST', path: '/api/v1/admin/ai-settings/reset', note: '恢复 AI 配置默认值' },
 ];
 
 before(async () => {
