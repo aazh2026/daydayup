@@ -22,11 +22,14 @@ import { createMasteryRoutes } from './api/routes/mastery.routes.ts';
 import { createPlanRoutes } from './api/routes/plan.routes.ts';
 import { createPrerequisiteRoutes } from './api/routes/prerequisite.routes.ts';
 import { createPracticeRoutes } from './api/routes/practice.routes.ts';
+import { createTizhuangRoutes } from './api/routes/tizhuang.routes.ts';
 import { createExamRoutes } from './api/routes/exam.routes.ts';
 import { createCoachingRoutes } from './api/routes/coaching.routes.ts';
 import { createJobRoutes } from './api/routes/job.routes.ts';
 import { createUploadRoutes } from './api/routes/upload.routes.ts';
 import { createAdminRoutes } from './api/routes/admin.routes.ts';
+import { createAiSettingsRoutes } from './api/routes/ai-settings.routes.ts';
+import { createDiagnosisRoutes } from './api/routes/diagnosis.routes.ts';
 import { gzipJsonMiddleware } from './api/middleware/gzip.ts';
 import { logger } from './infrastructure/logging/logger.ts';
 
@@ -115,10 +118,14 @@ export function createApp(container: Container): Express {
   // 先修链分析读学生掌握度记录 —— 必须与其它学生数据同受认证保护
   studentDataRouter.use(createPrerequisiteRoutes(container));
   studentDataRouter.use(createPracticeRoutes(container));
+  studentDataRouter.use(createTizhuangRoutes(container));
   studentDataRouter.use(createExamRoutes(container));
   studentDataRouter.use(createCoachingRoutes(container));
   studentDataRouter.use(createUploadRoutes(container));
   studentDataRouter.use(createAdminRoutes(container));
+  // AI 配置中心（运行时配置 AI Key / 模型 / 参数）——老师专属
+  studentDataRouter.use(createAiSettingsRoutes(container));
+  studentDataRouter.use(createDiagnosisRoutes(container));
   v1.use(studentDataRouter);
 
   /**
