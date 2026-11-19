@@ -11,10 +11,17 @@
     "test": "tsx --test tests/**/*.test.ts",
     "seed": "tsx scripts/seed.ts",
     "import:taxonomy": "tsx scripts/import-taxonomy.ts",
+    "import:traps": "tsx scripts/import-traps.ts",
+    "import:textbook": "tsx scripts/import-textbook-alignment.ts",
+    "import:aliases": "tsx scripts/import-id-aliases.ts",
+    "validate:ids": "tsx scripts/validate-ids.ts",
     "backup": "tsx scripts/backup.ts",
     "restore": "tsx scripts/restore.ts",
     "cleanup": "tsx scripts/cleanup.ts",
-    "migrate:curriculum": "tsx scripts/migrate-curriculum.ts"
+    "migrate:curriculum": "tsx scripts/migrate-curriculum.ts",
+    "propose:trap-map": "tsx scripts/propose-trap-map.ts",
+    "import:sprint": "tsx scripts/import-workbuddy-sprint.ts",
+    "import:workbuddy": "tsx scripts/import-workbuddy-english.ts"
   },
   "dependencies": {
     "@daydayup/contracts": "*",
