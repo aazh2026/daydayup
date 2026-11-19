@@ -20,6 +20,7 @@ const NAV_ITEMS: { id: AppPage; label: string }[] = [
   { id: 'errors', label: '错题档案' },
   { id: 'knowledge', label: '知识图谱' },
   { id: 'planning', label: '提分规划' },
+  { id: 'sprint', label: '30天冲刺' },
   { id: 'coach', label: 'AI教练' },
   { id: 'report', label: '提分报告' },
 ];
@@ -86,6 +87,24 @@ export const TopBar: React.FC<TopBarProps> = ({
             >
               教师工作台
               {activePage === 'teacher' && (
+                <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-blue-600 rounded-full" />
+              )}
+            </button>
+          )}
+
+          {/* 教师角色：AI 配置入口 */}
+          {isTeacher && (
+            <button
+              type="button"
+              onClick={() => onNavigate('settings')}
+              className={`relative py-5 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                activePage === 'settings'
+                  ? 'text-blue-700'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              AI配置
+              {activePage === 'settings' && (
                 <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-blue-600 rounded-full" />
               )}
             </button>

@@ -6,10 +6,12 @@ import { DiagnosisPage } from './components/DiagnosisPage.tsx';
 import { ErrorsPage } from './components/ErrorsPage.tsx';
 import { KnowledgePage } from './components/KnowledgePage.tsx';
 import { PlanningPage } from './components/PlanningPage.tsx';
+import { SprintPage } from './components/SprintPage.tsx';
 import { CoachPage } from './components/CoachPage.tsx';
 import { ReportPage } from './components/ReportPage.tsx';
 import { LoginPage } from './components/LoginPage.tsx';
 import { TeacherDashboard } from './components/TeacherDashboard.tsx';
+import { AISettingsPage } from './components/AISettingsPage.tsx';
 import { INITIAL_APP_STATE } from './data/initialStore.ts';
 import { submitMasteryAttempt, fetchCurrentPlan, regeneratePlan } from './engine/planner.ts';
 import { buildLocalPlanFallback } from './engine/plan-fallback.ts';
@@ -80,6 +82,29 @@ export default function App() {
   const [activePage, setActivePage] = useState<AppPage>('today');
   const [activeKnowledgeId, setActiveKnowledgeId] = useState<string>('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  /**
+   * 跨页深链请求。
+   *
+   * 「知识图谱」与「提分报告 → 考点档案」是同一批考点的两个视角，
+   * 需要互相跳转时用这两个请求对象携带目标：
+   * - archiveRequest：去提分报告并打开某个考点的全景档案
+   * - graphFocusRequest：去知识图谱并定位到某个考点
+   *
+   * 带 token 是为了「连续两次定位同一个考点」也能重新触发。
+   */
+  const [archiveRequest, setArchiveRequest] = useState<{
+    knowledgeId: string;
+    token: number;
+  } | null>(null);
+  const [graphFocusRequest, setGraphFocusRequest] = useState<{
+    knowledgeId: string;
+    token: number;
+  } | null>(null);
+  /** 从提分报告跳到知识图谱时需要聚焦的试卷 */
+  const [graphPaperId, setGraphPaperId] = useState<string>('');
+  /** 进入提分报告时默认打开的子页签 */
+  const [pendingReportTab, setPendingReportTab] = useState<'evaluation' | 'papers' | 'knowledge' | 'errors' | null>(null);
 
   /**
    * 登录态。
@@ -284,6 +309,40 @@ export default function App() {
   const handleLaunchCoach = (knowledgeId: string) => {
     setActiveKnowledgeId(knowledgeId);
     setActivePage('coach');
+  };
+
+  /** 从知识图谱打开提分报告中的考点档案 */
+  const handleOpenArchive = (knowledgeId: string) => {
+    setArchiveRequest({ knowledgeId, token: Date.now() });
+    setActivePage('report');
+  };
+
+  /** 从提分报告回到知识图谱并定位考点 */
+  const handleLocateInGraph = (knowledgeId: string) => {
+    setGraphFocusRequest({ knowledgeId, token: Date.now() });
+    setActivePage('knowledge');
+  };
+
+  /**
+   * 离开提分报告时清掉一次性页签请求。
+   *
+   * `initialTab` 只在组件挂载时生效；若不清理，用户下次从顶栏进入提分报告
+   * 会被强行带回上次的子页签。
+   */
+  useEffect(() => {
+    if (activePage !== 'report') setPendingReportTab(null);
+  }, [activePage]);
+
+  /** 从知识图谱打开提分报告的「考点档案」列表 */
+  const handleOpenArchiveList = () => {
+    setPendingReportTab('knowledge');
+    setActivePage('report');
+  };
+
+  /** 从提分报告的试卷存档库跳到知识图谱查看该卷拓扑 */
+  const handleOpenPaperInGraph = (paperId: string) => {
+    setGraphPaperId(paperId);
+    setActivePage('knowledge');
   };
 
   /**
@@ -1123,6 +1182,9 @@ export default function App() {
             examId={appState.exams[0]?.id ?? `exam-${appState.student.id}`}
             onVerifyKnowledge={handleVerifyKnowledge}
             onLaunchCoach={handleLaunchCoach}
+            onMasteryUpdated={async () => {
+              await refreshMasteryFromServer(appState.student.id, setAppState);
+            }}
             onNavigate={setActivePage}
           />
         )}
@@ -1148,7 +1210,11 @@ export default function App() {
             errorRecords={appState.errorRecords}
             masteryRecords={appState.masteryRecords}
             onLaunchCoach={handleLaunchCoach}
-            initialKnowledgeId={activeKnowledgeId}
+            focusRequest={graphFocusRequest}
+            initialPaperId={graphPaperId || undefined}
+            onOpenArchive={handleOpenArchive}
+            onOpenArchiveList={handleOpenArchiveList}
+            onNavigate={setActivePage}
           />
         )}
 
@@ -1158,6 +1224,13 @@ export default function App() {
             plan={plan}
             onUpdateStudent={handleUpdateStudent}
             onStartTask={handleStartTask}
+            onLaunchCoach={handleLaunchCoach}
+          />
+        )}
+
+        {activePage === 'sprint' && (
+          <SprintPage
+            studentId={appState.student.id}
             onLaunchCoach={handleLaunchCoach}
           />
         )}
@@ -1190,8 +1263,13 @@ export default function App() {
           />
         )}
 
+        {activePage === 'settings' && session?.role === 'teacher' && (
+          <AISettingsPage onNavigate={setActivePage} />
+        )}
+
         {activePage === 'report' && (
           <ReportPage
+            studentId={appState.student.id}
             exams={appState.exams}
             examResults={appState.examResults}
             examPapers={appState.examPapers}
@@ -1204,6 +1282,10 @@ export default function App() {
             onMarkErrorCorrected={handleMarkErrorCorrected}
             onLaunchCoach={handleLaunchCoach}
             onNavigate={setActivePage}
+            initialArchiveRequest={archiveRequest}
+            initialTab={pendingReportTab ?? undefined}
+            onLocateInGraph={handleLocateInGraph}
+            onOpenPaperInGraph={handleOpenPaperInGraph}
           />
         )}
       </main>
