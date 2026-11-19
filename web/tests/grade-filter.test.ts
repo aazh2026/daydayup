@@ -1,6 +1,10 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveGradeInfo } from '../src/utils/grade.ts';
+import {
+  resolveGradeInfo,
+  buildGradeOptions,
+  filterByGrade,
+} from '../src/utils/grade.ts';
 
 describe('年级解析 resolveGradeInfo', () => {
   test('初三年级识别（九年级/初三/九全/九上/九下）', () => {
@@ -99,5 +103,64 @@ describe('年级解析 resolveGradeInfo', () => {
       grade: '初三',
       label: '初三（九年级）',
     });
+  });
+});
+
+describe('年级筛选项 buildGradeOptions / filterByGrade', () => {
+  const mockKps = [
+    { id: 'kp-j3', chapter: '九年级上册 第21章 一元二次方程' },
+    { id: 'kp-j3-2', chapter: '九下 第27章 相似' },
+    { id: 'kp-j2', chapter: '八年级下册 第19章 一次函数' },
+    { id: 'kp-j1', chapter: '七年级上册 第2章 有理数' },
+    { id: 'kp-p', chapter: '六上 第1章 分数乘法' },
+    { id: 'kp-s', chapter: '必修第一册 第一章 集合与常用逻辑用语' },
+  ];
+
+  test('筛选项仅产出确有考点的年级/学段，并携带计数', () => {
+    const options = buildGradeOptions(mockKps);
+    assert.deepEqual(options[0], { id: 'all', label: '全部年级', count: 6 });
+
+    const byId = new Map(options.map((o) => [o.id, o]));
+    assert.equal(byId.get('初三')?.count, 2);
+    assert.equal(byId.get('初二')?.count, 1);
+    assert.equal(byId.get('初一')?.count, 1);
+    assert.equal(byId.get('junior')?.count, 4);
+    assert.equal(byId.get('primary')?.count, 1);
+    assert.equal(byId.get('senior')?.count, 1);
+  });
+
+  test('无某年级考点时不产出该年级筛选项', () => {
+    const options = buildGradeOptions([
+      { chapter: '九年级上册 第21章 一元二次方程' },
+    ]);
+    assert.deepEqual(
+      options.map((o) => o.id),
+      ['all', '初三']
+    );
+  });
+
+  test('按年级筛选返回对应考点', () => {
+    assert.deepEqual(
+      filterByGrade(mockKps, '初三').map((k) => k.id),
+      ['kp-j3', 'kp-j3-2']
+    );
+    assert.deepEqual(
+      filterByGrade(mockKps, '初二').map((k) => k.id),
+      ['kp-j2']
+    );
+    assert.equal(filterByGrade(mockKps, 'all').length, 6);
+    assert.equal(filterByGrade(mockKps, '').length, 6);
+  });
+
+  test('按学段筛选（初中/小学/高中）', () => {
+    assert.equal(filterByGrade(mockKps, 'junior').length, 4);
+    assert.deepEqual(
+      filterByGrade(mockKps, 'primary').map((k) => k.id),
+      ['kp-p']
+    );
+    assert.deepEqual(
+      filterByGrade(mockKps, 'senior').map((k) => k.id),
+      ['kp-s']
+    );
   });
 });

@@ -17,7 +17,7 @@ describe('知识图谱与考点独立页面', () => {
     assert.ok(validPages.includes('knowledge'));
   });
 
-  it('知识图谱独立页面包含思维导图与掌握度矩阵所需的统计计算', () => {
+  it('知识图谱独立页面保留结构统计：考点总数 / 掌握率 / 薄弱点 / 先修根因', () => {
     const mockKps = [
       { id: 'kp-1', name: '一次函数', subject: '数学', domain: '函数' },
       { id: 'kp-2', name: '二次函数', subject: '数学', domain: '函数' },
