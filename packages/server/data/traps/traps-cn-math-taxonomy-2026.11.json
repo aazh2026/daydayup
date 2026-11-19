@@ -1,0 +1,2359 @@
+{
+  "version": "traps-cn-math-taxonomy-2026.11",
+  "publishedAt": "2026-11-18T00:00:00.000Z",
+  "status": "ACTIVE",
+  "subject": "全学科",
+  "source": {
+    "repo": "cn-math-taxonomy",
+    "path": "resources/cn-math-taxonomy",
+    "license": "CC BY-NC 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "note": "非商业许可：产品商业化前须取得作者商业授权"
+  },
+  "entries": [
+    {
+      "id": "cnmt:cnc_p371#trap",
+      "knowledgeId": "cnc_p371",
+      "questionIds": [],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "易错字音（削、骨、血、处）",
+      "why": "",
+      "right": "读准削、骨、血、处在不同词里的读音，不按半边乱猜。",
+      "sourceId": "cnc_p371",
+      "sourceText": "读准削、骨、血、处在不同词里的读音，不按半边乱猜。"
+    },
+    {
+      "id": "cnmt:cnc_p413#trap",
+      "knowledgeId": "cnc_p413",
+      "questionIds": [],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "易错字音：屹、悼、炽、湃",
+      "why": "",
+      "right": "读准屹、悼、炽、湃，不按半边猜。园地里的日积月累是孟浩然《过故人庄》，不要和同册《宿建德江》串成一首。",
+      "sourceId": "cnc_p413",
+      "sourceText": "读准屹、悼、炽、湃，不按半边猜。园地里的日积月累是孟浩然《过故人庄》，不要和同册《宿建德江》串成一首。"
+    },
+    {
+      "id": "cnmt:cnc_p461#trap",
+      "knowledgeId": "cnc_p461",
+      "questionIds": [],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "易错字音：粥、宵、饺、祭",
+      "why": "",
+      "right": "读准腊八粥、元宵、饺子、祭灶里容易读错的字。口语「即兴发言」要先看清对谁说，抓住一两点就说完。园地还要分清内容的主次。日积月累背汉乐府《长歌行》，记住少壮不努力，老大徒伤悲。",
+      "sourceId": "cnc_p461",
+      "sourceText": "读准腊八粥、元宵、饺子、祭灶里容易读错的字。口语「即兴发言」要先看清对谁说，抓住一两点就说完。园地还要分清内容的主次。日积月累背汉乐府《长歌行》，记住少壮不努力，老大徒伤悲。"
+    },
+    {
+      "id": "cnmt:cnc_j174#trap",
+      "knowledgeId": "cnc_j174",
+      "questionIds": [],
+      "subject": "语文",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "易错字",
+      "why": "",
+      "right": "能认出本单元句子里的通假：辟、辩、得、与、支、被，并知道该查哪个本字。",
+      "sourceId": "cnc_j174",
+      "sourceText": "能认出本单元句子里的通假：辟、辩、得、与、支、被，并知道该查哪个本字。"
+    },
+    {
+      "id": "cnmt:cnm_p022_q4#e1",
+      "knowledgeId": "cnm_p022",
+      "questionIds": [
+        "cnm_p022_q4"
+      ],
+      "subject": "数学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把圆加进去",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_p022_q4",
+      "sourceText": "问的是三角形这一类，就是 4 个，不要把圆加进去。"
+    },
+    {
+      "id": "cnmt:cnm_p130_q4#e1",
+      "knowledgeId": "cnm_p130",
+      "questionIds": [
+        "cnm_p130_q4"
+      ],
+      "subject": "数学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "踢毽子的人数不要加进去",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_p130_q4",
+      "sourceText": "踢毽子的人数不要加进去。"
+    },
+    {
+      "id": "cnmt:cnm_008_q4#e1",
+      "knowledgeId": "cnm_008",
+      "questionIds": [
+        "cnm_008_q4"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 a=0 也满足",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_008_q4",
+      "sourceText": "|a|=-a 说明 a 的绝对值等于它的相反数，只有 a≤0 时成立，所以 a 是非正数（注意 a=0 也满足）。"
+    },
+    {
+      "id": "cnmt:cnm_036_q3#e1",
+      "knowledgeId": "cnm_036",
+      "questionIds": [
+        "cnm_036_q3"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意括号前是负号，-1 要变成 +1",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_036_q3",
+      "sourceText": "A-B=2x²-x-(x²+3x-1)=2x²-x-x²-3x+1=x²-4x+1，注意括号前是负号，-1 要变成 +1。"
+    },
+    {
+      "id": "cnmt:cnm_044_q4#e1",
+      "knowledgeId": "cnm_044",
+      "questionIds": [
+        "cnm_044_q4"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意右边的 1 也要乘 6",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_044_q4",
+      "sourceText": "两边同乘 6（注意右边的 1 也要乘 6）：3(x-1)-2(2x+1)=6，得 3x-3-4x-2=6，即 -x-5=6，所以 x=-11。"
+    },
+    {
+      "id": "cnmt:cnm_145_q2#e1",
+      "knowledgeId": "cnm_145",
+      "questionIds": [
+        "cnm_145_q2"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意符号",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_145_q2",
+      "sourceText": "-3x·2x=-6x²，-3x·(-4)=+12x，注意符号。"
+    },
+    {
+      "id": "cnmt:cnm_219_q1#e1",
+      "knowledgeId": "cnm_219",
+      "questionIds": [
+        "cnm_219_q1"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意一次项系数带符号",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_219_q1",
+      "sourceText": "注意一次项系数带符号。"
+    },
+    {
+      "id": "cnmt:cnm_238_q3#e1",
+      "knowledgeId": "cnm_238",
+      "questionIds": [
+        "cnm_238_q3"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 C 在第三象限，y 为负，最小",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_238_q3",
+      "sourceText": "注意 C 在第三象限，y 为负，最小。"
+    },
+    {
+      "id": "cnmt:cnm_241_q4#e1",
+      "knowledgeId": "cnm_241",
+      "questionIds": [
+        "cnm_241_q4"
+      ],
+      "subject": "数学",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 x≠0",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_241_q4",
+      "sourceText": "注意 x≠0。"
+    },
+    {
+      "id": "cnmt:cne_p152_q3#e1",
+      "knowledgeId": "cne_p152",
+      "questionIds": [
+        "cne_p152_q3"
+      ],
+      "subject": "英语",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要说话",
+      "why": "",
+      "right": "",
+      "sourceId": "cne_p152_q3",
+      "sourceText": "Do not talk 是不要说话。"
+    },
+    {
+      "id": "cnmt:cne_p160_q2#e1",
+      "knowledgeId": "cne_p160",
+      "questionIds": [
+        "cne_p160_q2"
+      ],
+      "subject": "英语",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要走",
+      "why": "",
+      "right": "",
+      "sourceId": "cne_p160_q2",
+      "sourceText": "Do not go 是不要走。"
+    },
+    {
+      "id": "cnmt:cne_p181_q2#e1",
+      "knowledgeId": "cne_p181",
+      "questionIds": [
+        "cne_p181_q2"
+      ],
+      "subject": "英语",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要再加 more",
+      "why": "",
+      "right": "",
+      "sourceId": "cne_p181_q2",
+      "sourceText": "taller 前面不要再加 more。"
+    },
+    {
+      "id": "cnmt:cne_j061_q1#e1",
+      "knowledgeId": "cne_j061",
+      "questionIds": [
+        "cne_j061_q1"
+      ],
+      "subject": "英语",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要迟到",
+      "why": "",
+      "right": "",
+      "sourceId": "cne_j061_q1",
+      "sourceText": "Don't arrive late 是不要迟到。"
+    },
+    {
+      "id": "cnmt:cnp_001_q2#e1",
+      "knowledgeId": "cnp_001",
+      "questionIds": [
+        "cnp_001_q2"
+      ],
+      "subject": "物理",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把 1.5 h 当成 1 h 50 min 是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_001_q2",
+      "sourceText": "把 1.5 h 当成 1 h 50 min 是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_003_q2#e1",
+      "knowledgeId": "cnp_003",
+      "questionIds": [
+        "cnp_003_q2"
+      ],
+      "subject": "物理",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把 72 乘以 3.6 是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_003_q2",
+      "sourceText": "把 72 乘以 3.6 是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_016_q3#e1",
+      "knowledgeId": "cnp_016",
+      "questionIds": [
+        "cnp_016_q3"
+      ],
+      "subject": "物理",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "直接把 30° 当入射角是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_016_q3",
+      "sourceText": "直接把 30° 当入射角是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_030_q3#e1",
+      "knowledgeId": "cnp_030",
+      "questionIds": [
+        "cnp_030_q3"
+      ],
+      "subject": "物理",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把 12 cm 当伸长量是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_030_q3",
+      "sourceText": "把 12 cm 当伸长量是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_069_q4#e1",
+      "knowledgeId": "cnp_069",
+      "questionIds": [
+        "cnp_069_q4"
+      ],
+      "subject": "物理",
+      "stage": "初中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意绝缘和用电安全",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_069_q4",
+      "sourceText": "自制电路应使用安全的低压电源，注意绝缘和用电安全。"
+    },
+    {
+      "id": "cnmt:cnp_h002_q2#e1",
+      "knowledgeId": "cnp_h002",
+      "questionIds": [
+        "cnp_h002_q2"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把两者混淆",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h002_q2",
+      "sourceText": "而路程是 30 + 40 = 70 m，不要把两者混淆。"
+    },
+    {
+      "id": "cnmt:cnp_h003_q4#e1",
+      "knowledgeId": "cnp_h003",
+      "questionIds": [
+        "cnp_h003_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意先把 cm 换算成 m，否则会得到 300 这样的错误结果",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h003_q4",
+      "sourceText": "注意先把 cm 换算成 m，否则会得到 300 这样的错误结果。"
+    },
+    {
+      "id": "cnmt:cnp_h007_q1#e1",
+      "knowledgeId": "cnp_h007",
+      "questionIds": [
+        "cnp_h007_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "常见错误是漏掉 1/2 而得到 50 m",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h007_q1",
+      "sourceText": "常见错误是漏掉 1/2 而得到 50 m。"
+    },
+    {
+      "id": "cnmt:cnp_h008_q4#e1",
+      "knowledgeId": "cnp_h008",
+      "questionIds": [
+        "cnp_h008_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意它不等于中间时刻速度 (2 + 14)/2",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h008_q4",
+      "sourceText": "注意它不等于中间时刻速度 (2 + 14)/2 = 8 m/s；"
+    },
+    {
+      "id": "cnmt:cnp_h016_q3#e1",
+      "knowledgeId": "cnp_h016",
+      "questionIds": [
+        "cnp_h016_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "常见错误是直接相加得 20 N",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h016_q3",
+      "sourceText": "常见错误是直接相加得 20 N。"
+    },
+    {
+      "id": "cnmt:cnp_h022_q4#e1",
+      "knowledgeId": "cnp_h022",
+      "questionIds": [
+        "cnp_h022_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意把 cm 换算成 m",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h022_q4",
+      "sourceText": "注意把 cm 换算成 m。"
+    },
+    {
+      "id": "cnmt:cnp_h040_q1#e1",
+      "knowledgeId": "cnp_h040",
+      "questionIds": [
+        "cnp_h040_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "常见错误是把「平方反比」当成「反比」而得 1/2",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h040_q1",
+      "sourceText": "常见错误是把「平方反比」当成「反比」而得 1/2。"
+    },
+    {
+      "id": "cnmt:cnp_h040_q3#e1",
+      "knowledgeId": "cnp_h040",
+      "questionIds": [
+        "cnp_h040_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 r 是到地心的距离 2R，而不是离地面的高度 R",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h040_q3",
+      "sourceText": "注意 r 是到地心的距离 2R，而不是离地面的高度 R。"
+    },
+    {
+      "id": "cnmt:cnp_h046_q3#e1",
+      "knowledgeId": "cnp_h046",
+      "questionIds": [
+        "cnp_h046_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意要把 kW 换成 W",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h046_q3",
+      "sourceText": "注意要把 kW 换成 W。"
+    },
+    {
+      "id": "cnmt:cnp_h048_q4#e1",
+      "knowledgeId": "cnp_h048",
+      "questionIds": [
+        "cnp_h048_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要误认为势能与形变量成正比",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h048_q4",
+      "sourceText": "不要误认为势能与形变量成正比。"
+    },
+    {
+      "id": "cnmt:cnp_h052_q3#e1",
+      "knowledgeId": "cnp_h052",
+      "questionIds": [
+        "cnp_h052_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意要把 cm 换成 m，且时间是两个周期",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h052_q3",
+      "sourceText": "注意要把 cm 换成 m，且时间是两个周期。"
+    },
+    {
+      "id": "cnmt:cnp_h058_q1#e1",
+      "knowledgeId": "cnp_h058",
+      "questionIds": [
+        "cnp_h058_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把『远离』误当成『克服静电力』是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h058_q1",
+      "sourceText": "把『远离』误当成『克服静电力』是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_h062_q1#e1",
+      "knowledgeId": "cnp_h062",
+      "questionIds": [
+        "cnp_h062_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意把 cm 换算成 m，若直接用 4 会得到 2000",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h062_q1",
+      "sourceText": "注意把 cm 换算成 m，若直接用 4 会得到 2000。"
+    },
+    {
+      "id": "cnmt:cnp_h063_q1#e1",
+      "knowledgeId": "cnp_h063",
+      "questionIds": [
+        "cnp_h063_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 μC 与 μF 的数量级相同，不必换算成 C 再换回来",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h063_q1",
+      "sourceText": "注意 μC 与 μF 的数量级相同，不必换算成 C 再换回来。"
+    },
+    {
+      "id": "cnmt:cnp_h064_q3#e1",
+      "knowledgeId": "cnp_h064",
+      "questionIds": [
+        "cnp_h064_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "单位换算是易错",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h064_q3",
+      "sourceText": "单位换算是易错点（mA·s = mC）。"
+    },
+    {
+      "id": "cnmt:cnp_h066_q3#e1",
+      "knowledgeId": "cnp_h066",
+      "questionIds": [
+        "cnp_h066_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意 tanθ = 2y/L（y = 5 mm 时为 0.1），不是 y/L",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h066_q3",
+      "sourceText": "注意 tanθ = 2y/L（y = 5 mm 时为 0.1），不是 y/L。"
+    },
+    {
+      "id": "cnmt:cnp_h074_q2#e1",
+      "knowledgeId": "cnp_h074",
+      "questionIds": [
+        "cnp_h074_q2"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意欧姆表的刻度是不均匀的，要直接读指针所指的示数",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h074_q2",
+      "sourceText": "注意欧姆表的刻度是不均匀的，要直接读指针所指的示数。"
+    },
+    {
+      "id": "cnmt:cnp_h086_q4#e1",
+      "knowledgeId": "cnp_h086",
+      "questionIds": [
+        "cnp_h086_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要乘 100",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h086_q4",
+      "sourceText": "磁通量与匝数无关，不要乘 100。"
+    },
+    {
+      "id": "cnmt:cnp_h097_q3#e1",
+      "knowledgeId": "cnp_h097",
+      "questionIds": [
+        "cnp_h097_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意喷气后火箭质量是 480 kg，不是 500 kg，用 500 会得到 9.6",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h097_q3",
+      "sourceText": "注意喷气后火箭质量是 480 kg，不是 500 kg，用 500 会得到 9.6。"
+    },
+    {
+      "id": "cnmt:cnp_h099_q4#e1",
+      "knowledgeId": "cnp_h099",
+      "questionIds": [
+        "cnp_h099_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "ω = 100π rad/s，f = ω/(2π) = 50 Hz，把 ω 当作 f 是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h099_q4",
+      "sourceText": "ω = 100π rad/s，f = ω/(2π) = 50 Hz，把 ω 当作 f 是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_h121_q2#e1",
+      "knowledgeId": "cnp_h121",
+      "questionIds": [
+        "cnp_h121_q2"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把周期误当成与速度有关是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h121_q2",
+      "sourceText": "把周期误当成与速度有关是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_h131_q1#e1",
+      "knowledgeId": "cnp_h131",
+      "questionIds": [
+        "cnp_h131_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "二者不要混为一谈",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h131_q1",
+      "sourceText": "磁通量最大处恰是电动势为零处，二者不要混为一谈。"
+    },
+    {
+      "id": "cnmt:cnp_h142_q4#e1",
+      "knowledgeId": "cnp_h142",
+      "questionIds": [
+        "cnp_h142_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "单位换算易错",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h142_q4",
+      "sourceText": "单位换算易错：1 V = 1000 mV。"
+    },
+    {
+      "id": "cnmt:cnp_h154_q3#e1",
+      "knowledgeId": "cnp_h154",
+      "questionIds": [
+        "cnp_h154_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "只看一个量变为 2 倍就判断 T 为 2 倍是常见错误",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h154_q3",
+      "sourceText": "只看一个量变为 2 倍就判断 T 为 2 倍是常见错误。"
+    },
+    {
+      "id": "cnmt:cnp_h164_q4#e1",
+      "knowledgeId": "cnp_h164",
+      "questionIds": [
+        "cnp_h164_q4"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意把 μA 换算成 A（10⁻⁶ A），漏换会差 10⁶ 倍",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h164_q4",
+      "sourceText": "注意把 μA 换算成 A（10⁻⁶ A），漏换会差 10⁶ 倍。"
+    },
+    {
+      "id": "cnmt:cnp_h165_q3#e1",
+      "knowledgeId": "cnp_h165",
+      "questionIds": [
+        "cnp_h165_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把方向弄反",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h165_q3",
+      "sourceText": "波长小于 500 nm 的光才能使它发生光电效应，不要把方向弄反。"
+    },
+    {
+      "id": "cnmt:cnp_h167_q3#e1",
+      "knowledgeId": "cnp_h167",
+      "questionIds": [
+        "cnp_h167_q3"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把比值写反成 0.74",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h167_q3",
+      "sourceText": "波长与 1/λ 成反比，不要把比值写反成 0.74。"
+    },
+    {
+      "id": "cnmt:cnp_h168_q1#e1",
+      "knowledgeId": "cnp_h168",
+      "questionIds": [
+        "cnp_h168_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "注意高能级到低能级放出光子，能量取两能级之差的绝对值",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h168_q1",
+      "sourceText": "注意高能级到低能级放出光子，能量取两能级之差的绝对值。"
+    },
+    {
+      "id": "cnmt:cnp_h171_q1#e1",
+      "knowledgeId": "cnp_h171",
+      "questionIds": [
+        "cnp_h171_q1"
+      ],
+      "subject": "物理",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要当成中子数",
+      "why": "",
+      "right": "",
+      "sourceId": "cnp_h171_q1",
+      "sourceText": "92 是质子数（电荷数），不要当成中子数。"
+    },
+    {
+      "id": "cnmt:cnc_p008_q2#e1",
+      "knowledgeId": "cnc_p008",
+      "questionIds": [
+        "cnc_p008_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要读成妈、麻或骂",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p008_q2",
+      "sourceText": "马是第三声 mǎ，不要读成妈、麻或骂。"
+    },
+    {
+      "id": "cnmt:cnc_p010_q4#e1",
+      "knowledgeId": "cnc_p010",
+      "questionIds": [
+        "cnc_p010_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要读成 b 或 p",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p010_q4",
+      "sourceText": "不要读成 b 或 p。"
+    },
+    {
+      "id": "cnmt:cnc_p011_q4#e1",
+      "knowledgeId": "cnc_p011",
+      "questionIds": [
+        "cnc_p011_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要读混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p011_q4",
+      "sourceText": "你的声母是 n，不要读混。"
+    },
+    {
+      "id": "cnmt:cnc_p021_q2#e1",
+      "knowledgeId": "cnc_p021",
+      "questionIds": [
+        "cnc_p021_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要读成后鼻音 eng 或 ang",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p021_q2",
+      "sourceText": "in 是前鼻音，像「音」，不要读成后鼻音 eng 或 ang。"
+    },
+    {
+      "id": "cnmt:cnc_p022_q4#e1",
+      "knowledgeId": "cnc_p022",
+      "questionIds": [
+        "cnc_p022_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要读混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p022_q4",
+      "sourceText": "méng、mèng 是后鼻音，不要读混。"
+    },
+    {
+      "id": "cnmt:cnc_p026_q3#e1",
+      "knowledgeId": "cnc_p026",
+      "questionIds": [
+        "cnc_p026_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把两样对换",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p026_q3",
+      "sourceText": "不要把两样对换。"
+    },
+    {
+      "id": "cnmt:cnc_p030_q1#e1",
+      "knowledgeId": "cnc_p030",
+      "questionIds": [
+        "cnc_p030_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要看错",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p030_q1",
+      "sourceText": "朋是两个月，不要看错。"
+    },
+    {
+      "id": "cnmt:cnc_p033_q3#e1",
+      "knowledgeId": "cnc_p033",
+      "questionIds": [
+        "cnc_p033_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和多少混在一起",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p033_q3",
+      "sourceText": "大和小是另一组，不要和多少混在一起。"
+    },
+    {
+      "id": "cnmt:cnc_p036_q2#e1",
+      "knowledgeId": "cnc_p036",
+      "questionIds": [
+        "cnc_p036_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把两样对换",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p036_q2",
+      "sourceText": "不要把两样对换。"
+    },
+    {
+      "id": "cnmt:cnc_p063_q3#e1",
+      "knowledgeId": "cnc_p063",
+      "questionIds": [
+        "cnc_p063_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把这两句接错",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p063_q3",
+      "sourceText": "不要把这两句接错。"
+    },
+    {
+      "id": "cnmt:cnc_p066_q3#e1",
+      "knowledgeId": "cnc_p066",
+      "questionIds": [
+        "cnc_p066_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要看名字里都有「池」就记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p066_q3",
+      "sourceText": "《池上》是白居易的，不要看名字里都有「池」就记混。"
+    },
+    {
+      "id": "cnmt:cnc_p095_q3#e1",
+      "knowledgeId": "cnc_p095",
+      "questionIds": [
+        "cnc_p095_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p095_q3",
+      "sourceText": "李白写过《望庐山瀑布》，不要记混。"
+    },
+    {
+      "id": "cnmt:cnc_p096_q2#e1",
+      "knowledgeId": "cnc_p096",
+      "questionIds": [
+        "cnc_p096_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要装进来",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p096_q2",
+      "sourceText": "白发三千丈是另一首诗，不要装进来。"
+    },
+    {
+      "id": "cnmt:cnc_p098_q2#e1",
+      "knowledgeId": "cnc_p098",
+      "questionIds": [
+        "cnc_p098_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把南北记反",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p098_q2",
+      "sourceText": "不要把南北记反。"
+    },
+    {
+      "id": "cnmt:cnc_p099_q1#e1",
+      "knowledgeId": "cnc_p099",
+      "questionIds": [
+        "cnc_p099_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把它写成台湾或黄山",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p099_q1",
+      "sourceText": "不要把它写成台湾或黄山。"
+    },
+    {
+      "id": "cnmt:cnc_p104_q2#e1",
+      "knowledgeId": "cnc_p104",
+      "questionIds": [
+        "cnc_p104_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "被拒绝了不要勉强",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p104_q2",
+      "sourceText": "别人有困难，被拒绝了不要勉强。"
+    },
+    {
+      "id": "cnmt:cnc_p108_q4#e1",
+      "knowledgeId": "cnc_p108",
+      "questionIds": [
+        "cnc_p108_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和别的名句记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p108_q4",
+      "sourceText": "不要和别的名句记混。"
+    },
+    {
+      "id": "cnmt:cnc_p110_q4#e1",
+      "knowledgeId": "cnc_p110",
+      "questionIds": [
+        "cnc_p110_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和敕勒川、夜宿山寺装成一首",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p110_q4",
+      "sourceText": "不要和敕勒川、夜宿山寺装成一首。"
+    },
+    {
+      "id": "cnmt:cnc_p111_q3#e1",
+      "knowledgeId": "cnc_p111",
+      "questionIds": [
+        "cnc_p111_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要安到李白名下",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p111_q3",
+      "sourceText": "不要安到李白名下。"
+    },
+    {
+      "id": "cnmt:cnc_p113_q2#e1",
+      "knowledgeId": "cnc_p113",
+      "questionIds": [
+        "cnc_p113_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "还叮嘱小白兔不要出去",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p113_q2",
+      "sourceText": "她让雪孩子陪伴，还叮嘱小白兔不要出去。"
+    },
+    {
+      "id": "cnmt:cnc_p124_q1#e1",
+      "knowledgeId": "cnc_p124",
+      "questionIds": [
+        "cnc_p124_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "园地里的口语交际是注意说话的语气",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p124_q1",
+      "sourceText": "园地里的口语交际是注意说话的语气。"
+    },
+    {
+      "id": "cnmt:cnc_p124_q3#e1",
+      "knowledgeId": "cnc_p124",
+      "questionIds": [
+        "cnc_p124_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要当众责怪",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p124_q3",
+      "sourceText": "提醒别人时，语气要让对方听得进去，不要当众责怪。"
+    },
+    {
+      "id": "cnmt:cnc_p140_q4#e1",
+      "knowledgeId": "cnc_p140",
+      "questionIds": [
+        "cnc_p140_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "就不要改成别人眼里的样子",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p140_q4",
+      "sourceText": "看到的是五角星，就不要改成别人眼里的样子。"
+    },
+    {
+      "id": "cnmt:cnc_p143_q3#e1",
+      "knowledgeId": "cnc_p143",
+      "questionIds": [
+        "cnc_p143_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要看姓就记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p143_q3",
+      "sourceText": "杜牧写的是《山行》《清明》，不要看姓就记混。"
+    },
+    {
+      "id": "cnmt:cnc_p161_q3#e1",
+      "knowledgeId": "cnc_p161",
+      "questionIds": [
+        "cnc_p161_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要按翘舌音去找别的字母",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p161_q3",
+      "sourceText": "不要按翘舌音去找别的字母。"
+    },
+    {
+      "id": "cnmt:cnc_p164_q3#e1",
+      "knowledgeId": "cnc_p164",
+      "questionIds": [
+        "cnc_p164_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要只看姓杜就记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p164_q3",
+      "sourceText": "杜甫写过《绝句》，不要只看姓杜就记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p177_q3#e1",
+      "knowledgeId": "cnc_p177",
+      "questionIds": [
+        "cnc_p177_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "队长注意到了它的心思",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p177_q3",
+      "sourceText": "队长注意到了它的心思。"
+    },
+    {
+      "id": "cnmt:cnc_p189_q3#e1",
+      "knowledgeId": "cnc_p189",
+      "questionIds": [
+        "cnc_p189_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都写到山就记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p189_q3",
+      "sourceText": "李白写《望天门山》，不要因为都写到山就记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p190_q3#e1",
+      "knowledgeId": "cnc_p190",
+      "questionIds": [
+        "cnc_p190_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p190_q3",
+      "sourceText": "《山行》是杜牧的，不要记混。"
+    },
+    {
+      "id": "cnmt:cnc_p217_q3#e1",
+      "knowledgeId": "cnc_p217",
+      "questionIds": [
+        "cnc_p217_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p217_q3",
+      "sourceText": "杜牧写《清明》，不要记混。"
+    },
+    {
+      "id": "cnmt:cnc_p234_q1#e1",
+      "knowledgeId": "cnc_p234",
+      "questionIds": [
+        "cnc_p234_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p234_q1",
+      "sourceText": "萧红写《火烧云》，不要记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p242_q4#e1",
+      "knowledgeId": "cnc_p242",
+      "questionIds": [
+        "cnc_p242_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两首诗不要串成一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p242_q4",
+      "sourceText": "两首诗不要串成一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p258_q3#e1",
+      "knowledgeId": "cnc_p258",
+      "questionIds": [
+        "cnc_p258_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要写成精卫或女娲来救",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p258_q3",
+      "sourceText": "不要写成精卫或女娲来救。"
+    },
+    {
+      "id": "cnmt:cnc_p261_q2#e1",
+      "knowledgeId": "cnc_p261",
+      "questionIds": [
+        "cnc_p261_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两类不要混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p261_q2",
+      "sourceText": "两类不要混。"
+    },
+    {
+      "id": "cnmt:cnc_p277_q3#e1",
+      "knowledgeId": "cnc_p277",
+      "questionIds": [
+        "cnc_p277_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要只看姓王就当成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p277_q3",
+      "sourceText": "《出塞》是王昌龄的，不要只看姓王就当成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p278_q3#e1",
+      "knowledgeId": "cnc_p278",
+      "questionIds": [
+        "cnc_p278_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要只看姓王就当成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p278_q3",
+      "sourceText": "王翰写的是《凉州词》，不要只看姓王就当成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p281_q3#e1",
+      "knowledgeId": "cnc_p281",
+      "questionIds": [
+        "cnc_p281_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p281_q3",
+      "sourceText": "杨万里写的是《宿新市徐公店》，不要记混。"
+    },
+    {
+      "id": "cnmt:cnc_p296_q1#e1",
+      "knowledgeId": "cnc_p296",
+      "questionIds": [
+        "cnc_p296_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p296_q1",
+      "sourceText": "老舍写《猫》，不要记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p297_q1#e1",
+      "knowledgeId": "cnc_p297",
+      "questionIds": [
+        "cnc_p297_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把满世界的绿安到白桦上",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p297_q1",
+      "sourceText": "《绿》才是艾青的，不要把满世界的绿安到白桦上。"
+    },
+    {
+      "id": "cnmt:cnc_p301_q1#e1",
+      "knowledgeId": "cnc_p301",
+      "questionIds": [
+        "cnc_p301_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把两篇的作者记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p301_q1",
+      "sourceText": "《白鹅》才是丰子恺的，不要把两篇的作者记混。"
+    },
+    {
+      "id": "cnmt:cnc_p310_q1#e1",
+      "knowledgeId": "cnc_p310",
+      "questionIds": [
+        "cnc_p310_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和雨来、那个小男孩记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p310_q1",
+      "sourceText": "不要和雨来、那个小男孩记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p328_q3#e1",
+      "knowledgeId": "cnc_p328",
+      "questionIds": [
+        "cnc_p328_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "其实进了死胡同或陷阱",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p328_q3",
+      "sourceText": "看起来像路，其实进了死胡同或陷阱。"
+    },
+    {
+      "id": "cnmt:cnc_p334_q2#e1",
+      "knowledgeId": "cnc_p334",
+      "questionIds": [
+        "cnc_p334_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "专心致志是注意力集中",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p334_q2",
+      "sourceText": "专心致志是注意力集中。"
+    },
+    {
+      "id": "cnmt:cnc_p338_q2#e1",
+      "knowledgeId": "cnc_p338",
+      "questionIds": [
+        "cnc_p338_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两类不要混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p338_q2",
+      "sourceText": "两类不要混。"
+    },
+    {
+      "id": "cnmt:cnc_p340_q3#e1",
+      "knowledgeId": "cnc_p340",
+      "questionIds": [
+        "cnc_p340_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要都记成爱国诗人里的同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p340_q3",
+      "sourceText": "《示儿》是陆游的，不要都记成爱国诗人里的同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p342_q2#e1",
+      "knowledgeId": "cnc_p342",
+      "questionIds": [
+        "cnc_p342_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都是近代文章就记成别人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p342_q2",
+      "sourceText": "不要因为都是近代文章就记成别人。"
+    },
+    {
+      "id": "cnmt:cnc_p355_q3#e1",
+      "knowledgeId": "cnc_p355",
+      "questionIds": [
+        "cnc_p355_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都写了夜就记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p355_q3",
+      "sourceText": "王维写《山居秋暝》，不要因为都写了夜就记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p361_q4#e1",
+      "knowledgeId": "cnc_p361",
+      "questionIds": [
+        "cnc_p361_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p361_q4",
+      "sourceText": "不要记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p368_q4#e1",
+      "knowledgeId": "cnc_p368",
+      "questionIds": [
+        "cnc_p368_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p368_q4",
+      "sourceText": "不要记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p375_q4#e1",
+      "knowledgeId": "cnc_p375",
+      "questionIds": [
+        "cnc_p375_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都有热闹场面就记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p375_q4",
+      "sourceText": "不要因为都有热闹场面就记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p393_q1#e1",
+      "knowledgeId": "cnc_p393",
+      "questionIds": [
+        "cnc_p393_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和孙武记成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p393_q1",
+      "sourceText": "不要和孙武记成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p410_q3#e1",
+      "knowledgeId": "cnc_p410",
+      "questionIds": [
+        "cnc_p410_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为写了月亮就记成李白",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p410_q3",
+      "sourceText": "不要因为写了月亮就记成李白。"
+    },
+    {
+      "id": "cnmt:cnc_p414_q4#e1",
+      "knowledgeId": "cnc_p414",
+      "questionIds": [
+        "cnc_p414_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "尽开颜后面不要再加字",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p414_q4",
+      "sourceText": "尽开颜后面不要再加字。"
+    },
+    {
+      "id": "cnmt:cnc_p416_q1#e1",
+      "knowledgeId": "cnc_p416",
+      "questionIds": [
+        "cnc_p416_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和别的历史日子记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p416_q1",
+      "sourceText": "不要和别的历史日子记混。"
+    },
+    {
+      "id": "cnmt:cnc_p417_q4#e1",
+      "knowledgeId": "cnc_p417",
+      "questionIds": [
+        "cnc_p417_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把烈火和跳崖记成一件事",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p417_q4",
+      "sourceText": "不要把烈火和跳崖记成一件事。"
+    },
+    {
+      "id": "cnmt:cnc_p431_q3#e1",
+      "knowledgeId": "cnc_p431",
+      "questionIds": [
+        "cnc_p431_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和开国大典记成同一件事",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p431_q3",
+      "sourceText": "不要和开国大典记成同一件事。"
+    },
+    {
+      "id": "cnmt:cnc_p435_q1#e1",
+      "knowledgeId": "cnc_p435",
+      "questionIds": [
+        "cnc_p435_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和草原、故宫记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p435_q1",
+      "sourceText": "不要和草原、故宫记混。"
+    },
+    {
+      "id": "cnmt:cnc_p435_q4#e1",
+      "knowledgeId": "cnc_p435",
+      "questionIds": [
+        "cnc_p435_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p435_q4",
+      "sourceText": "都在第六单元，不要记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p445_q4#e1",
+      "knowledgeId": "cnc_p445",
+      "questionIds": [
+        "cnc_p445_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p445_q4",
+      "sourceText": "不要记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p450_q1#e1",
+      "knowledgeId": "cnc_p450",
+      "questionIds": [
+        "cnc_p450_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把作者和鲁迅换成同一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p450_q1",
+      "sourceText": "不要把作者和鲁迅换成同一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p451_q4#e1",
+      "knowledgeId": "cnc_p451",
+      "questionIds": [
+        "cnc_p451_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记成同一篇",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p451_q4",
+      "sourceText": "都在第八单元，不要记成同一篇。"
+    },
+    {
+      "id": "cnmt:cnc_p453_q2#e1",
+      "knowledgeId": "cnc_p453",
+      "questionIds": [
+        "cnc_p453_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要在轩辕后面加字",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p453_q2",
+      "sourceText": "不要在轩辕后面加字。"
+    },
+    {
+      "id": "cnmt:cnc_p456_q3#e1",
+      "knowledgeId": "cnc_p456",
+      "questionIds": [
+        "cnc_p456_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为写了春天就记成杜甫",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p456_q3",
+      "sourceText": "不要因为写了春天就记成杜甫。"
+    },
+    {
+      "id": "cnmt:cnc_p458_q3#e1",
+      "knowledgeId": "cnc_p458",
+      "questionIds": [
+        "cnc_p458_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都写节令就记成一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p458_q3",
+      "sourceText": "《寒食》才是韩翃的，不要因为都写节令就记成一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p463_q1#e1",
+      "knowledgeId": "cnc_p463",
+      "questionIds": [
+        "cnc_p463_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要记混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p463_q1",
+      "sourceText": "笛福写的是鲁滨逊，不要记混。"
+    },
+    {
+      "id": "cnmt:cnc_p465_q4#e1",
+      "knowledgeId": "cnc_p465",
+      "questionIds": [
+        "cnc_p465_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两件事不要并成一种",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p465_q4",
+      "sourceText": "两件事不要并成一种。"
+    },
+    {
+      "id": "cnmt:cnc_p475_q3#e1",
+      "knowledgeId": "cnc_p475",
+      "questionIds": [
+        "cnc_p475_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两首咏物诗不要记成一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p475_q3",
+      "sourceText": "《石灰吟》是于谦的，两首咏物诗不要记成一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p488_q4#e1",
+      "knowledgeId": "cnc_p488",
+      "questionIds": [
+        "cnc_p488_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为写了杨柳就记成后来的诗人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p488_q4",
+      "sourceText": "不要因为写了杨柳就记成后来的诗人。"
+    },
+    {
+      "id": "cnmt:cnc_p489_q2#e1",
+      "knowledgeId": "cnc_p489",
+      "questionIds": [
+        "cnc_p489_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "无故人后面不要加字",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p489_q2",
+      "sourceText": "无故人后面不要加字。"
+    },
+    {
+      "id": "cnmt:cnc_p489_q3#e1",
+      "knowledgeId": "cnc_p489",
+      "questionIds": [
+        "cnc_p489_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为姓王就和王建、王安石记成一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p489_q3",
+      "sourceText": "不要因为姓王就和王建、王安石记成一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p490_q2#e1",
+      "knowledgeId": "cnc_p490",
+      "questionIds": [
+        "cnc_p490_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要在无声后面加息",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p490_q2",
+      "sourceText": "不要在无声后面加息。"
+    },
+    {
+      "id": "cnmt:cnc_p490_q3#e1",
+      "knowledgeId": "cnc_p490",
+      "questionIds": [
+        "cnc_p490_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要加外或中",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p490_q3",
+      "sourceText": "不要加外或中。"
+    },
+    {
+      "id": "cnmt:cnc_p490_q4#e1",
+      "knowledgeId": "cnc_p490",
+      "questionIds": [
+        "cnc_p490_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要只因为姓杜就记成他",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p490_q4",
+      "sourceText": "杜牧写过别的诗，不要只因为姓杜就记成他。"
+    },
+    {
+      "id": "cnmt:cnc_p491_q3#e1",
+      "knowledgeId": "cnc_p491",
+      "questionIds": [
+        "cnc_p491_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两首不要并成一首",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p491_q3",
+      "sourceText": "他在上册还有《书湖阴先生壁》，两首不要并成一首。"
+    },
+    {
+      "id": "cnmt:cnc_p492_q3#e1",
+      "knowledgeId": "cnc_p492",
+      "questionIds": [
+        "cnc_p492_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要因为都写春天记成一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p492_q3",
+      "sourceText": "春风又绿是王安石，不要因为都写春天记成一个人。"
+    },
+    {
+      "id": "cnmt:cnc_p493_q2#e1",
+      "knowledgeId": "cnc_p493",
+      "questionIds": [
+        "cnc_p493_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要在盈盈处后面加字",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p493_q2",
+      "sourceText": "不要在盈盈处后面加字。"
+    },
+    {
+      "id": "cnmt:cnc_p493_q4#e1",
+      "knowledgeId": "cnc_p493",
+      "questionIds": [
+        "cnc_p493_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "两首送别不要记成一个人",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_p493_q4",
+      "sourceText": "王维写的是《送元二使安西》，两首送别不要记成一个人。"
+    },
+    {
+      "id": "cnmt:cnm_p253_q4#e1",
+      "knowledgeId": "cnm_p253",
+      "questionIds": [
+        "cnm_p253_q4"
+      ],
+      "subject": "数学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要把梨加进去",
+      "why": "",
+      "right": "",
+      "sourceId": "cnm_p253_q4",
+      "sourceText": "问的是桃还剩几个，只算 8－2＝6，不要把梨加进去。"
+    },
+    {
+      "id": "cnmt:cne_p270_q4#e1",
+      "knowledgeId": "cne_p270",
+      "questionIds": [
+        "cne_p270_q4"
+      ],
+      "subject": "英语",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要 loudly",
+      "why": "",
+      "right": "",
+      "sourceId": "cne_p270_q4",
+      "sourceText": "quietly，不要 loudly。"
+    },
+    {
+      "id": "cnmt:cnk_j001_q4#e1",
+      "knowledgeId": "cnk_j001",
+      "questionIds": [
+        "cnk_j001_q4"
+      ],
+      "subject": "化学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "并注意安全和用途",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_j001_q4",
+      "sourceText": "化学结论要有事实和实验依据，并注意安全和用途。"
+    },
+    {
+      "id": "cnmt:cnk_j008_q4#e1",
+      "knowledgeId": "cnk_j008",
+      "questionIds": [
+        "cnk_j008_q4"
+      ],
+      "subject": "化学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要与试剂混放",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_j008_q4",
+      "sourceText": "催化剂反应前后质量和化学性质不变，应回收，不要与试剂混放。"
+    },
+    {
+      "id": "cnmt:cnk_j032_q3#e1",
+      "knowledgeId": "cnk_j032",
+      "questionIds": [
+        "cnk_j032_q3"
+      ],
+      "subject": "化学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "也不要用手摸热金属",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_j032_q3",
+      "sourceText": "不能品尝酸，也不要用手摸热金属。"
+    },
+    {
+      "id": "cnmt:cnk_j042_q4#e1",
+      "knowledgeId": "cnk_j042",
+      "questionIds": [
+        "cnk_j042_q4"
+      ],
+      "subject": "化学",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_j042_q4",
+      "sourceText": "铵盐与碱混合会放出氨气，所以铵态氮肥不要与碱性物质混合施用。"
+    },
+    {
+      "id": "cnmt:cnc_j030_q2#e1",
+      "knowledgeId": "cnc_j030",
+      "questionIds": [
+        "cnc_j030_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "邓稼先最不要引人注目，却担当最危险的事",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j030_q2",
+      "sourceText": "邓稼先最不要引人注目，却担当最危险的事。"
+    },
+    {
+      "id": "cnmt:cnc_j033_q4#e1",
+      "knowledgeId": "cnc_j033",
+      "questionIds": [
+        "cnc_j033_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "孙权不要吕蒙钻研成博士，只要求他广泛、粗略地读，了解历史",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j033_q4",
+      "sourceText": "孙权不要吕蒙钻研成博士，只要求他广泛、粗略地读，了解历史。"
+    },
+    {
+      "id": "cnmt:cnc_j052_q2#e1",
+      "knowledgeId": "cnc_j052",
+      "questionIds": [
+        "cnc_j052_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要悲伤，不要心急」「忧郁的日子里须要镇静」",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j052_q2",
+      "sourceText": "「不要悲伤，不要心急」「忧郁的日子里须要镇静」。"
+    },
+    {
+      "id": "cnmt:cnc_j052_q4#e1",
+      "knowledgeId": "cnc_j052",
+      "questionIds": [
+        "cnc_j052_q4"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "把它读成「不要选择」，就和「那条路从此决定了我的一生」相反",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j052_q4",
+      "sourceText": "把它读成「不要选择」，就和「那条路从此决定了我的一生」相反。"
+    },
+    {
+      "id": "cnmt:cnc_j101_q1#e1",
+      "knowledgeId": "cnc_j101",
+      "questionIds": [
+        "cnc_j101_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和写月球的卞毓麟弄混",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j101_q1",
+      "sourceText": "不要和写月球的卞毓麟弄混。"
+    },
+    {
+      "id": "cnmt:cnc_j116_q1#e1",
+      "knowledgeId": "cnc_j116",
+      "questionIds": [
+        "cnc_j116_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "各拉丹冬不要写成「格拉丹东」",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j116_q1",
+      "sourceText": "各拉丹冬不要写成「格拉丹东」。"
+    },
+    {
+      "id": "cnmt:cnc_j122_q1#e1",
+      "knowledgeId": "cnc_j122",
+      "questionIds": [
+        "cnc_j122_q1"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要和《小石潭记》的作者对调",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j122_q1",
+      "sourceText": "不要和《小石潭记》的作者对调。"
+    },
+    {
+      "id": "cnmt:cnc_j134_q2#e1",
+      "knowledgeId": "cnc_j134",
+      "questionIds": [
+        "cnc_j134_q2"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "第一间不要被仇恨塞满，第二间给事业，第三间留给自己",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j134_q2",
+      "sourceText": "第一间不要被仇恨塞满，第二间给事业，第三间留给自己。"
+    },
+    {
+      "id": "cnmt:cnc_j182_q3#e1",
+      "knowledgeId": "cnc_j182",
+      "questionIds": [
+        "cnc_j182_q3"
+      ],
+      "subject": "语文",
+      "stage": "小学",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "先看要不要这段",
+      "why": "",
+      "right": "",
+      "sourceId": "cnc_j182_q3",
+      "sourceText": "先看要不要这段。"
+    },
+    {
+      "id": "cnmt:cnk_h025_q4#e1",
+      "knowledgeId": "cnk_h025",
+      "questionIds": [
+        "cnk_h025_q4"
+      ],
+      "subject": "化学",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "实验要控制用量、注意通风，废液按实验室要求处理",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_h025_q4",
+      "sourceText": "实验要控制用量、注意通风，废液按实验室要求处理。"
+    },
+    {
+      "id": "cnmt:cnk_h030_q4#e1",
+      "knowledgeId": "cnk_h030",
+      "questionIds": [
+        "cnk_h030_q4"
+      ],
+      "subject": "化学",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "气体也不要去吸",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_h030_q4",
+      "sourceText": "二氧化锰是实验室常用的催化剂，不能入口，气体也不要去吸。"
+    },
+    {
+      "id": "cnmt:cnk_h058_q4#e1",
+      "knowledgeId": "cnk_h058",
+      "questionIds": [
+        "cnk_h058_q4"
+      ],
+      "subject": "化学",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "不要加入大量酸，也不要品尝",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_h058_q4",
+      "sourceText": "不要加入大量酸，也不要品尝。"
+    },
+    {
+      "id": "cnmt:cnk_h063_q4#e1",
+      "knowledgeId": "cnk_h063",
+      "questionIds": [
+        "cnk_h063_q4"
+      ],
+      "subject": "化学",
+      "stage": "高中",
+      "matchConfidence": "high",
+      "matchMethod": "source-topic",
+      "wrong": "通电时不要用手接触电极",
+      "why": "",
+      "right": "",
+      "sourceId": "cnk_h063_q4",
+      "sourceText": "电源要用直流，通电时不要用手接触电极。"
+    }
+  ]
+}

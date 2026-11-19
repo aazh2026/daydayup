@@ -98,8 +98,8 @@ daydayup 是面向中考学生的 AI 提分产品，具备明确的商业属性�
 
 | 缺口 | cn-mt 是否有 | daydayup 的处理 |
 |---|---|---|
-| `commonTraps`（常见陷阱） | ❌ 无 | 留空 + 告警，**需教师补全**，不得由 AI 凭空生成 |
-| `commonErrors`（题目常见错误） | ❌ 无 | 留空 |
+| `commonTraps`（常见陷阱） | ❌ 无 | ✅ 已由**错因资产层**补齐（见下节）：从 cn-mt 显式警示解析 / junior-math-atlas `pitfalls` / china-skill-taxonomy 易错提示抽取，**不得由 AI 凭空生成** |
+| `commonErrors`（题目常见错误） | ❌ 无 | ✅ 同上，由错因资产层在加载期覆盖 |
 | `examWeight`（考试权重） | ❌ 无 | 由 `type`/学段/课标置信度**确定性推导**（见 `deriveExamWeight`） |
 | `learningCostHours`（学习成本） | ❌ 无 | 由 `type` + `mastery_criteria` 数量确定性推导 |
 | `commonExamForms`（常见题型） | ❌ 无 | 由 `type` 推导 + 学段标签 |
@@ -126,3 +126,38 @@ export interface KnowledgePoint {
 
 本转换器**暂未**写入这两个字段 —— 因为契约未定义，写了会破坏类型约束。
 待契约扩展后，只需在 `convertTopic()` 中补两行即可。
+
+## 错因资产层（TrapSet）：`commonTraps` / `commonErrors` 从哪来
+
+cn-mt 没有错因字段，但这不意味着错因无处可取 —— daydayup 把错因做成**独立的一层资产**，
+与知识资产、题库并列：
+
+| 资产 | 目录 | 说明 |
+|---|---|---|
+| 知识资产 | `packages/server/data/knowledge/*.json` | 知识点主体 |
+| 题库 | `packages/server/data/questions/*.json` | 题目主体 |
+| **错因资产** | `packages/server/data/traps/*.json` | **易错点**，独立可下架 |
+
+导入脚本：`npm run import:traps --workspace=@daydayup/server`
+（设计与 `import-taxonomy.ts` 同构：`--dry-run` / `--promote` / `--report` / `--force`）。
+
+三条红线（写死在脚本与转换器里）：
+
+1. **不得凭空生成** —— 所有 `wrong`/`why`/`right` 全部取自源项目原句；
+   源数据没写错因就留空，绝不补写。
+2. **中等置信度必须人工确认** —— 名称包含匹配命中的条目置信度为 `medium`，
+   默认**不写入**产物；只有显式 `--allow-medium` 才会写入（视为人工已确认）。
+3. **不把 atlas 并入知识资产** —— junior-math-atlas 只进错因资产层，
+   它的 83 篇知识点**不**合并进 2760 个知识点的知识资产。
+
+生效方式：**加载期覆盖**（`curriculum.ts` 读 ACTIVE 的 TrapSet → `applyTrapSets` 追加到
+`commonTraps` / `commonErrors`），不改写资产文件本身，因此随时可以下架某个来源。
+
+许可约束：
+
+| 来源 | 许可 | 能否 promote |
+|---|---|---|
+| cn-math-taxonomy | CC BY-NC 4.0（非商业） | 可（商业化前须取得商业授权） |
+| junior-math-atlas | **作者本人已确认**（自有原创内容，授权 daydayup 使用与发布；仓库仍缺 LICENSE 文件，建议补写） | ✅ 已带 `--confirm-license` promote |
+| china-skill-taxonomy | ODbL 1.0 + CC BY-SA 4.0 | 可（需署名，衍生数据库保持同许可） |
+| workbuddy-english-map（英语知识地图 / 详解表 / 提分手册） | **作者本人已确认**（自有原创内容，授权 daydayup 使用与发布；`workbuddy-research` 仓库仍缺 LICENSE 文件，建议补写） | ✅ 已带 `--confirm-license` promote（`licenseConfirmed` 仍为 false，每次 promote 须显式带许可文本） |

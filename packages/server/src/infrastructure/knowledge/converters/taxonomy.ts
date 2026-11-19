@@ -355,9 +355,14 @@ export function deriveCommonExamForms(topic: TaxonomyTopic): string[] {
  * 并且明确标注"待教师补充"，避免把编造内容当成教研结论。
  *
  * 这是一个**已知的覆盖缺口**，记入 ConversionReport.warnings。
+ *
+ * ✅ 已补齐：错因不再由本转换器生成，而是走**独立的错因资产层**
+ * （TrapSet，`packages/server/data/traps/*.json`），由 `import-traps.ts` 从
+ * cn-mt / junior-math-atlas / china-skill-taxonomy 抽取、匹配后在**加载期覆盖**
+ * 到 `commonTraps`（见 `converters/trap-overlay.ts` 与 `knowledge/curriculum.ts`）。
  */
 export function deriveCommonTraps(topic: TaxonomyTopic): string[] {
-  // 源数据不含错因信息 → 返回空数组，由转换报告标记为待补充。
+  // 源数据不含错因信息 → 返回空数组，由错因资产层在加载期补齐。
   return [];
 }
 
@@ -550,7 +555,7 @@ export function convertQuestion(
     difficulty: DIFFICULTY_MAP[q.difficulty] ?? 2,
     // cn-mt 每题都有 explanation；拆成"解题步骤"数组
     solutionSteps: q.explanation ? [q.explanation] : [],
-    // cn-mt 无错因数据 → 空数组（与 commonTraps 同源缺口）
+    // cn-mt 无错因数据 → 空数组；由错因资产层（TrapSet）在加载期补齐，见 trap-overlay.ts
     commonErrors: [],
     knowledgeIds: [q.topicId],
   };

@@ -1,0 +1,189 @@
+[
+  {
+    "id": "en-action:1#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-1",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "看到括号词就凭语感直接变形，忽略空格位置",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n语法词汇 · 词形转换（8分）\n涉及分值：8\n具体失分形式：看到括号词就凭语感直接变形，忽略空格位置\n立刻照做的动作：拿 2022 真题 44–51 共 8 题，先在空格上方写\"名词/动词/形容词/副词/数词/代词\"标签，再填词；限时 4 分钟\n达标验收标准：连续 3 套 8 题错 ≤1，且能口头说出每空的判断依据（如 49 reporter→report 是\"冠词后要名词/动词\"）\n常见失败原因：填对词义但词性错，如 pollute 写成 polluting；unlucky 漏否定前缀"
+  },
+  {
+    "id": "en-action:2#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-2",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "被动语态漏 be、间接引语时态不后移、连词成句语序乱",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n语法词汇 · 句型转换（14分）\n涉及分值：14\n具体失分形式：被动语态漏 be、间接引语时态不后移、连词成句语序乱\n立刻照做的动作：把 2021 与 2022 两套句转共 14 题按 7 类归档（否定/疑问/划线提问/被动/简单句/同义句/间接引语/连词成句），每类各补 5 题\n达标验收标准：14 道真题二刷全对；被动题能同时说清时态和主谓一致；间接引语三处（语序/时态/人称）零错\n常见失败原因：\"have been saved / was saved\" 时态选错；if/whether 后仍用疑问语序"
+  },
+  {
+    "id": "en-action:3#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-3",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "要点漏答、只写两句话、字数不足 60",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n作文 · 内容分（8分）\n涉及分值：8\n具体失分形式：要点漏答、只写两句话、字数不足 60\n立刻照做的动作：拿到题目先圈 4 要素：体裁、身份、必答要点数量、时态；写 3 行中文提纲，把每个要点编号，写完逐条打勾\n达标验收标准：连续 3 篇作文要点全覆盖、≥60 词、无跑题；能用 10 秒复述题目要求\n常见失败原因：2025 题要求\"选一组+优势+理由+建议\"，很多人漏\"建议\"直接掉 3 分"
+  },
+  {
+    "id": "en-action:4#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-4",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "主谓一致、时态混用、名词单复数、拼写各扣 0.5",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n作文 · 语言分（8分）\n涉及分值：8\n具体失分形式：主谓一致、时态混用、名词单复数、拼写各扣 0.5\n立刻照做的动作：写完用 60 秒只做一件事：圈出所有动词和所有名词复数，逐个核对时态与主谓一致；再数词数\n达标验收标准：每篇 0 处主谓一致错误、0 处时态混用、≥60 词；拼写错误 ≤1\n常见失败原因：I am writing... / I wrote... 混用；\"advices / informations\" 类不可数名词加 s"
+  },
+  {
+    "id": "en-action:5#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-5",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "通篇简单句、句型单一，即使无语法错误也拿不到结构分",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n作文 · 结构分（4分）\n涉及分值：4\n具体失分形式：通篇简单句、句型单一，即使无语法错误也拿不到结构分\n立刻照做的动作：每篇至少主动放入 2 个\"复合句\"和 1 个连接词：which 定语从句 / because 状语从句 / Having done 结构 / However\n达标验收标准：内容和语言合计 ≥15 分（这是拿结构分的前提），且全文至少 2 处非简单句\n常见失败原因：全篇 I think... I like... I hope... 单句堆砌，结构分给 0"
+  },
+  {
+    "id": "en-action:6#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-6",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "只写短语、照抄大段原文、人称不转换",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n阅读问答 · 完整句（12分）\n涉及分值：12\n具体失分形式：只写短语、照抄大段原文、人称不转换\n立刻照做的动作：拿 2023 D 篇 78–83 限时 10 分钟；所有回答一律\"主语 + 谓语\"完整句，Why 用 Because，How 用 By doing\n达标验收标准：6 题中至少 5 题是完整句；答案能在原文划出依据句\n常见失败原因：83 题要求三条理由，只写一条；81 题补句脱离人物情绪"
+  },
+  {
+    "id": "en-action:7#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-7",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "只凭首字母猜词、猜对却拼错、忽略单复数和时态",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n首字母 · 四步法（14分）\n涉及分值：14\n具体失分形式：只凭首字母猜词、猜对却拼错、忽略单复数和时态\n立刻照做的动作：每天 1 篇，严格执行：①通读定大意 ②判断空格词性 ③按语义+搭配定词 ④复查名词单复数/动词时态/比较级/副词 -ly\n达标验收标准：连续 5 篇 7 空错 ≤2 且拼写零错；能标出每空词性\n常见失败原因：2022 真题 cycling 忘加 -ing、serious 写成 seriously"
+  },
+  {
+    "id": "en-action:8#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-8",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "抢答、重复作答、未发音作答、读错反复纠正",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n听说 · 一次成句（10分）\n涉及分值：10\n具体失分形式：抢答、重复作答、未发音作答、读错反复纠正\n立刻照做的动作：每次模考录音，回放只检查三件事：是否等提示音再开口、是否只纠正一次、是否出现空白段\n达标验收标准：连续 3 次模考无抢答、无二次纠正、无空白；表达题 ≥5 句\n常见失败原因：系统未出现录音进度条就开口，答案被截断"
+  },
+  {
+    "id": "en-action:9#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-9",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "听懂了却写错单复数或时态",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P0\n听力填空 · 词形（5分）\n涉及分值：5\n具体失分形式：听懂了却写错单复数或时态\n立刻照做的动作：用 2022 真题 16–20 做听写：A building / gift boxes / have saved / on Friday / good team；先写词性再写词\n达标验收标准：5 空全对，重点核对 gift boxes 复数与 have saved 完成时\n常见失败原因：gift box 漏 s；have saved 写成 has saved"
+  },
+  {
+    "id": "en-action:10#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-10",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "时态、非谓语、从句连接词靠感觉选",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n语法选择 · 15题（15分）\n涉及分值：15\n具体失分形式：时态、非谓语、从句连接词靠感觉选\n立刻照做的动作：重做 2022 真题 21–35，每错题标注\"考点标签\"，把 15 题归成 6 类（代词/冠词介词/比较级/时态/非谓语/连词感叹句）\n达标验收标准：二刷 15 题全对，且能说出每个干扰项为什么错\n常见失败原因：since June 未识别完成时；spend time doing 选成 to practise"
+  },
+  {
+    "id": "en-action:11#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-11",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "只看空格所在句，不看全文逻辑",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n五选四 / 选词填空（8分）\n涉及分值：8\n具体失分形式：只看空格所在句，不看全文逻辑\n立刻照做的动作：先通读全文判断时态与情感基调，再按\"词性 → 搭配 → 上下文\"三步填，最后通读整篇\n达标验收标准：连续 3 篇错 ≤1；每个空格能指出依据词\n常见失败原因：把动词填进需要形容词的位置"
+  },
+  {
+    "id": "en-action:12#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-12",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "只盯着空格那一句，忽略复现与情感线",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n完形填空 · 上下文（约12分）\n涉及分值：约12\n具体失分形式：只盯着空格那一句，忽略复现与情感线\n立刻照做的动作：做题前先读首句定基调；每个空在原文圈出\"提示词\"（原词复现、同义、转折词、代词）\n达标验收标准：每篇至少能圈出 6 个提示词；连续 3 篇错 ≤2\n常见失败原因：看到 however 仍选顺承关系的词"
+  },
+  {
+    "id": "en-action:13#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-13",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "凭常识选、把\"未提及\"当正确、过度推断",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n阅读理解 · 细节与推断（约20分）\n涉及分值：约20\n具体失分形式：凭常识选、把\"未提及\"当正确、过度推断\n立刻照做的动作：每题在原文划出依据句并写题号；选不出时先排除\"无中生有/以偏概全/偷换概念\"三类\n达标验收标准：每篇 4–6 题全部能指出依据句；推理题不超出原文一步\n常见失败原因：选项出现原文词就选，忽略整句含义"
+  },
+  {
+    "id": "en-action:14#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-14",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "只读正文，漏看图表、图例、单位",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n多模态 / 新题型（2027）\n涉及分值：2027 新增\n具体失分形式：只读正文，漏看图表、图例、单位\n立刻照做的动作：每周做 2 篇海报/邮件/菜单/图表类材料；先看标题、图例、数字单位，再读文字\n达标验收标准：图表题能同时从图和文各找到 1 条依据\n常见失败原因：把图表中的百分比当具体人数"
+  },
+  {
+    "id": "en-action:15#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-15",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "忽略衔接词和代词指代",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n六选五 / 小标题（2027）\n涉及分值：2027 新增\n具体失分形式：忽略衔接词和代词指代\n立刻照做的动作：练六选五时先圈 however / therefore / in addition 和 it/they/this；练小标题时每段读完写 1 句概括\n达标验收标准：每篇能写出每段 1 句概括；错题能说明是衔接还是指代判断失误\n常见失败原因：空后 However 却选了顺承句"
+  },
+  {
+    "id": "en-action:16#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-16",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "句子结构不完整、拼写语法错误集中",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P1\n中译英（2027 拟新增）\n涉及分值：5句×2分\n具体失分形式：句子结构不完整、拼写语法错误集中\n立刻照做的动作：按\"句子基本结构 1 分 + 拼写语法 0.5 分\"标准自评；每天 5 句，先写主干再补修饰\n达标验收标准：5 句中至少 4 句主干完整；同一错误不重复出现\n常见失败原因：漏谓语或写成中文语序"
+  },
+  {
+    "id": "en-action:17#e1",
+    "sourceRepo": "workbuddy-english-map",
+    "sourceId": "action-17",
+    "subject": "英语",
+    "stage": "初中",
+    "wrong": "单词认识但不会用，写作与首字母同时卡住",
+    "why": "",
+    "right": "",
+    "sourceText": "优先级：P2\n词汇 · 考纲词块\n涉及分值：间接影响 30+\n具体失分形式：单词认识但不会用，写作与首字母同时卡住\n立刻照做的动作：每天 20 个词以\"词块 + 自己造句\"形式过一遍，不做英译汉；重点记 take measures to / be proud of / look forward to doing\n达标验收标准：当天能默写 15 个词块并各造 1 句\n常见失败原因：只背中文释义，考场想不起搭配介词"
+  }
+]
