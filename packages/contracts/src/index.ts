@@ -91,3 +91,18 @@ export {
   type JobProgressEvent,
   type JobStatus,
 } from './api/job.ts';
+
+export {
+  AI_CONFIG_LIMITS,
+  AI_MODEL_OPTIONS,
+  AI_PURPOSES,
+  maskApiKey,
+  parseAIConfigResponse,
+  validateAIConfigUpdate,
+  type AIConfig,
+  type AIConfigResponse,
+  type AIModelId,
+  type AIPurposeId,
+  type TestAIConnectionResult,
+  type UpdateAIConfigRequest,
+} from './api/ai-config.ts';
